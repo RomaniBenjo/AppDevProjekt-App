@@ -1,6 +1,6 @@
 package com.example.commingsoon.ui.theme
 
-enum class AppTheme {
+enum class AppThemeType {
     VIOLET,
     DARKBLUE,
     LIGHTBLUE,
