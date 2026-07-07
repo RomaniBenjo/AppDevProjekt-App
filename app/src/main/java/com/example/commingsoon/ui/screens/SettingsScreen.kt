@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -42,6 +43,7 @@ import com.example.commingsoon.language.AppLanguage
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.ui.theme.AppThemeType
 import com.example.commingsoon.ui.theme.AppThemeViewModel
+import kotlin.collections.forEach
 
 @Composable
 fun SettingsScreen(
@@ -56,7 +58,6 @@ fun SettingsScreen(
     ) {
 
         item {
-
             Text(
                 text = stringResource(R.string.choose_language),
                 style = MaterialTheme.typography.titleMedium
@@ -72,7 +73,6 @@ fun SettingsScreen(
         }
 
         item {
-
             LightDarkSwitch(
                 isDarkMode = viewModel.getCurrentMode(),
                 onChanged = {
@@ -82,7 +82,6 @@ fun SettingsScreen(
         }
 
         item {
-
             Text(
                 text = stringResource(R.string.choose_theme),
                 style = MaterialTheme.typography.titleMedium
@@ -94,7 +93,7 @@ fun SettingsScreen(
                 selected = viewModel.getCurrentTheme(),
                 onSelected = viewModel::setTheme,
                 allThemes = viewModel.getAllThemes(),
-                image = viewModel.getCurrentThemeDefinition().assets.menuShape
+                viewModel = viewModel
             )
         }
     }
@@ -182,58 +181,67 @@ fun ThemeGrid(
     selected: AppThemeType,
     onSelected: (AppThemeType) -> Unit,
     allThemes: List<AppThemeType>,
-    image: Int
+    viewModel: SettingsViewModel
 ) {
+    val rows = allThemes.chunked(2)
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.height(500.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        userScrollEnabled = false
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
-        items(allThemes) { theme ->
-
-            ThemeCard(
-                theme = theme,
-                selected = theme == selected,
-                image = image,
-                onClick = {
-                    onSelected(theme)
+        rows.forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                row.forEach { theme ->
+                    ThemeCard(
+                        modifier = Modifier.weight(1f),
+                        theme = theme,
+                        viewModel = viewModel,
+                        selected = theme == selected,
+                        onClick = {
+                            onSelected(theme)
+                        }
+                    )
                 }
-            )
+                if (row.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
 
 @Composable
 fun ThemeCard(
+    modifier: Modifier = Modifier,
     theme: AppThemeType,
+    viewModel: SettingsViewModel,
     selected: Boolean,
-    image: Int,
     onClick: () -> Unit
 ) {
+    val definition = viewModel.getThemeDefinition(theme)
+
+    val colorScheme =
+        if (viewModel.getCurrentMode())
+            definition.colorScheme.light
+        else
+            definition.colorScheme.dark
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .height(120.dp)
-            .clickable {
-                onClick()
-            },
+            .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondary
+            containerColor = colorScheme.secondary
         )
     ) {
-
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-
             Image(
-                painter = painterResource(image),
+                painter = painterResource(definition.assets.menuShape),
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
@@ -241,18 +249,23 @@ fun ThemeCard(
                     .fillMaxHeight()
             )
 
-            Column(
-                modifier = Modifier.padding(16.dp)
+            Row(
+                modifier = Modifier
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
                 RadioButton(
                     selected = selected,
                     onClick = onClick
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-                Text(text = theme.name)
+                Text(
+                    text = stringResource(viewModel.getThemeName(theme)),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colorScheme.onBackground
+                )
             }
         }
     }

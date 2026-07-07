@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.commingsoon.ui.screens.HomeScreen
+import com.example.commingsoon.ui.screens.OpenGuesserScreen
 import com.example.commingsoon.ui.screens.SettingsScreen
 
 @Composable
@@ -24,7 +25,7 @@ fun AppNavHost (
         }
 
         composable(NavScreens.OpenGuesser.route) {
-            //OpenGuesserScreen()
+            OpenGuesserScreen()
         }
 
         composable(NavScreens.Friends.route) {

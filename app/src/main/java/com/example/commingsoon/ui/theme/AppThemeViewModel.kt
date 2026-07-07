@@ -14,22 +14,15 @@ class AppThemeViewModel (initialDarkMode: Boolean = false) : ViewModel() {
     fun setTheme(theme: AppThemeType) {
         currentTheme = theme
     }
-    fun getCurrentTheme(): AppThemeType {
-        return currentTheme
-    }
-
-    fun getThemeDefinition(): AppThemeDefinition {
+   fun getThemeDefinition(): AppThemeDefinition {
         return themes[currentTheme]!!
     }
 
     fun setMode(isDarkMode: Boolean) {
         darkMode = isDarkMode
     }
-    fun getMode(): Boolean {
-        return darkMode
-    }
 
-    private val themes = mapOf(
+    val themes = mapOf(
         AppThemeType.VIOLET to VioletTheme,
         AppThemeType.TEAL to TealTheme,
         AppThemeType.PINK to PinkTheme,

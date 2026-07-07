@@ -20,14 +20,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val themeViewModel: AppThemeViewModel = viewModel()
-            val currentTheme = themeViewModel.getCurrentTheme()
+            val currentAppTheme = themeViewModel.getThemeDefinition()
 
             CommingSoonTheme(
-                theme = currentTheme
+                theme = currentAppTheme
             ) {
                 AppLayout(
                     navController = navController,
-                    themeDefinition = currentTheme,
+                    themeDefinition = currentAppTheme,
                     title = "Comming Soon"
                 )
             }
