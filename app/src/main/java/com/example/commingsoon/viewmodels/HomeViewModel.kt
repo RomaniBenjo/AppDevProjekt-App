@@ -14,7 +14,7 @@ data class Journey(
 
 class HomeViewModel : ViewModel() {
 
-    // TODO: Platzhalter Reisen
+    // TODO: Platzhalter Reisen (nach Startzeitpunkt sotiert)
 
     val journeys = mutableStateListOf(
         Journey(
@@ -46,10 +46,31 @@ class HomeViewModel : ViewModel() {
             pinCount = 23
         ),
         Journey(
-            id = 4,
+            id = 5,
             title = "Netherlands",
             startDate = LocalDate.of(2027, 10, 16),
             endDate = LocalDate.of(2027, 10, 20),
+            pinCount = 12
+        ),
+        Journey(
+            id = 6,
+            title = "China",
+            startDate = LocalDate.of(2027, 11, 16),
+            endDate = LocalDate.of(2027, 12, 20),
+            pinCount = 4
+        ),
+        Journey(
+            id = 7,
+            title = "Australia",
+            startDate = LocalDate.of(2028, 2, 16),
+            endDate = LocalDate.of(2028, 2, 20),
+            pinCount = 12
+        ),
+        Journey(
+            id = 8,
+            title = "Netherlands",
+            startDate = LocalDate.of(2028, 5, 16),
+            endDate = LocalDate.of(2028, 5, 20),
             pinCount = 12
         )
     )

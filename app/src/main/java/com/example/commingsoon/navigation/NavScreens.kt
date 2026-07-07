@@ -14,8 +14,8 @@ sealed class NavScreens (
     val title: String,
     val icon: ImageVector? = null
 ) {
-    object Home : NavScreens("home", "Comming Soon", icon = Icons.Default.Home)
-    object Journey : NavScreens("journey", "Journey", icon = Icons.Default.Flight)
+    object Home : NavScreens("home", "Home", icon = Icons.Default.Home)
+    object Journey : NavScreens("journeys", "Journeys", icon = Icons.Default.Flight)
     object OpenGuesser : NavScreens("openguesser","Play OpenGuesser", icon = Icons.Default.PlayArrow)
     object Friends : NavScreens("friends","Friends", icon = Icons.Default.Groups)
     object AddFriend : NavScreens("addfriend", "Add Friend")
