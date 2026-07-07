@@ -1,5 +1,7 @@
 package com.example.commingsoon.ui.theme
 
+import androidx.compose.ui.unit.sp
+
 val VioletTypography = Typography.copy(
     headlineLarge = Typography.headlineLarge.copy(
         fontFamily = RubikPuddles
@@ -50,6 +52,7 @@ val OrangeTypography = Typography.copy(
 
 val PinkTypography = Typography.copy(
     headlineLarge = Typography.headlineLarge.copy(
-        fontFamily = LeagueScript
+        fontFamily = LeagueScript,
+        fontSize = 42.sp
     )
 )

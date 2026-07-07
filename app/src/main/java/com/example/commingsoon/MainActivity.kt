@@ -7,30 +7,32 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
+import com.example.commingsoon.components.AppLayout
+import com.example.commingsoon.ui.theme.AppThemeViewModel
+import com.example.commingsoon.ui.theme.CommingSoonTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-//            CommingSoonTheme {
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    Greeting(
-//                        name = "Android",
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-//                }
-//            }
+            val navController = rememberNavController()
+            val themeViewModel: AppThemeViewModel = viewModel()
+            val currentTheme = themeViewModel.getCurrentTheme()
+
+            CommingSoonTheme(
+                theme = currentTheme
+            ) {
+                AppLayout(
+                    navController = navController,
+                    themeDefinition = currentTheme,
+                    title = "Comming Soon"
+                )
+            }
 
         }
     }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
 }
 

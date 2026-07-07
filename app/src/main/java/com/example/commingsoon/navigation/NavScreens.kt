@@ -1,41 +1,25 @@
 package com.example.commingsoon.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Flight
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.graphics.vector.ImageVector
+
 sealed class NavScreens (
     val route: String,
-    val title: String
+    val title: String,
+    val icon: ImageVector? = null
 ) {
-    object Home : NavScreens("home", "Home")
-    object Journey : NavScreens("journey", "Journey")
-    object OpenGuesser : NavScreens("openguesser","Play OpenGuesser")
-    object Friends : NavScreens("friends","Friends")
+    object Home : NavScreens("home", "Comming Soon", icon = Icons.Default.Home)
+    object Journey : NavScreens("journey", "Journey", icon = Icons.Default.Flight)
+    object OpenGuesser : NavScreens("openguesser","Play OpenGuesser", icon = Icons.Default.PlayArrow)
+    object Friends : NavScreens("friends","Friends", icon = Icons.Default.Groups)
     object AddFriend : NavScreens("addfriend", "Add Friend")
-    object Settings : NavScreens("settings","App Settings")
-    object Profile : NavScreens("profile","Profile")
+    object FriendDetail : NavScreens("friend/{friendId}", "Friend")
+    object Settings : NavScreens("settings","App Settings", icon = Icons.Default.Settings)
+    object Profile : NavScreens("profile","Profile", icon = Icons.Default.Person)
 }
-
-/*
-* val drawerItems = listOf(
-    Screen.Home,
-    Screen.Journey,
-    Screen.OpenGuesser,
-    Screen.Friends,
-    Screen.Settings,
-    Screen.Profile
-)
-*
-* drawerItems.forEach { item ->
-
-    NavigationDrawerItem(
-
-        label = {
-            Text(item.title)
-        },
-
-        selected = false,
-
-        onClick = {
-            navController.navigate(item.route)
-        }
-    )
-}
-* */
