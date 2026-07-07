@@ -27,12 +27,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.commingsoon.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.commingsoon.viewmodels.HomeViewModel
 import com.example.commingsoon.viewmodels.Journey
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun HomeScreen ( viewModel: HomeViewModel = viewModel() ) {
@@ -85,7 +88,7 @@ fun HomeScreen ( viewModel: HomeViewModel = viewModel() ) {
             shape = RoundedCornerShape(50),
             onClick = { /* TODO: nav to new journey */ }
         ) {
-            Text("New Journey")
+            Text(text = stringResource(R.string.new_journey))
         }
     }
 }

@@ -5,12 +5,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
-class AppThemeViewModel : ViewModel() {
+class AppThemeViewModel (initialDarkMode: Boolean = false) : ViewModel() {
     var currentTheme by mutableStateOf(AppThemeType.PINK)
+        private set
+    var darkMode by mutableStateOf(initialDarkMode)
         private set
 
     fun setTheme(theme: AppThemeType) {
         currentTheme = theme
+    }
+    fun getCurrentTheme(): AppThemeType {
+        return currentTheme
+    }
+
+    fun getThemeDefinition(): AppThemeDefinition {
+        return themes[currentTheme]!!
+    }
+
+    fun setMode(isDarkMode: Boolean) {
+        darkMode = isDarkMode
+    }
+    fun getMode(): Boolean {
+        return darkMode
     }
 
     private val themes = mapOf(
@@ -24,8 +40,4 @@ class AppThemeViewModel : ViewModel() {
         AppThemeType.LIGHTGREEN to LightGreenTheme,
         AppThemeType.YELLOW to YellowTheme
     )
-
-    fun getCurrentTheme(): AppThemeDefinition {
-        return themes[currentTheme]!!
-    }
 }

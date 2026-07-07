@@ -12,4 +12,12 @@ class AppLanguageViewModel : ViewModel() {
     fun setLanguage(language: AppLanguage) {
         currentLanguage = language
     }
+
+    fun getCurrentLanguage(): AppLanguage {
+        return currentLanguage
+    }
+
+    fun getLanguages(): List<AppLanguage> {
+        return AppLanguage.entries
+    }
 }
