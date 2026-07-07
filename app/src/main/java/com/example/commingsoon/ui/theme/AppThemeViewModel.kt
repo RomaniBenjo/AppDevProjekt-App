@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
-class ThemeViewModel : ViewModel() {
+class AppThemeViewModel : ViewModel() {
     var currentTheme by mutableStateOf(AppThemeType.PINK)
         private set
 
