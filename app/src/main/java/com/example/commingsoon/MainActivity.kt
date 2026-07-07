@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.commingsoon.components.AppLayout
+import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.ui.theme.CommingSoonTheme
 
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val themeViewModel: AppThemeViewModel = viewModel()
             val currentAppTheme = themeViewModel.getThemeDefinition()
+            val languageViewModel: AppLanguageViewModel = viewModel()
 
             CommingSoonTheme(
                 theme = currentAppTheme
@@ -28,7 +30,9 @@ class MainActivity : ComponentActivity() {
                 AppLayout(
                     navController = navController,
                     themeDefinition = currentAppTheme,
-                    title = "Comming Soon"
+                    title = "Comming Soon",
+                    themeViewModel = themeViewModel,
+                    languageViewModel = languageViewModel
                 )
             }
 

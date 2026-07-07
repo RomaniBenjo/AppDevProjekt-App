@@ -4,13 +4,17 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.ui.screens.HomeScreen
 import com.example.commingsoon.ui.screens.OpenGuesserScreen
 import com.example.commingsoon.ui.screens.SettingsScreen
+import com.example.commingsoon.ui.theme.AppThemeViewModel
 
 @Composable
 fun AppNavHost (
-    navController: NavHostController
+    navController: NavHostController,
+    themeViewModel: AppThemeViewModel,
+    languageViewModel: AppLanguageViewModel
 ) {
     NavHost(
         navController = navController,
@@ -33,7 +37,10 @@ fun AppNavHost (
         }
 
         composable(NavScreens.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(
+                themeViewModel = themeViewModel,
+                languageViewModel = languageViewModel
+            )
         }
 
         composable(NavScreens.Profile.route) {

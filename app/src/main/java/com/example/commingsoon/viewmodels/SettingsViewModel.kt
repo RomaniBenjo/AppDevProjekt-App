@@ -20,8 +20,8 @@ import kotlin.to
 import com.example.commingsoon.R
 
 class SettingsViewModel(
-    private val languageViewModel: AppLanguageViewModel = AppLanguageViewModel(),
-    private val themeViewModel: AppThemeViewModel = AppThemeViewModel()
+    private val languageViewModel: AppLanguageViewModel,
+    private val themeViewModel: AppThemeViewModel
 ) : ViewModel() {
 
     private val themeNames = mapOf(

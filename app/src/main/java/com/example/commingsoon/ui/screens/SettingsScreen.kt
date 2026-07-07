@@ -43,12 +43,20 @@ import com.example.commingsoon.language.AppLanguage
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.ui.theme.AppThemeType
 import com.example.commingsoon.ui.theme.AppThemeViewModel
+import com.example.commingsoon.viewmodels.SettingsViewModelFactory
 import kotlin.collections.forEach
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = viewModel()
+    themeViewModel: AppThemeViewModel,
+    languageViewModel: AppLanguageViewModel
 ) {
+    val viewModel: SettingsViewModel = viewModel(
+        factory = SettingsViewModelFactory(
+            languageViewModel,
+            themeViewModel
+        )
+    )
 
     LazyColumn(
         modifier = Modifier
@@ -230,23 +238,22 @@ fun ThemeCard(
 
     Card(
         modifier = modifier
-            .height(120.dp)
+            .height(80.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = colorScheme.secondary
+            containerColor = colorScheme.tertiary
         )
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(definition.assets.menuShape),
+                painter = painterResource(definition.assets.headerShape),
                 contentDescription = null,
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .offset(x = 30.dp)
-                    .fillMaxHeight()
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
             )
 
             Row(
@@ -264,7 +271,7 @@ fun ThemeCard(
                 Text(
                     text = stringResource(viewModel.getThemeName(theme)),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = colorScheme.onBackground
+                    color = colorScheme.background
                 )
             }
         }

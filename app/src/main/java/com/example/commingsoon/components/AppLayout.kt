@@ -10,15 +10,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.navigation.AppNavHost
 import com.example.commingsoon.ui.theme.AppThemeDefinition
+import com.example.commingsoon.ui.theme.AppThemeViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun AppLayout (
     navController: NavHostController,
     themeDefinition: AppThemeDefinition,
-    title: String
+    title: String,
+    themeViewModel: AppThemeViewModel,
+    languageViewModel: AppLanguageViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -49,7 +53,9 @@ fun AppLayout (
         ) { innerpadding ->
             Box(modifier = Modifier.padding(innerpadding)) {
                 AppNavHost(
-                    navController = navController
+                    navController = navController,
+                    themeViewModel = themeViewModel,
+                    languageViewModel = languageViewModel
                 )
             }
         }
