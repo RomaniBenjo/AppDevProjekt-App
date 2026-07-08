@@ -24,7 +24,7 @@ sealed class NavScreens (
                 "journeyeditor/$journeyId"
         }
     }
-    object JourneyDetail : NavScreens("journey/{journeyId]", "Journey") {
+    object JourneyDetail : NavScreens("journey/{journeyId}", "Journey") {
         fun createRoute(jouneyId: Int): String {
             return "journey/$jouneyId"
         }

@@ -334,12 +334,16 @@ fun PinListItem (
         Spacer(Modifier.width(16.dp))
 
         Row (
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = location.name,
                 style = MaterialTheme.typography.bodyLarge
             )
+
+            Spacer(Modifier.width(23.dp))
+
             Column() {
                 Text(
                     text = "Latitude: ${location.latitude}",

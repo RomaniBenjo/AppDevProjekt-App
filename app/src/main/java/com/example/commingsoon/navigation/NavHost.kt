@@ -65,10 +65,7 @@ fun AppNavHost (
             route = NavScreens.JourneyDetail.route
         ) { backStackEntry ->
 
-            val journeyId = backStackEntry.arguments
-                ?.getString("journeyId")
-                ?.toIntOrNull()
-                ?: return@composable
+            val journeyId = backStackEntry.arguments?.getString("journeyId")?.toIntOrNull() ?: return@composable
 
             JourneyDetailScreen(
                 journeyId = journeyId,

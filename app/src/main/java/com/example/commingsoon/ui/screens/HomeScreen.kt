@@ -88,7 +88,7 @@ fun HomeScreen (
                 .padding(16.dp)
                 .height(58.dp),
             shape = RoundedCornerShape(50),
-            onClick = { navController.navigate(NavScreens.JourneyEditor) }
+            onClick = { navController.navigate(NavScreens.JourneyEditor.createRoute()) }
         ) {
             Text(text = stringResource(R.string.new_journey))
         }

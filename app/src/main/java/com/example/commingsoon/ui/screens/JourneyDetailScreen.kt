@@ -41,17 +41,24 @@ fun JourneyDetailScreen (
     val journey = viewModel.getJourney(journeyId) ?: return
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 20.dp)
     ) {
-        // Date
+        // Titel & Date
         Text(
-            text = "${journey.startDate}  -  ${journey.endDate}",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp),
-            textAlign = TextAlign.Center,
+            text = journey.title,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            text = "${journey.startDate} - ${journey.endDate}",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
+            color = Color.Gray,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         Spacer(Modifier.height(16.dp))
@@ -137,7 +144,7 @@ fun PinCard(
         ) {
             Text(
                 text = location.name,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.bodyLarge
             )
         }
 
