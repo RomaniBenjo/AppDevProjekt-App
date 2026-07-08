@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.overlays.OverlayViewModel
+import com.example.commingsoon.ui.screens.FriendDetailScreen
 import com.example.commingsoon.ui.screens.FriendOverviewScreen
 import com.example.commingsoon.ui.screens.HomeScreen
 import com.example.commingsoon.ui.screens.JourneyDetailScreen
@@ -88,6 +89,19 @@ fun AppNavHost (
         composable(NavScreens.Friends.route) {
             FriendOverviewScreen(
                 viewModel = friendViewModel,
+                navController = navController,
+                overlayViewModel = overlayViewModel
+            )
+        }
+        composable(
+            route = NavScreens.FriendDetail.route
+        ) { backStackEntry ->
+
+            val friendId = backStackEntry.arguments?.getString("friendId")?.toIntOrNull() ?: return@composable
+
+            FriendDetailScreen(
+                friendId = friendId,
+                friendViewModel = friendViewModel,
                 navController = navController
             )
         }

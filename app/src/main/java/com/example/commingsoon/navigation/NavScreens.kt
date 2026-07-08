@@ -31,7 +31,11 @@ sealed class NavScreens (
     }
     object OpenGuesser : NavScreens("openguesser","Play OpenGuesser", icon = Icons.Default.PlayArrow)
     object Friends : NavScreens("friends","Friends", icon = Icons.Default.Groups)
-    object FriendDetail : NavScreens("friend/{friendId}", "Friend")
+    object FriendDetail : NavScreens("friend/{friendId}", "Friend") {
+        fun createRoute(friendId: Int): String {
+            return "friend/$friendId"
+        }
+    }
     object Settings : NavScreens("settings","App Settings", icon = Icons.Default.Settings)
     object Profile : NavScreens("profile","Profile", icon = Icons.Default.Person)
 }

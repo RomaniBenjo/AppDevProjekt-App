@@ -22,6 +22,8 @@ class AppLanguageViewModel : ViewModel() {
             AppLanguage.GERMAN -> Locale("de")
         }
 
+        // TODO: fix language switching
+
         AppCompatDelegate.setApplicationLocales(
             LocaleListCompat.create(locale)
         )

@@ -70,7 +70,9 @@ fun HomeScreen (
                     journey = journey,
                     isFirst = index == 0,
                     isLast = index == viewModel.journeys.lastIndex,
-                    onClick = { /* TODO: nav to specific journey */ }
+                    onClick = { navController.navigate(
+                        NavScreens.JourneyDetail.createRoute(journey.id)
+                    ) }
                 )
             }
             item { Spacer(Modifier.height(90.dp)) }

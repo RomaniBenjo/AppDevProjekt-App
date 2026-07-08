@@ -8,8 +8,8 @@ data class Friend(
     val id: Int,
     val name: String,
     val image: Int? = null,
-    val sharedWithMe: List<Journey>? = null,
-    val sharedByMe: List<Journey>? = null,
+    val sharedWithMe: List<Journey> = emptyList(),
+    val sharedByMe: List<Journey> = emptyList(),
     val liveLocation: FriendLocation?
 )
 
@@ -18,6 +18,11 @@ data class FriendLocation(
     val longitude: Double,
     val timestamp: Instant? = null
 )
+
+enum class FriendJourneyTab {
+    SHARED_BY_ME,
+    SHARED_WITH_ME
+}
 
 class FriendViewModel : ViewModel() {
     private val _friends = mutableStateListOf<Friend>()

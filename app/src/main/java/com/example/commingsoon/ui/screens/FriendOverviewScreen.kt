@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -49,11 +50,14 @@ import androidx.navigation.NavHostController
 import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.R
+import com.example.commingsoon.navigation.NavScreens
+import com.example.commingsoon.overlays.OverlayViewModel
 
 @Composable
 fun FriendOverviewScreen (
     viewModel: FriendViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    overlayViewModel: OverlayViewModel
 ) {
     var expandedFriendId by rememberSaveable { mutableStateOf<Int?>(null) }
     var friendToRemove by remember { mutableStateOf<Friend?>(null) }
@@ -75,9 +79,12 @@ fun FriendOverviewScreen (
                             if (expandedFriendId == friend.id) { null }
                             else { friend.id }
                     },
+                    onShow = { navController.navigate(
+                        NavScreens.FriendDetail.createRoute(friend.id)
+                    )},
                     onRemove = { friendToRemove = friend },
                     onShare = {
-                        // TODO
+                        overlayViewModel.showFriendShare(friend)
                     }
                 )
             }
@@ -107,7 +114,7 @@ fun FriendOverviewScreen (
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.background)
                     .clickable {
-                        // TODO Add Friend
+                        overlayViewModel.showAddFriend()
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -194,6 +201,7 @@ fun ExpandableFriendCard(
     friend: Friend,
     isExpanded: Boolean,
     onClick: () -> Unit,
+    onShow: () -> Unit,
     onRemove: () -> Unit,
     onShare: () -> Unit
 ) {
@@ -218,6 +226,21 @@ fun ExpandableFriendCard(
                     ),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = onShow
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Visibility,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+
+                    Spacer(Modifier.width(6.dp))
+
+                    Text("Show")
+                }
+
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
                     onClick = onRemove

@@ -301,7 +301,7 @@ fun QrCodeView(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(R.drawable.qr_placeholder),
+                    painter = painterResource(R.drawable.qr_placeholder), // TODO: creating real QR codes
                     contentDescription = "QR Code",
                     modifier = Modifier.size(190.dp)
                 )

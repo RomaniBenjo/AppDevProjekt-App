@@ -236,7 +236,7 @@ fun ScanQrPlaceholder() {
         ) {
 
             Image(
-                painter = painterResource(R.drawable.qr_placeholder),
+                painter = painterResource(R.drawable.qr_placeholder), // TODO: creating real QR codes
                 contentDescription = null,
                 modifier = Modifier.size(220.dp)
             )
