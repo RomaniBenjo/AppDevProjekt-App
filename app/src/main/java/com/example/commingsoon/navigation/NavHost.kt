@@ -14,10 +14,13 @@ import com.example.commingsoon.ui.screens.JourneyEditorScreen
 import com.example.commingsoon.ui.screens.JourneyOverviewScreen
 import com.example.commingsoon.ui.screens.LiveLocationScreen
 import com.example.commingsoon.ui.screens.OpenGuesserScreen
+import com.example.commingsoon.ui.screens.ProfileEditorScreen
+import com.example.commingsoon.ui.screens.ProfileScreen
 import com.example.commingsoon.ui.screens.SettingsScreen
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import com.example.commingsoon.viewmodels.ProfileViewModel
 
 @Composable
 fun AppNavHost (
@@ -26,7 +29,8 @@ fun AppNavHost (
     languageViewModel: AppLanguageViewModel,
     journeyViewModel: JourneyViewModel,
     friendViewModel: FriendViewModel,
-    overlayViewModel: OverlayViewModel
+    overlayViewModel: OverlayViewModel,
+    profileViewModel: ProfileViewModel
 ) {
     NavHost(
         navController = navController,
@@ -120,7 +124,16 @@ fun AppNavHost (
         }
 
         composable(NavScreens.Profile.route) {
-            //ProfileScreen()
+            ProfileScreen(
+                viewModel = profileViewModel,
+                navController = navController
+            )
+        }
+        composable(NavScreens.ProfileEditor.route) {
+            ProfileEditorScreen(
+                viewModel = profileViewModel,
+                navController = navController
+            )
         }
     }
 }

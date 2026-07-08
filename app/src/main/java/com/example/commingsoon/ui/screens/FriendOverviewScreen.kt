@@ -148,7 +148,9 @@ fun FriendOverviewScreen (
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.primary)
                     .clickable {
-                        // TODO Live Location
+                        navController.navigate(
+                            NavScreens.LiveLocations.route
+                        )
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -224,19 +226,19 @@ fun ExpandableFriendCard(
                         end = 16.dp,
                         bottom = 12.dp
                     ),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(.9f),
                     onClick = onShow
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Visibility,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
 
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(4.dp))
 
                     Text("Show")
                 }
@@ -248,22 +250,22 @@ fun ExpandableFriendCard(
                     Icon(
                         Icons.Outlined.Delete,
                         null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
 
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(4.dp))
 
                     Text("Remove")
                 }
 
                 Button(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(.9f),
                     onClick = onShare
                 ) {
                     Icon(
                         Icons.Outlined.Share,
                         null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
 
                     Spacer(Modifier.width(6.dp))

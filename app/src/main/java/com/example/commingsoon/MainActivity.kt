@@ -15,6 +15,7 @@ import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.ui.theme.CommingSoonTheme
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import com.example.commingsoon.viewmodels.ProfileViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
             val journeyViewModel: JourneyViewModel = viewModel()
             val friendViewModel: FriendViewModel = viewModel()
             val overlayViewModel: OverlayViewModel = viewModel()
+            val profileViewModel: ProfileViewModel = viewModel()
 
             val isDark = isSystemInDarkTheme()
             LaunchedEffect(Unit) {
@@ -46,7 +48,8 @@ class MainActivity : ComponentActivity() {
                     languageViewModel = languageViewModel,
                     journeyViewModel = journeyViewModel,
                     friendViewModel= friendViewModel,
-                    overlayViewModel = overlayViewModel
+                    overlayViewModel = overlayViewModel,
+                    profileViewModel = profileViewModel
                 )
             }
 

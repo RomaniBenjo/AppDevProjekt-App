@@ -21,6 +21,7 @@ import com.example.commingsoon.ui.theme.AppThemeDefinition
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import com.example.commingsoon.viewmodels.ProfileViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -32,7 +33,8 @@ fun AppLayout (
     languageViewModel: AppLanguageViewModel,
     journeyViewModel: JourneyViewModel,
     friendViewModel: FriendViewModel,
-    overlayViewModel: OverlayViewModel
+    overlayViewModel: OverlayViewModel,
+    profileViewModel: ProfileViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -105,7 +107,8 @@ fun AppLayout (
                     languageViewModel = languageViewModel,
                     journeyViewModel = journeyViewModel,
                     friendViewModel = friendViewModel,
-                    overlayViewModel = overlayViewModel
+                    overlayViewModel = overlayViewModel,
+                    profileViewModel = profileViewModel
                 )
             }
         }
