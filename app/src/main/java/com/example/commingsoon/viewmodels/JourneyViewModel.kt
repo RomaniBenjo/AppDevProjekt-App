@@ -33,6 +33,9 @@ class JourneyViewModel : ViewModel() {
     init {
         _journeys.addAll(JourneyPlaceholder.journeys)
     }
+    fun getNextJourneyId(): Int {
+        return (_journeys.maxOfOrNull { it.id } ?: 0) + 1
+    }
 
     // journey management
     fun getJourney(id: Int): Journey? {
@@ -54,6 +57,12 @@ class JourneyViewModel : ViewModel() {
             _journeys[index] = _journeys[index].update()
         }
     }
+    fun updateJourney(updatedJourney: Journey) {
+        val index = _journeys.indexOfFirst { it.id == updatedJourney.id }
+        if (index != -1) {
+            _journeys[index] = updatedJourney
+        }
+    }
 
     fun updateTitle(id: Int, title: String) {
         updateJourney(id) {
@@ -66,11 +75,6 @@ class JourneyViewModel : ViewModel() {
                 startDate = startDate,
                 endDate = endDate
             )
-        }
-    }
-    fun renameJourney(id: Int, title: String) {
-        updateJourney(id) {
-            copy(title = title)
         }
     }
 

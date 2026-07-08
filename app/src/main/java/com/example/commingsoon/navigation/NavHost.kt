@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.ui.screens.HomeScreen
 import com.example.commingsoon.ui.screens.JourneyDetailScreen
+import com.example.commingsoon.ui.screens.JourneyEditorScreen
 import com.example.commingsoon.ui.screens.JourneyOverviewScreen
 import com.example.commingsoon.ui.screens.OpenGuesserScreen
 import com.example.commingsoon.ui.screens.SettingsScreen
@@ -37,7 +38,27 @@ fun AppNavHost (
                 navController = navController
             )
         }
-        composable(NavScreens.AddJourney.route) {
+        composable(NavScreens.JourneyEditor.route) { backStackEntry ->
+            val journeyId = backStackEntry.arguments?.getString("journeyId")?.toIntOrNull() ?: -1
+            val journey = if (journeyId == -1) { null } else { journeyViewModel.getJourney(journeyId) }
+
+            JourneyEditorScreen(
+                viewModel = journeyViewModel,
+                journey = journey,
+                onDiscard = {
+                    navController.popBackStack()
+                },
+                onSave = { editedJourney ->
+                    if (journey == null) {
+                        journeyViewModel.addJourney(
+                            editedJourney.copy(id = journeyViewModel.getNextJourneyId())
+                        )
+                    } else {
+                        journeyViewModel.updateJourney(editedJourney)
+                    }
+                    navController.popBackStack()
+                }
+            )
 
         }
         composable(
@@ -51,7 +72,8 @@ fun AppNavHost (
 
             JourneyDetailScreen(
                 journeyId = journeyId,
-                viewModel = journeyViewModel
+                viewModel = journeyViewModel,
+                navController = navController
             )
         }
 

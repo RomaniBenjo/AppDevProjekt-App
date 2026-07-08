@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.JourneyLocation
 import com.example.commingsoon.viewmodels.JourneyViewModel
 
@@ -34,7 +36,7 @@ import com.example.commingsoon.viewmodels.JourneyViewModel
 fun JourneyDetailScreen (
     journeyId: Int,
     viewModel: JourneyViewModel,
-    onEdit: () -> Unit = {}
+    navController: NavController
 ) {
     val journey = viewModel.getJourney(journeyId) ?: return
 
@@ -96,7 +98,9 @@ fun JourneyDetailScreen (
                 .padding(16.dp)
                 .height(58.dp),
             shape = RoundedCornerShape(50),
-            onClick = onEdit
+            onClick = { navController.navigate(
+                NavScreens.JourneyEditor.createRoute(journey.id)
+            ) }
         ) {
             Icon(
                 imageVector = Icons.Outlined.Edit,

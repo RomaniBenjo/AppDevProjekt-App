@@ -16,7 +16,14 @@ sealed class NavScreens (
 ) {
     object Home : NavScreens("home", "Home", icon = Icons.Default.Home)
     object Journey : NavScreens("journeys", "Journeys", icon = Icons.Default.Flight)
-    object AddJourney : NavScreens("addjourney", "Add New Journey")
+    object JourneyEditor : NavScreens("journeyeditor/{journeyId}", "Journey Editor") {
+        fun createRoute(journeyId: Int? = null): String {
+            return if (journeyId == null)
+                "journeyeditor/-1"
+            else
+                "journeyeditor/$journeyId"
+        }
+    }
     object JourneyDetail : NavScreens("journey/{journeyId]", "Journey") {
         fun createRoute(jouneyId: Int): String {
             return "journey/$jouneyId"

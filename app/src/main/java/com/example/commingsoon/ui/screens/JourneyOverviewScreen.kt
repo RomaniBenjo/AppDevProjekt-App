@@ -128,7 +128,7 @@ fun JourneyOverviewScreen (
                         )
                     },
                     onRemove = { journeyToDelete = journey },
-                    onShare = { }
+                    onShare = { /* TODO */ }
                 )
             }
 
@@ -186,7 +186,7 @@ fun JourneyOverviewScreen (
                 .height(58.dp),
             shape = RoundedCornerShape(50),
             onClick = {
-                navController.navigate(NavScreens.AddJourney)
+                navController.navigate(NavScreens.JourneyEditor.createRoute())
             }
         ) {
             Text(stringResource(R.string.new_journey))
