@@ -1,13 +1,18 @@
 package com.example.commingsoon.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -24,11 +30,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.commingsoon.navigation.NavScreens
+import com.example.commingsoon.overlays.ShareViewModel
 import com.example.commingsoon.viewmodels.JourneyLocation
 import com.example.commingsoon.viewmodels.JourneyViewModel
 
@@ -36,7 +44,8 @@ import com.example.commingsoon.viewmodels.JourneyViewModel
 fun JourneyDetailScreen (
     journeyId: Int,
     viewModel: JourneyViewModel,
-    navController: NavController
+    navController: NavController,
+    shareViewModel: ShareViewModel
 ) {
     val journey = viewModel.getJourney(journeyId) ?: return
 
@@ -99,24 +108,92 @@ fun JourneyDetailScreen (
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
-        Button(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .height(58.dp),
-            shape = RoundedCornerShape(50),
-            onClick = { navController.navigate(
-                NavScreens.JourneyEditor.createRoute(journey.id)
-            ) }
+                .height(58.dp)
+                .clip(RoundedCornerShape(50))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.primary,
+                    RoundedCornerShape(50)
+                )
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Edit,
-                contentDescription = null
+
+            // Edit
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.background)
+                    .clickable {
+                        navController.navigate(
+                            NavScreens.JourneyEditor.createRoute(journey.id)
+                        )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = "Edit",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+
+            // border
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .fillMaxHeight()
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(alpha = .3f)
+                    )
             )
 
-            Spacer(Modifier.width(8.dp))
+            // Share
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable {
+                        shareViewModel.show(journey)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.background,
+                        modifier = Modifier.size(18.dp)
+                    )
 
-            Text("Edit Journey")
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = "Share",
+                        color = MaterialTheme.colorScheme.background,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
         }
     }
 }

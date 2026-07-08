@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.commingsoon.language.AppLanguageViewModel
+import com.example.commingsoon.overlays.ShareViewModel
 import com.example.commingsoon.ui.screens.FriendOverviewScreen
 import com.example.commingsoon.ui.screens.HomeScreen
 import com.example.commingsoon.ui.screens.JourneyDetailScreen
@@ -22,7 +23,8 @@ fun AppNavHost (
     themeViewModel: AppThemeViewModel,
     languageViewModel: AppLanguageViewModel,
     journeyViewModel: JourneyViewModel,
-    friendViewModel: FriendViewModel
+    friendViewModel: FriendViewModel,
+    shareViewModel: ShareViewModel
 ) {
     NavHost(
         navController = navController,
@@ -38,7 +40,8 @@ fun AppNavHost (
         composable(NavScreens.Journey.route) {
             JourneyOverviewScreen(
                 viewModel = journeyViewModel,
-                navController = navController
+                navController = navController,
+                shareViewModel = shareViewModel
             )
         }
         composable(NavScreens.JourneyEditor.route) { backStackEntry ->
@@ -73,7 +76,8 @@ fun AppNavHost (
             JourneyDetailScreen(
                 journeyId = journeyId,
                 viewModel = journeyViewModel,
-                navController = navController
+                navController = navController,
+                shareViewModel = shareViewModel
             )
         }
 

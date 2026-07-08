@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.navigation.AppNavHost
+import com.example.commingsoon.overlays.ShareJourneyOverlay
+import com.example.commingsoon.overlays.ShareViewModel
 import com.example.commingsoon.ui.theme.AppThemeDefinition
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.viewmodels.FriendViewModel
@@ -26,10 +28,24 @@ fun AppLayout (
     themeViewModel: AppThemeViewModel,
     languageViewModel: AppLanguageViewModel,
     journeyViewModel: JourneyViewModel,
-    friendViewModel: FriendViewModel
+    friendViewModel: FriendViewModel,
+    shareViewModel: ShareViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    shareViewModel.selectedJourney?.let { journey ->
+        ShareJourneyOverlay(
+            journey = journey,
+            friends = friendViewModel.friends,
+            onDismiss = {
+                shareViewModel.hide()
+            },
+            onShare = { friend ->
+                // TODO
+            }
+        )
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -61,7 +77,8 @@ fun AppLayout (
                     themeViewModel = themeViewModel,
                     languageViewModel = languageViewModel,
                     journeyViewModel = journeyViewModel,
-                    friendViewModel = friendViewModel
+                    friendViewModel = friendViewModel,
+                    shareViewModel = shareViewModel
                 )
             }
         }

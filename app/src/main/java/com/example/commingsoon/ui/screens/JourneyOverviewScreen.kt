@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.AlertDialog
@@ -34,9 +33,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,23 +51,17 @@ import com.example.commingsoon.viewmodels.Journey
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.navigation.NavScreens
+import com.example.commingsoon.overlays.ShareViewModel
 
 @Composable
 fun JourneyOverviewScreen (
     viewModel: JourneyViewModel,
-    navController: NavController
+    navController: NavController,
+    shareViewModel: ShareViewModel
 ) {
-    var mapExpanded by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    var expandedJourneyId by rememberSaveable {
-        mutableStateOf<Int?>(null)
-    }
-
-    var journeyToDelete by remember {
-        mutableStateOf<Journey?>(null)
-    }
+    var mapExpanded by rememberSaveable { mutableStateOf(false) }
+    var expandedJourneyId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var journeyToDelete by remember { mutableStateOf<Journey?>(null) }
 
     // Map
     Column(
@@ -128,7 +119,7 @@ fun JourneyOverviewScreen (
                         )
                     },
                     onRemove = { journeyToDelete = journey },
-                    onShare = { /* TODO */ }
+                    onShare = { shareViewModel.show(journey) }
                 )
             }
 

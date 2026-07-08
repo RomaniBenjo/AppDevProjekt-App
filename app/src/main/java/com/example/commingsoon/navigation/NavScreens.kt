@@ -31,7 +31,6 @@ sealed class NavScreens (
     }
     object OpenGuesser : NavScreens("openguesser","Play OpenGuesser", icon = Icons.Default.PlayArrow)
     object Friends : NavScreens("friends","Friends", icon = Icons.Default.Groups)
-    object AddFriend : NavScreens("addfriend", "Add Friend")
     object FriendDetail : NavScreens("friend/{friendId}", "Friend")
     object Settings : NavScreens("settings","App Settings", icon = Icons.Default.Settings)
     object Profile : NavScreens("profile","Profile", icon = Icons.Default.Person)

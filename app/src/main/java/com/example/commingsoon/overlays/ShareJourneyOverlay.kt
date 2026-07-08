@@ -48,7 +48,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.R
 import com.example.commingsoon.viewmodels.Journey
@@ -60,7 +59,7 @@ enum class ShareTab {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShareJourneySheet(
+fun ShareJourneyOverlay(
     journey: Journey,
     friends: List<Friend>,
     onDismiss: () -> Unit,

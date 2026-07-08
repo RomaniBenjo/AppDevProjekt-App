@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.commingsoon.components.AppLayout
 import com.example.commingsoon.language.AppLanguageViewModel
+import com.example.commingsoon.overlays.ShareViewModel
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.ui.theme.CommingSoonTheme
 import com.example.commingsoon.viewmodels.FriendViewModel
@@ -28,6 +29,7 @@ class MainActivity : ComponentActivity() {
             val languageViewModel: AppLanguageViewModel = viewModel()
             val journeyViewModel: JourneyViewModel = viewModel()
             val friendViewModel: FriendViewModel = viewModel()
+            val shareViewModel: ShareViewModel = viewModel()
 
             val isDark = isSystemInDarkTheme()
             LaunchedEffect(Unit) {
@@ -46,7 +48,8 @@ class MainActivity : ComponentActivity() {
                     themeViewModel = themeViewModel,
                     languageViewModel = languageViewModel,
                     journeyViewModel = journeyViewModel,
-                    friendViewModel= friendViewModel
+                    friendViewModel= friendViewModel,
+                    shareViewModel = shareViewModel
                 )
             }
 
