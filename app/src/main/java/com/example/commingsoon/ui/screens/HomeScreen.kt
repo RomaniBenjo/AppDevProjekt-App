@@ -31,11 +31,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.viewmodels.Journey
 
 @Composable
-fun HomeScreen ( viewModel: JourneyViewModel = viewModel() ) {
+fun HomeScreen (
+    viewModel: JourneyViewModel,
+    navController: NavController
+) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -83,7 +88,7 @@ fun HomeScreen ( viewModel: JourneyViewModel = viewModel() ) {
                 .padding(16.dp)
                 .height(58.dp),
             shape = RoundedCornerShape(50),
-            onClick = { /* TODO: nav to new journey */ }
+            onClick = { navController.navigate(NavScreens.AddJourney) }
         ) {
             Text(text = stringResource(R.string.new_journey))
         }

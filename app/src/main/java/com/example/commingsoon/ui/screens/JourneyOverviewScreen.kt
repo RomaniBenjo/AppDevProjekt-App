@@ -49,13 +49,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.commingsoon.viewmodels.Journey
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.R
+import com.example.commingsoon.navigation.NavScreens
 
 @Composable
 fun JourneyOverviewScreen (
-    viewModel: JourneyViewModel
+    viewModel: JourneyViewModel,
+    navController: NavController
 ) {
     var mapExpanded by rememberSaveable {
         mutableStateOf(false)
@@ -119,7 +122,11 @@ fun JourneyOverviewScreen (
                             else
                                 journey.id
                     },
-                    onChange = { },
+                    onChange = {
+                        navController.navigate(
+                            NavScreens.JourneyDetail.createRoute(journey.id)
+                        )
+                    },
                     onRemove = { journeyToDelete = journey },
                     onShare = { }
                 )
@@ -179,7 +186,7 @@ fun JourneyOverviewScreen (
                 .height(58.dp),
             shape = RoundedCornerShape(50),
             onClick = {
-                // TODO
+                navController.navigate(NavScreens.AddJourney)
             }
         ) {
             Text(stringResource(R.string.new_journey))

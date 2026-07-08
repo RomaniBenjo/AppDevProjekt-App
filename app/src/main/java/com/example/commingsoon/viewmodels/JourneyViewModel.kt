@@ -21,7 +21,7 @@ data class JourneyLocation (
     val id: Int,
     val name: String,
     val latitude: Double,
-    val logitude: Double
+    val longitude: Double
 )
 
 class JourneyViewModel : ViewModel() {

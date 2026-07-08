@@ -17,6 +17,11 @@ sealed class NavScreens (
     object Home : NavScreens("home", "Home", icon = Icons.Default.Home)
     object Journey : NavScreens("journeys", "Journeys", icon = Icons.Default.Flight)
     object AddJourney : NavScreens("addjourney", "Add New Journey")
+    object JourneyDetail : NavScreens("journey/{journeyId]", "Journey") {
+        fun createRoute(jouneyId: Int): String {
+            return "journey/$jouneyId"
+        }
+    }
     object OpenGuesser : NavScreens("openguesser","Play OpenGuesser", icon = Icons.Default.PlayArrow)
     object Friends : NavScreens("friends","Friends", icon = Icons.Default.Groups)
     object AddFriend : NavScreens("addfriend", "Add Friend")
