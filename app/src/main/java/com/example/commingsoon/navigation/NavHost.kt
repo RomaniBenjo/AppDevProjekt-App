@@ -12,6 +12,7 @@ import com.example.commingsoon.ui.screens.HomeScreen
 import com.example.commingsoon.ui.screens.JourneyDetailScreen
 import com.example.commingsoon.ui.screens.JourneyEditorScreen
 import com.example.commingsoon.ui.screens.JourneyOverviewScreen
+import com.example.commingsoon.ui.screens.LiveLocationScreen
 import com.example.commingsoon.ui.screens.OpenGuesserScreen
 import com.example.commingsoon.ui.screens.SettingsScreen
 import com.example.commingsoon.ui.theme.AppThemeViewModel
@@ -102,6 +103,11 @@ fun AppNavHost (
             FriendDetailScreen(
                 friendId = friendId,
                 friendViewModel = friendViewModel,
+                navController = navController
+            )
+        }
+        composable (NavScreens.LiveLocations.route) {
+            LiveLocationScreen(
                 navController = navController
             )
         }

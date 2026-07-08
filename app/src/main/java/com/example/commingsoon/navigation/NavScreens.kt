@@ -36,6 +36,7 @@ sealed class NavScreens (
             return "friend/$friendId"
         }
     }
+    object LiveLocations : NavScreens("livelocations", "Live Locations")
     object Settings : NavScreens("settings","App Settings", icon = Icons.Default.Settings)
     object Profile : NavScreens("profile","Profile", icon = Icons.Default.Person)
 }

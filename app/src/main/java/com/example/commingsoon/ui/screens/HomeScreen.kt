@@ -44,7 +44,7 @@ fun HomeScreen (
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // TODO: world map
+        // TODO: world map with counrties visited marked
         Box(
             modifier = Modifier
                 .fillMaxWidth()

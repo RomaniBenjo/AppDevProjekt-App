@@ -67,7 +67,7 @@ fun JourneyOverviewScreen (
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Map Placeholder
+        // Map Placeholder TODO: real map like on home screen
         AnimatedContent(
             targetState = mapExpanded,
             label = ""
