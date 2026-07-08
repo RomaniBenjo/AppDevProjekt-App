@@ -1,5 +1,6 @@
 package com.example.commingsoon.viewmodels
 
+import android.util.Log
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import com.example.commingsoon.language.AppLanguage
@@ -75,6 +76,7 @@ class SettingsViewModel(
     }
 
     fun setLanguage(language: AppLanguage) {
+        Log.d("SettingsVM", "setLanguage: $language")
         languageViewModel.setLanguage(language)
     }
 

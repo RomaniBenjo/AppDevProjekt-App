@@ -2,6 +2,7 @@ package com.example.commingsoon.ui.screens
 
 
 import android.R.attr.theme
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -119,13 +120,15 @@ fun LanguageSelection (
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
+                        Log.d("Row", "Clicked: $language")
                         onSelected(language)
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
                     selected = language == selected,
-                    onClick = { onSelected(language) }
+                    onClick = { Log.d("RadioButton", "Clicked: $language")
+                        onSelected(language) }
                 )
 
                 Text(language.name)

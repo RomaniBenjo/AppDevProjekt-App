@@ -14,6 +14,7 @@ import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.navigation.AppNavHost
 import com.example.commingsoon.ui.theme.AppThemeDefinition
 import com.example.commingsoon.ui.theme.AppThemeViewModel
+import com.example.commingsoon.viewmodels.JourneyViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -22,7 +23,8 @@ fun AppLayout (
     themeDefinition: AppThemeDefinition,
     title: String,
     themeViewModel: AppThemeViewModel,
-    languageViewModel: AppLanguageViewModel
+    languageViewModel: AppLanguageViewModel,
+    journeyViewModel: JourneyViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -55,7 +57,8 @@ fun AppLayout (
                 AppNavHost(
                     navController = navController,
                     themeViewModel = themeViewModel,
-                    languageViewModel = languageViewModel
+                    languageViewModel = languageViewModel,
+                    journeyViewModel = journeyViewModel
                 )
             }
         }

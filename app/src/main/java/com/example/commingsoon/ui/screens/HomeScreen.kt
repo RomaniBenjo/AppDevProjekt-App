@@ -2,7 +2,6 @@ package com.example.commingsoon.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,12 +31,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.commingsoon.viewmodels.HomeViewModel
+import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.viewmodels.Journey
-import androidx.compose.ui.res.stringResource
 
 @Composable
-fun HomeScreen ( viewModel: HomeViewModel = viewModel() ) {
+fun HomeScreen ( viewModel: JourneyViewModel = viewModel() ) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
