@@ -12,8 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.navigation.AppNavHost
+import com.example.commingsoon.overlays.AddFriendOverlay
+import com.example.commingsoon.overlays.OverlayType
 import com.example.commingsoon.overlays.ShareJourneyOverlay
-import com.example.commingsoon.overlays.ShareViewModel
+import com.example.commingsoon.overlays.OverlayViewModel
+import com.example.commingsoon.overlays.ShareWithFriendOverlay
 import com.example.commingsoon.ui.theme.AppThemeDefinition
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.viewmodels.FriendViewModel
@@ -29,22 +32,46 @@ fun AppLayout (
     languageViewModel: AppLanguageViewModel,
     journeyViewModel: JourneyViewModel,
     friendViewModel: FriendViewModel,
-    shareViewModel: ShareViewModel
+    overlayViewModel: OverlayViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    shareViewModel.selectedJourney?.let { journey ->
-        ShareJourneyOverlay(
-            journey = journey,
-            friends = friendViewModel.friends,
-            onDismiss = {
-                shareViewModel.hide()
-            },
-            onShare = { friend ->
-                // TODO
+    when (overlayViewModel.overlayType) {
+        OverlayType.SHARE_JOURNEY -> {
+            overlayViewModel.selectedJourney?.let { journey ->
+                ShareJourneyOverlay(
+                    journey = journey,
+                    friends = friendViewModel.friends,
+                    onDismiss = { overlayViewModel.dismiss() },
+                    onShare = { friend ->
+                        // TODO
+                    }
+                )
             }
-        )
+        }
+        OverlayType.SHARE_WITH_FRIEND -> {
+            overlayViewModel.selectedFriend?.let { friend ->
+                ShareWithFriendOverlay(
+                    friend = friend,
+                    journeys = journeyViewModel.journeys,
+                    onDismiss = { overlayViewModel.dismiss() },
+                    onShare = { journey ->
+                        // TODO
+                    }
+                )
+            }
+        }
+        OverlayType.ADD_FRIEND -> {
+            AddFriendOverlay(
+                viewModel = friendViewModel,
+                onDismiss = { overlayViewModel.dismiss() },
+                onAddFriend = { friend ->
+                    // TODO
+                }
+            )
+        }
+        OverlayType.NONE -> {}
     }
 
     ModalNavigationDrawer(
@@ -78,7 +105,7 @@ fun AppLayout (
                     languageViewModel = languageViewModel,
                     journeyViewModel = journeyViewModel,
                     friendViewModel = friendViewModel,
-                    shareViewModel = shareViewModel
+                    overlayViewModel = overlayViewModel
                 )
             }
         }

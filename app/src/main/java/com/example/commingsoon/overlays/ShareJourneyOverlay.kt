@@ -106,7 +106,9 @@ fun ShareJourneyOverlay(
                 selected = currentTab,
                 onSelected = {
                     currentTab = it
-                }
+                },
+                leftTitle = "Friends",
+                rightTitle = "QR Code"
             )
 
             when (currentTab) {
@@ -129,7 +131,9 @@ fun ShareJourneyOverlay(
 @Composable
 fun ShareModeSwitch(
     selected: ShareTab,
-    onSelected: (ShareTab) -> Unit
+    onSelected: (ShareTab) -> Unit,
+    leftTitle: String,
+    rightTitle: String
 ) {
 
     Row(
@@ -158,7 +162,7 @@ fun ShareModeSwitch(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                "Friends",
+                text = leftTitle,
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -176,7 +180,7 @@ fun ShareModeSwitch(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                "QR Code",
+                text = rightTitle,
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -200,7 +204,8 @@ fun FriendShareList(
                 onShare = { onShare(friend) }
             )
             HorizontalDivider(
-                color = Color.LightGray.copy(alpha = .3f)
+                color = Color.LightGray.copy(alpha = .3f),
+                modifier = Modifier.padding(start = 50.dp)
             )
         }
 

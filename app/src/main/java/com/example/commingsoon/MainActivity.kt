@@ -5,15 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.commingsoon.components.AppLayout
 import com.example.commingsoon.language.AppLanguageViewModel
-import com.example.commingsoon.overlays.ShareViewModel
+import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.ui.theme.CommingSoonTheme
 import com.example.commingsoon.viewmodels.FriendViewModel
@@ -29,7 +26,7 @@ class MainActivity : ComponentActivity() {
             val languageViewModel: AppLanguageViewModel = viewModel()
             val journeyViewModel: JourneyViewModel = viewModel()
             val friendViewModel: FriendViewModel = viewModel()
-            val shareViewModel: ShareViewModel = viewModel()
+            val overlayViewModel: OverlayViewModel = viewModel()
 
             val isDark = isSystemInDarkTheme()
             LaunchedEffect(Unit) {
@@ -49,7 +46,7 @@ class MainActivity : ComponentActivity() {
                     languageViewModel = languageViewModel,
                     journeyViewModel = journeyViewModel,
                     friendViewModel= friendViewModel,
-                    shareViewModel = shareViewModel
+                    overlayViewModel = overlayViewModel
                 )
             }
 

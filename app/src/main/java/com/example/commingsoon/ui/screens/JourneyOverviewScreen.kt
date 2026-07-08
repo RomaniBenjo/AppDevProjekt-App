@@ -51,13 +51,13 @@ import com.example.commingsoon.viewmodels.Journey
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.navigation.NavScreens
-import com.example.commingsoon.overlays.ShareViewModel
+import com.example.commingsoon.overlays.OverlayViewModel
 
 @Composable
 fun JourneyOverviewScreen (
     viewModel: JourneyViewModel,
     navController: NavController,
-    shareViewModel: ShareViewModel
+    overlayViewModel: OverlayViewModel
 ) {
     var mapExpanded by rememberSaveable { mutableStateOf(false) }
     var expandedJourneyId by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -119,7 +119,7 @@ fun JourneyOverviewScreen (
                         )
                     },
                     onRemove = { journeyToDelete = journey },
-                    onShare = { shareViewModel.show(journey) }
+                    onShare = { overlayViewModel.showJourneyShare(journey) }
                 )
             }
 

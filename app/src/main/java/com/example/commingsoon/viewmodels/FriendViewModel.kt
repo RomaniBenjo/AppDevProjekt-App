@@ -49,4 +49,13 @@ class FriendViewModel : ViewModel() {
     fun getNextFriendId(): Int {
         return (_friends.maxOfOrNull { it.id } ?: 0) + 1
     }
+
+    // Platzhalter TODO: server abfrage nach allen bekannten Personen
+    fun searchFriends(query: String): List<Friend> {
+        if (query.isBlank()) return emptyList()
+
+        return friends.filter {
+            it.name.contains(query, ignoreCase = true)
+        }
+    }
 }

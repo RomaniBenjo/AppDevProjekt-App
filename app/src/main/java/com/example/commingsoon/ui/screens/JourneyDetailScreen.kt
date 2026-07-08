@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -32,11 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.commingsoon.navigation.NavScreens
-import com.example.commingsoon.overlays.ShareViewModel
+import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.viewmodels.JourneyLocation
 import com.example.commingsoon.viewmodels.JourneyViewModel
 
@@ -45,7 +43,7 @@ fun JourneyDetailScreen (
     journeyId: Int,
     viewModel: JourneyViewModel,
     navController: NavController,
-    shareViewModel: ShareViewModel
+    overlayViewModel: OverlayViewModel
 ) {
     val journey = viewModel.getJourney(journeyId) ?: return
 
@@ -171,7 +169,7 @@ fun JourneyDetailScreen (
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.primary)
                     .clickable {
-                        shareViewModel.show(journey)
+                        overlayViewModel.showJourneyShare(journey)
                     },
                 contentAlignment = Alignment.Center
             ) {

@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -285,7 +286,8 @@ fun FriendCard(
         }
         if (!isExpanded) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 88.dp)
+                color = Color.LightGray.copy(alpha = .3f),
+                modifier = Modifier.padding(start = 50.dp)
             )
         }
     }
