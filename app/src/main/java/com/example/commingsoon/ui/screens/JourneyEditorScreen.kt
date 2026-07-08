@@ -33,6 +33,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -75,28 +77,33 @@ fun JourneyEditorScreen (
     var showAddPinDialog by remember { mutableStateOf(false) }
     var pinToRemove by remember { mutableStateOf<JourneyLocation?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().padding(20.dp)) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
+                .padding(vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // journey title
             item {
-                OutlinedTextField(
+                TextField(
                     value = title,
                     onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text("Journey Name")
-                    },
                     singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.LightGray.copy(alpha = .15f),
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.primary
+                    label = { Text("Journey Name") },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
+                        unfocusedContainerColor = Color.White,
+
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
+
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = Color.Gray,
+
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                     )
                 )
             }
@@ -104,14 +111,12 @@ fun JourneyEditorScreen (
             // pick start and end date
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    OutlinedTextField(
+                    TextField(
                         value = startDate.toString(),
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.weight(1f),
-                        label = {
-                            Text("Start")
-                        },
+                        label = { Text("Start Date") },
                         trailingIcon = {
                             IconButton(
                                 onClick = {
@@ -120,32 +125,54 @@ fun JourneyEditorScreen (
                             ) {
                                 Icon(
                                     Icons.Outlined.DateRange,
-                                    null
+                                    contentDescription = null
                                 )
                             }
-                        }
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
+                            unfocusedContainerColor = Color.White,
+
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
+
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = Color.Gray,
+
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground
+                        )
                     )
 
-                    OutlinedTextField(
+                    TextField(
                         value = endDate.toString(),
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.weight(1f),
-                        label = {
-                            Text("End")
-                        },
+                        label = { Text("End Date") },
                         trailingIcon = {
                             IconButton(
-                                onClick = {
-                                    showDatePicker = true
-                                }
+                                onClick = { showDatePicker = true }
                             ) {
                                 Icon(
                                     Icons.Outlined.DateRange,
-                                    null
+                                    contentDescription = null
                                 )
                             }
-                        }
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
+                            unfocusedContainerColor = Color.White,
+
+                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
+
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = Color.Gray,
+
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground
+                        )
                     )
                 }
             }
@@ -399,26 +426,53 @@ fun AddPinDialog (
         title = { Text("Add Pin") },
         text = {
             Column {
-                OutlinedTextField(
+                TextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") }
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Name") },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
+                        unfocusedContainerColor = Color.White,
+
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
 
                 Spacer(Modifier.height(12.dp))
 
-                OutlinedTextField(
+                TextField(
                     value = latitude,
                     onValueChange = { latitude = it },
-                    label = { Text("Latitude") }
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Latitude") },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
+                        unfocusedContainerColor = Color.White,
+
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
 
                 Spacer(Modifier.height(12.dp))
 
-                OutlinedTextField(
+                TextField(
                     value = longitude,
                     onValueChange = { longitude = it },
-                    label = { Text("Longitude") }
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Longitude") },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
+                        unfocusedContainerColor = Color.White,
+
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             }
         },
