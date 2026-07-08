@@ -15,6 +15,7 @@ import com.example.commingsoon.components.AppLayout
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.ui.theme.CommingSoonTheme
+import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.JourneyViewModel
 
 class MainActivity : ComponentActivity() {
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
             val themeViewModel: AppThemeViewModel = viewModel()
             val languageViewModel: AppLanguageViewModel = viewModel()
             val journeyViewModel: JourneyViewModel = viewModel()
+            val friendViewModel: FriendViewModel = viewModel()
 
             val isDark = isSystemInDarkTheme()
             LaunchedEffect(Unit) {
@@ -43,7 +45,8 @@ class MainActivity : ComponentActivity() {
                     title = "Comming Soon",
                     themeViewModel = themeViewModel,
                     languageViewModel = languageViewModel,
-                    journeyViewModel = journeyViewModel
+                    journeyViewModel = journeyViewModel,
+                    friendViewModel= friendViewModel
                 )
             }
 

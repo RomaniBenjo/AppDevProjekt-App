@@ -1,10 +1,14 @@
 package com.example.commingsoon.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,6 +49,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.commingsoon.viewmodels.Journey
@@ -239,38 +244,54 @@ fun JourneyEditorScreen (
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxWidth()
+                .height(58.dp)
+                .clip(RoundedCornerShape(50))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.primary,
+                    RoundedCornerShape(50)
+                )
         ) {
-            OutlinedButton(
+            // Discard
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(58.dp),
-                onClick = onDiscard
-            ) { Text("Discard") }
-            Button(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(58.dp),
-                shape = RoundedCornerShape(50),
-                onClick = {
-                    val result = Journey(
-                        id = journey?.id ?: 0,
-                        title = title,
-                        startDate = startDate,
-                        endDate = endDate,
-                        shared = shareJourney,
-                        locations = locations.toList()
-                    )
-
-                    onSave(result)
-                }
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.background)
+                    .clickable(onClick = onDiscard),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    if (isEditing)
-                        "Save"
-                    else
-                        "Create"
+                    text = "Discard",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
+            // Save / Create
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable {
+                        val result = Journey(
+                            id = journey?.id ?: 0,
+                            title = title,
+                            startDate = startDate,
+                            endDate = endDate,
+                            shared = shareJourney,
+                            locations = locations.toList()
+                        )
+                        onSave(result)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (isEditing) "Save" else "Create",
+                    color = MaterialTheme.colorScheme.background,
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
         }

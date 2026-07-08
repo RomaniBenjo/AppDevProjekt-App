@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.commingsoon.language.AppLanguageViewModel
+import com.example.commingsoon.ui.screens.FriendOverviewScreen
 import com.example.commingsoon.ui.screens.HomeScreen
 import com.example.commingsoon.ui.screens.JourneyDetailScreen
 import com.example.commingsoon.ui.screens.JourneyEditorScreen
@@ -12,6 +13,7 @@ import com.example.commingsoon.ui.screens.JourneyOverviewScreen
 import com.example.commingsoon.ui.screens.OpenGuesserScreen
 import com.example.commingsoon.ui.screens.SettingsScreen
 import com.example.commingsoon.ui.theme.AppThemeViewModel
+import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.JourneyViewModel
 
 @Composable
@@ -19,7 +21,8 @@ fun AppNavHost (
     navController: NavHostController,
     themeViewModel: AppThemeViewModel,
     languageViewModel: AppLanguageViewModel,
-    journeyViewModel: JourneyViewModel
+    journeyViewModel: JourneyViewModel,
+    friendViewModel: FriendViewModel
 ) {
     NavHost(
         navController = navController,
@@ -79,7 +82,10 @@ fun AppNavHost (
         }
 
         composable(NavScreens.Friends.route) {
-            //FriendsScreen()
+            FriendOverviewScreen(
+                viewModel = friendViewModel,
+                navController = navController
+            )
         }
 
         composable(NavScreens.Settings.route) {
