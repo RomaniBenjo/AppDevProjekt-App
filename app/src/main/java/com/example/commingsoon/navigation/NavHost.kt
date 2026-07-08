@@ -32,6 +32,9 @@ fun AppNavHost (
                 viewModel = journeyViewModel
             )
         }
+        composable(NavScreens.AddJourney.route) {
+
+        }
 
         composable(NavScreens.OpenGuesser.route) {
             OpenGuesserScreen()
