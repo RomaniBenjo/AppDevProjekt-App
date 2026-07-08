@@ -1,2 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="app_name">CommingSoon</string>
+    <string name="home">Start</string>
+    <string name="friends">Freunde</string>
+    <string name="settings">Einstellungen</string>
+    <string name="new_journey">Neue Reise</string>
+    <string name="choose_language">Sprache wählen</string>
+    <string name="choose_theme">Design wählen</string>
+    <string name="violet_theme">violete Schnörkel</string>
+    <string name="darkblue_theme">dunkelblaue Tropfen</string>
+    <string name="lightblue_theme">hellblaue Wolken</string>
+    <string name="teal_theme">türkise Wellen</string>
+    <string name="darkgreen_theme">dunkelgrüne Dreiecke</string>
+    <string name="lightgreen_theme">hellgrüne Ranken</string>
+    <string name="yellow_theme">gelbe Sonnen</string>
+    <string name="orange_theme">orange Früchte</string>
+    <string name="pink_theme">pinke Blumen</string>
+</resources>

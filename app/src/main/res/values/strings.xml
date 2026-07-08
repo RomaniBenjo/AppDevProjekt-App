@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">CommingSoon</string>
+    <string name="home">Home</string>
+    <string name="friends">Friends</string>
+    <string name="settings">Settings</string>
+    <string name="new_journey">New Journey</string>
+    <string name="choose_language">Choose a Language</string>
+    <string name="choose_theme">Choose a Theme</string>
+    <string name="violet_theme">Violet Squiggles</string>
+    <string name="darkblue_theme">Dark Blue Drops</string>
+    <string name="lightblue_theme">Light Blue Clouds</string>
+    <string name="teal_theme">Teal Waves</string>
+    <string name="darkgreen_theme">Dark Green Triangles</string>
+    <string name="lightgreen_theme">Light Green Vines</string>
+    <string name="yellow_theme">Yellow Suns</string>
+    <string name="orange_theme">Orange Fruit</string>
+    <string name="pink_theme">Pink Flowers</string>
 </resources>
