@@ -1,0 +1,60 @@
+package com.example.commingsoon.ui.screens.localopenguesser.connection
+
+internal enum class NearbyPhase {
+    IDLE,
+    ADVERTISING,
+    DISCOVERING,
+    REQUESTING_CONNECTION,
+    AWAITING_CONFIRMATION,
+    CONNECTING,
+    CONNECTED,
+    ERROR
+}
+
+internal enum class NearbyRole { HOST, JOINER }
+
+internal enum class LocalGamePhase {
+    SETUP,
+    PREPARING,
+    WAITING_FOR_OTHER_PLAYER,
+    TRANSFERRING_PHOTO,
+    PLAYING_ROUND,
+    FINISHED
+}
+
+internal data class LocalGameSettings(
+    val roundCount: Int = 5,
+    val roundSeconds: Int = 30
+)
+
+internal data class LocalGameState(
+    val phase: LocalGamePhase = LocalGamePhase.SETUP,
+    val settings: LocalGameSettings = LocalGameSettings(),
+    val currentRound: Int = -1,
+    val receivedPhotoPath: String? = null,
+    val transferProgress: Float = 0f,
+    val secondsRemaining: Int = 0,
+    val statusMessage: String? = null
+)
+
+internal data class NearbyEndpoint(
+    val id: String,
+    val name: String
+)
+
+internal data class PendingConnection(
+    val endpoint: NearbyEndpoint,
+    val authenticationDigits: String
+)
+
+internal data class NearbyConnectionState(
+    val phase: NearbyPhase = NearbyPhase.IDLE,
+    val localName: String = "",
+    val role: NearbyRole? = null,
+    val discoveredEndpoints: List<NearbyEndpoint> = emptyList(),
+    val pendingConnection: PendingConnection? = null,
+    val connectedEndpoint: NearbyEndpoint? = null,
+    val receivedTestMessage: String? = null,
+    val game: LocalGameState = LocalGameState(),
+    val errorMessage: String? = null
+)

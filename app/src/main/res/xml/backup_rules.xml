@@ -6,6 +6,9 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
+    <!-- MediaStore IDs and photo GPS data are device-local and must not enter backups. -->
+    <exclude domain="database" path="local_openguesser_photo_index.db" />
+    <exclude domain="database" path="local_openguesser_photo_index.db-journal" />
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>

@@ -79,7 +79,7 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
         Text("Local OpenGuesser", style = MaterialTheme.typography.headlineSmall)
         Text(
             "Allow access to your full photo library to find photos with GPS metadata. " +
-                "The scan and country lookup happen only on this phone.",
+                "The scan, country lookup, and reusable photo index stay only on this phone.",
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
@@ -125,6 +125,14 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
+                    if (scanProgress.processedImages > 0) {
+                        Text(
+                            "${scanProgress.reusedFromIndex} indexed · " +
+                                "${scanProgress.scannedNow} read from photos",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         }
@@ -145,6 +153,13 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
         }
 
         Spacer(Modifier.height(4.dp))
+        Button(
+            onClick = { navController.navigate(NavScreens.OpenGuesserLocalLobby.route) },
+            enabled = stats != null && !isScanning,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Connect to another phone")
+        }
         Button(
             onClick = { navController.navigate(NavScreens.OpenGuesserLocalMap.route) },
             modifier = Modifier.fillMaxWidth()
@@ -195,6 +210,9 @@ private fun PhotoStats(stats: PhotoLibraryStats) {
             StatRow("Without GPS location", stats.imagesWithoutLocation)
             if (stats.unresolvedLocations > 0) StatRow("GPS location outside country data", stats.unresolvedLocations)
             if (stats.unreadableImages > 0) StatRow("Could not be read", stats.unreadableImages)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            StatRow("Reused from local index", stats.reusedFromIndex)
+            StatRow("Scanned or updated now", stats.scannedNow)
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Text("Images by country", style = MaterialTheme.typography.titleSmall)
             if (stats.imagesByCountry.isEmpty()) {
