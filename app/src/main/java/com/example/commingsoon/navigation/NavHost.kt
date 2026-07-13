@@ -14,6 +14,9 @@ import com.example.commingsoon.ui.screens.JourneyEditorScreen
 import com.example.commingsoon.ui.screens.JourneyOverviewScreen
 import com.example.commingsoon.ui.screens.LiveLocationScreen
 import com.example.commingsoon.ui.screens.OpenGuesserScreen
+import com.example.commingsoon.ui.screens.OnlineOpenGuesserScreen
+import com.example.commingsoon.ui.screens.localopenguesser.LocalOpenGuesserScreen
+import com.example.commingsoon.ui.screens.localopenguesser.LocalOpenGuesserStartScreen
 import com.example.commingsoon.ui.screens.ProfileEditorScreen
 import com.example.commingsoon.ui.screens.ProfileScreen
 import com.example.commingsoon.ui.screens.SettingsScreen
@@ -88,7 +91,16 @@ fun AppNavHost (
         }
 
         composable(NavScreens.OpenGuesser.route) {
-            OpenGuesserScreen()
+            OpenGuesserScreen(navController = navController)
+        }
+        composable(NavScreens.OpenGuesserOnline.route) {
+            OnlineOpenGuesserScreen(navController = navController)
+        }
+        composable(NavScreens.OpenGuesserLocal.route) {
+            LocalOpenGuesserStartScreen(navController = navController)
+        }
+        composable(NavScreens.OpenGuesserLocalMap.route) {
+            LocalOpenGuesserScreen(navController = navController)
         }
 
         composable(NavScreens.Friends.route) {

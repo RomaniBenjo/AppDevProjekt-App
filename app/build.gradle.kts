@@ -35,6 +35,9 @@ android {
     buildFeatures {
         compose = true
     }
+    androidResources {
+        noCompress += "pmtiles"
+    }
 }
 
 dependencies {
@@ -56,4 +59,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.0")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.exifinterface:exifinterface:1.3.2")
+    implementation("org.maplibre.gl:android-sdk:13.3.1")
 }

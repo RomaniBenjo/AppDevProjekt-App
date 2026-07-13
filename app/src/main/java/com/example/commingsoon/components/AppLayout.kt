@@ -7,11 +7,14 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.navigation.AppNavHost
+import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.AddFriendOverlay
 import com.example.commingsoon.overlays.OverlayType
 import com.example.commingsoon.overlays.ShareJourneyOverlay
@@ -38,6 +41,9 @@ fun AppLayout (
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+    val drawerGesturesEnabled = currentRoute != NavScreens.OpenGuesserLocalMap.route
 
     when (overlayViewModel.overlayType) {
         OverlayType.SHARE_JOURNEY -> {
@@ -78,10 +84,11 @@ fun AppLayout (
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = drawerGesturesEnabled,
         drawerContent = {
             AppMenu(
                 navController = navController,
-                currentRoute = navController.currentDestination?.route,
+                currentRoute = currentRoute,
                 assets = themeDefinition.assets,
                 closeMenu = {
                     scope.launch { drawerState.close() }
