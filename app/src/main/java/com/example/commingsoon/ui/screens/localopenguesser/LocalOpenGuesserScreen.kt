@@ -40,7 +40,6 @@ import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
-import java.io.File
 
 /** Offline map used by an active guessing round. */
 @Composable
@@ -192,21 +191,13 @@ internal fun OfflineGuessMap(
     }
 }
 
-private const val LOCAL_PMTILES_ASSET = "maps/world_z7.pmtiles"
 private const val OFFLINE_STYLE_ASSET = "maps/offline_map_style.json"
 private const val ARCHIVE_URL_PLACEHOLDER = "pmtiles://LOCAL_ARCHIVE"
 
 private fun prepareLocalPmTiles(context: Context): String {
-    val mapsDirectory = File(context.filesDir, "maps").apply { mkdirs() }
-    val localFile = File(mapsDirectory, "world_z7.pmtiles")
-    val assetLength = context.assets.openFd(LOCAL_PMTILES_ASSET).length
-
-    if (!localFile.exists() || localFile.length() != assetLength) {
-        val temporaryFile = File(mapsDirectory, "world_z7.pmtiles.tmp")
-        context.assets.open(LOCAL_PMTILES_ASSET).use { input ->
-            temporaryFile.outputStream().buffered().use { output -> input.copyTo(output) }
-        }
-        check(temporaryFile.renameTo(localFile)) { "Could not prepare the offline map archive" }
+    check(isOfflineMapDownloaded(context)) {
+        "Download the offline map before playing Local OpenGuesser"
     }
+    val localFile = offlineMapArchive(context)
     return "pmtiles://file://${localFile.absolutePath}"
 }

@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.example.commingsoon.navigation.NavScreens
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun LocalOpenGuesserStartScreen(navController: NavHostController) {
@@ -48,6 +50,11 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
     var scanProgress by remember { mutableStateOf(PhotoScanProgress(0, 0)) }
     var stats by remember { mutableStateOf<PhotoLibraryStats?>(null) }
     var scanError by remember { mutableStateOf<String?>(null) }
+    var mapDownloaded by remember { mutableStateOf(isOfflineMapDownloaded(context)) }
+    var mapDownloadRequest by remember { mutableIntStateOf(0) }
+    var isDownloadingMap by remember { mutableStateOf(false) }
+    var mapDownloadProgress by remember { mutableStateOf<OfflineMapDownloadProgress?>(null) }
+    var mapDownloadError by remember { mutableStateOf<String?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -69,6 +76,25 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
         isScanning = false
     }
 
+    LaunchedEffect(mapDownloadRequest) {
+        if (mapDownloadRequest == 0 || mapDownloaded) return@LaunchedEffect
+        isDownloadingMap = true
+        mapDownloadError = null
+        mapDownloadProgress = OfflineMapDownloadProgress(0L, null)
+        runCatching {
+            downloadOfflineMap(context) { progress ->
+                withContext(Dispatchers.Main.immediate) {
+                    mapDownloadProgress = progress
+                }
+            }
+        }
+            .onSuccess { mapDownloaded = true }
+            .onFailure { error ->
+                mapDownloadError = error.message ?: "The offline map could not be downloaded."
+            }
+        isDownloadingMap = false
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,6 +110,14 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
         )
 
         PermissionCard(access = access)
+
+        OfflineMapDownloadCard(
+            isDownloaded = mapDownloaded,
+            isDownloading = isDownloadingMap,
+            progress = mapDownloadProgress,
+            error = mapDownloadError,
+            onDownload = { mapDownloadRequest++ }
+        )
 
         Button(
             onClick = { permissionLauncher.launch(requiredPhotoPermissions()) },
@@ -155,7 +189,7 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
         Spacer(Modifier.height(4.dp))
         Button(
             onClick = { navController.navigate(NavScreens.OpenGuesserLocalLobby.route) },
-            enabled = stats != null && !isScanning,
+            enabled = stats != null && !isScanning && mapDownloaded && !isDownloadingMap,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Connect to another phone")
@@ -167,6 +201,72 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
             Text("Back")
         }
     }
+}
+
+@Composable
+private fun OfflineMapDownloadCard(
+    isDownloaded: Boolean,
+    isDownloading: Boolean,
+    progress: OfflineMapDownloadProgress?,
+    error: String?,
+    onDownload: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text("Offline world map", style = MaterialTheme.typography.titleMedium)
+            Text(
+                if (isDownloaded) {
+                    "Ready. The downloaded map stays on this phone and works without internet."
+                } else {
+                    "Download the world map once before playing. It will be stored only on this phone for offline games."
+                },
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            if (isDownloading) {
+                val fraction = progress?.fraction
+                if (fraction != null) {
+                    LinearProgressIndicator(
+                        progress = { fraction },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+                val downloaded = progress?.downloadedBytes ?: 0L
+                val total = progress?.totalBytes
+                Text(
+                    if (total != null) {
+                        "Downloading ${formatFileSize(downloaded)} / ${formatFileSize(total)}"
+                    } else {
+                        "Downloading ${formatFileSize(downloaded)}"
+                    },
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
+            if (!isDownloaded) {
+                Button(
+                    onClick = onDownload,
+                    enabled = !isDownloading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (isDownloading) "Downloading map…" else "Download offline map")
+                }
+            }
+        }
+    }
+}
+
+private fun formatFileSize(bytes: Long): String = when {
+    bytes >= 1024L * 1024L -> "%.1f MB".format(bytes / (1024.0 * 1024.0))
+    bytes >= 1024L -> "%.1f KB".format(bytes / 1024.0)
+    else -> "$bytes B"
 }
 
 @Composable

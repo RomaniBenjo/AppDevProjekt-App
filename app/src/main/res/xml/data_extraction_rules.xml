@@ -7,6 +7,7 @@
     <cloud-backup>
         <exclude domain="database" path="local_openguesser_photo_index.db" />
         <exclude domain="database" path="local_openguesser_photo_index.db-journal" />
+        <exclude domain="file" path="maps/" />
         <!-- TODO: Use <include> and <exclude> to control what is backed up.
         <include .../>
         <exclude .../>
@@ -15,6 +16,7 @@
     <device-transfer>
         <exclude domain="database" path="local_openguesser_photo_index.db" />
         <exclude domain="database" path="local_openguesser_photo_index.db-journal" />
+        <exclude domain="file" path="maps/" />
     </device-transfer>
     <!--
     <device-transfer>

@@ -9,6 +9,8 @@
     <!-- MediaStore IDs and photo GPS data are device-local and must not enter backups. -->
     <exclude domain="database" path="local_openguesser_photo_index.db" />
     <exclude domain="database" path="local_openguesser_photo_index.db-journal" />
+    <!-- The large offline map is reproducible from the download URL. -->
+    <exclude domain="file" path="maps/" />
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>
