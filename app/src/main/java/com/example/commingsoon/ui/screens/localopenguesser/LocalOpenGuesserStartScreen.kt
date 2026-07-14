@@ -160,12 +160,6 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
         ) {
             Text("Connect to another phone")
         }
-        Button(
-            onClick = { navController.navigate(NavScreens.OpenGuesserLocalMap.route) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Open offline map")
-        }
         OutlinedButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth()

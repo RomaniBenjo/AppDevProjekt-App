@@ -3,7 +3,7 @@ package com.example.commingsoon.ui.screens.localopenguesser.connection
 import org.json.JSONObject
 
 internal object LocalGameProtocol {
-    private const val VERSION = 1
+    private const val VERSION = 2
     private const val TYPE_TEST_MESSAGE = "test_message"
     const val TYPE_GAME_SETTINGS = "game_settings"
     const val TYPE_PLAYER_READY = "player_ready"
@@ -11,6 +11,9 @@ internal object LocalGameProtocol {
     const val TYPE_PHOTO_METADATA = "photo_metadata"
     const val TYPE_PHOTO_READY = "photo_ready"
     const val TYPE_ROUND_REVEAL = "round_reveal"
+    const val TYPE_ROUND_GUESS = "round_guess"
+    const val TYPE_ROUND_RESULT = "round_result"
+    const val TYPE_ROUND_RESULT_READY = "round_result_ready"
     const val TYPE_GAME_FINISHED = "game_finished"
     const val TYPE_GAME_ERROR = "game_error"
 

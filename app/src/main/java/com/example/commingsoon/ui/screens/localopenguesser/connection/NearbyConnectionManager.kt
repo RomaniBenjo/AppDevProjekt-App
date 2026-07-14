@@ -32,11 +32,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 internal class NearbyConnectionManager(context: Context) {
     private val appContext = context.applicationContext
     private val client: ConnectionsClient = Nearby.getConnectionsClient(appContext)
-    private val serviceId = "${appContext.packageName}.localopenguesser.v1"
+    private val serviceId = "${appContext.packageName}.localopenguesser.v2"
     private val strategy = Strategy.P2P_POINT_TO_POINT
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val endpointNames = mutableMapOf<String, String>()
@@ -47,6 +53,8 @@ internal class NearbyConnectionManager(context: Context) {
     private var timerJob: Job? = null
     private var receivedOtherPhoto = false
     private var otherPlayerReceivedOurPhoto = false
+    private var localRoundSubmission: RoundSubmission? = null
+    private var remoteRoundSubmission: RoundSubmission? = null
     private val incomingPayloads = mutableMapOf<Long, Payload>()
     private val incomingMetadata = mutableMapOf<Long, Int>()
     private val completedIncomingPayloads = mutableSetOf<Long>()
@@ -147,6 +155,19 @@ internal class NearbyConnectionManager(context: Context) {
             endpoint.id,
             Payload.fromBytes(LocalGameProtocol.encodeTestMessage(message.trim()))
         ).addOnFailureListener { showConnectionError("Could not send the test message", it) }
+    }
+
+    fun setGuess(latitude: Double, longitude: Double) {
+        if (mutableState.value.game.phase != LocalGamePhase.PLAYING_ROUND) return
+        if (latitude !in -90.0..90.0 || longitude !in -180.0..180.0) return
+        updateGame { it.copy(currentGuess = GuessLocation(latitude, longitude)) }
+    }
+
+    fun continueAfterRound() {
+        if (mutableState.value.role != NearbyRole.HOST ||
+            mutableState.value.game.phase != LocalGamePhase.ROUND_RESULT
+        ) return
+        startRound(mutableState.value.game.currentRound + 1)
     }
 
     fun stopSearching() {
@@ -251,6 +272,8 @@ internal class NearbyConnectionManager(context: Context) {
         timerJob?.cancel()
         receivedOtherPhoto = false
         otherPlayerReceivedOurPhoto = false
+        localRoundSubmission = null
+        remoteRoundSubmission = null
         mutableState.value.game.receivedPhotoPath?.let { File(it).delete() }
         updateGame {
             it.copy(
@@ -259,6 +282,9 @@ internal class NearbyConnectionManager(context: Context) {
                 receivedPhotoPath = null,
                 transferProgress = 0f,
                 secondsRemaining = it.settings.roundSeconds,
+                currentGuess = null,
+                currentRoundResult = null,
+                canContinueAfterRound = false,
                 statusMessage = "Exchanging round ${round + 1} photos…"
             )
         }
@@ -309,10 +335,55 @@ internal class NearbyConnectionManager(context: Context) {
                 delay(1_000)
             }
             updateGame { it.copy(secondsRemaining = 0) }
-            if (mutableState.value.role == NearbyRole.HOST) {
-                startRound(mutableState.value.game.currentRound + 1)
-            }
+            submitRoundGuess()
         }
+    }
+
+    private fun submitRoundGuess() {
+        val game = mutableState.value.game
+        val photo = selectedPhotos.getOrNull(game.currentRound) ?: return
+        val actual = GuessLocation(
+            latitude = photo.latitude ?: return,
+            longitude = photo.longitude ?: return
+        )
+        val submission = RoundSubmission(game.currentRound, game.currentGuess, actual)
+        localRoundSubmission = submission
+        val values = mutableMapOf<String, Any?>(
+            "round" to submission.round,
+            "hasGuess" to (submission.guess != null),
+            "actualLat" to submission.actual.latitude,
+            "actualLon" to submission.actual.longitude
+        )
+        submission.guess?.let {
+            values["guessLat"] = it.latitude
+            values["guessLon"] = it.longitude
+        }
+        sendControl(LocalGameProtocol.TYPE_ROUND_GUESS, values)
+        updateGame { it.copy(statusMessage = "Waiting for the other player's result…") }
+        maybeFinalizeRound()
+    }
+
+    private fun maybeFinalizeRound() {
+        if (mutableState.value.role != NearbyRole.HOST) return
+        val host = localRoundSubmission ?: return
+        val joiner = remoteRoundSubmission ?: return
+        if (host.round != joiner.round || host.round != mutableState.value.game.currentRound) return
+
+        val hostDistance = host.guess?.let { localGuesserDistanceKm(it, joiner.actual) }
+        val joinerDistance = joiner.guess?.let { localGuesserDistanceKm(it, host.actual) }
+        val result = CanonicalRoundResult(
+            round = host.round,
+            hostGuess = host.guess,
+            joinerGuess = joiner.guess,
+            hostActual = host.actual,
+            joinerActual = joiner.actual,
+            hostDistanceKm = hostDistance,
+            joinerDistanceKm = joinerDistance,
+            hostPoints = localGuesserPoints(hostDistance),
+            joinerPoints = localGuesserPoints(joinerDistance)
+        )
+        sendControl(LocalGameProtocol.TYPE_ROUND_RESULT, result.toValues())
+        applyRoundResult(result)
     }
 
     private fun maybeRevealRound() {
@@ -379,6 +450,30 @@ internal class NearbyConnectionManager(context: Context) {
             LocalGameProtocol.TYPE_ROUND_REVEAL -> {
                 if (json.optInt("round", -1) == mutableState.value.game.currentRound) revealRound()
             }
+            LocalGameProtocol.TYPE_ROUND_GUESS -> {
+                val submission = json.toRoundSubmission() ?: return
+                if (submission.round == mutableState.value.game.currentRound) {
+                    remoteRoundSubmission = submission
+                    maybeFinalizeRound()
+                }
+            }
+            LocalGameProtocol.TYPE_ROUND_RESULT -> json.toCanonicalRoundResult()?.let { result ->
+                applyRoundResult(result)
+                if (mutableState.value.role == NearbyRole.JOINER) {
+                    sendControl(
+                        LocalGameProtocol.TYPE_ROUND_RESULT_READY,
+                        mapOf("round" to result.round)
+                    )
+                }
+            }
+            LocalGameProtocol.TYPE_ROUND_RESULT_READY -> {
+                if (mutableState.value.role == NearbyRole.HOST &&
+                    json.optInt("round", -1) == mutableState.value.game.currentRound &&
+                    mutableState.value.game.phase == LocalGamePhase.ROUND_RESULT
+                ) {
+                    updateGame { it.copy(canContinueAfterRound = true) }
+                }
+            }
             LocalGameProtocol.TYPE_GAME_FINISHED -> finishGame()
             LocalGameProtocol.TYPE_GAME_ERROR -> showGameError(
                 json.optString("message", "The other phone could not prepare the game."),
@@ -429,6 +524,44 @@ internal class NearbyConnectionManager(context: Context) {
                 processingPayloads.remove(payloadId)
                 showGameError("Could not save the received photo.", notifyOtherPlayer = true)
             }
+        }
+    }
+
+    private fun applyRoundResult(result: CanonicalRoundResult) {
+        if (result.round != mutableState.value.game.currentRound) return
+        val isHost = mutableState.value.role == NearbyRole.HOST
+        val roundResult = if (isHost) {
+            RoundResult(
+                round = result.round,
+                localGuess = result.hostGuess,
+                actualLocation = result.joinerActual,
+                localDistanceKm = result.hostDistanceKm,
+                localPoints = result.hostPoints,
+                opponentDistanceKm = result.joinerDistanceKm,
+                opponentPoints = result.joinerPoints
+            )
+        } else {
+            RoundResult(
+                round = result.round,
+                localGuess = result.joinerGuess,
+                actualLocation = result.hostActual,
+                localDistanceKm = result.joinerDistanceKm,
+                localPoints = result.joinerPoints,
+                opponentDistanceKm = result.hostDistanceKm,
+                opponentPoints = result.hostPoints
+            )
+        }
+        updateGame { game ->
+            val results = (game.roundResults.filterNot { it.round == roundResult.round } + roundResult)
+                .sortedBy(RoundResult::round)
+            game.copy(
+                phase = LocalGamePhase.ROUND_RESULT,
+                currentRoundResult = roundResult,
+                roundResults = results,
+                canContinueAfterRound = !isHost,
+                secondsRemaining = 0,
+                statusMessage = null
+            )
         }
     }
 
@@ -613,3 +746,108 @@ internal class NearbyConnectionManager(context: Context) {
         const val MAX_PHOTOS_PER_COUNTRY = 2
     }
 }
+
+private data class RoundSubmission(
+    val round: Int,
+    val guess: GuessLocation?,
+    val actual: GuessLocation
+)
+
+private data class CanonicalRoundResult(
+    val round: Int,
+    val hostGuess: GuessLocation?,
+    val joinerGuess: GuessLocation?,
+    val hostActual: GuessLocation,
+    val joinerActual: GuessLocation,
+    val hostDistanceKm: Double?,
+    val joinerDistanceKm: Double?,
+    val hostPoints: Int,
+    val joinerPoints: Int
+) {
+    fun toValues(): Map<String, Any?> = buildMap {
+        put("round", round)
+        put("hostHasGuess", hostGuess != null)
+        put("joinerHasGuess", joinerGuess != null)
+        put("hostActualLat", hostActual.latitude)
+        put("hostActualLon", hostActual.longitude)
+        put("joinerActualLat", joinerActual.latitude)
+        put("joinerActualLon", joinerActual.longitude)
+        put("hostDistanceKm", hostDistanceKm ?: -1.0)
+        put("joinerDistanceKm", joinerDistanceKm ?: -1.0)
+        put("hostPoints", hostPoints)
+        put("joinerPoints", joinerPoints)
+        hostGuess?.let {
+            put("hostGuessLat", it.latitude)
+            put("hostGuessLon", it.longitude)
+        }
+        joinerGuess?.let {
+            put("joinerGuessLat", it.latitude)
+            put("joinerGuessLon", it.longitude)
+        }
+    }
+}
+
+private fun JSONObject.toRoundSubmission(): RoundSubmission? {
+    val round = optInt("round", -1)
+    val actualLat = optDouble("actualLat", Double.NaN)
+    val actualLon = optDouble("actualLon", Double.NaN)
+    if (round < 0 || !actualLat.isFinite() || !actualLon.isFinite()) return null
+    val guess = if (optBoolean("hasGuess")) {
+        val latitude = optDouble("guessLat", Double.NaN)
+        val longitude = optDouble("guessLon", Double.NaN)
+        if (!latitude.isFinite() || !longitude.isFinite()) return null
+        GuessLocation(latitude, longitude)
+    } else {
+        null
+    }
+    return RoundSubmission(round, guess, GuessLocation(actualLat, actualLon))
+}
+
+private fun JSONObject.toCanonicalRoundResult(): CanonicalRoundResult? {
+    val round = optInt("round", -1)
+    val hostActual = location("hostActual") ?: return null
+    val joinerActual = location("joinerActual") ?: return null
+    if (round < 0) return null
+    return CanonicalRoundResult(
+        round = round,
+        hostGuess = optionalLocation("hostGuess", "hostHasGuess") ?: if (optBoolean("hostHasGuess")) return null else null,
+        joinerGuess = optionalLocation("joinerGuess", "joinerHasGuess") ?: if (optBoolean("joinerHasGuess")) return null else null,
+        hostActual = hostActual,
+        joinerActual = joinerActual,
+        hostDistanceKm = optDouble("hostDistanceKm", -1.0).takeIf { it >= 0.0 },
+        joinerDistanceKm = optDouble("joinerDistanceKm", -1.0).takeIf { it >= 0.0 },
+        hostPoints = optInt("hostPoints").coerceIn(0, MAX_ROUND_POINTS),
+        joinerPoints = optInt("joinerPoints").coerceIn(0, MAX_ROUND_POINTS)
+    )
+}
+
+private fun JSONObject.location(prefix: String): GuessLocation? {
+    val latitude = optDouble("${prefix}Lat", Double.NaN)
+    val longitude = optDouble("${prefix}Lon", Double.NaN)
+    return if (latitude.isFinite() && longitude.isFinite()) GuessLocation(latitude, longitude) else null
+}
+
+private fun JSONObject.optionalLocation(prefix: String, presentKey: String): GuessLocation? =
+    if (optBoolean(presentKey)) location(prefix) else null
+
+internal fun localGuesserDistanceKm(first: GuessLocation, second: GuessLocation): Double {
+    val lat1 = Math.toRadians(first.latitude)
+    val lat2 = Math.toRadians(second.latitude)
+    val deltaLat = lat2 - lat1
+    val deltaLon = Math.toRadians(second.longitude - first.longitude)
+    val a = sin(deltaLat / 2) * sin(deltaLat / 2) +
+        cos(lat1) * cos(lat2) * sin(deltaLon / 2) * sin(deltaLon / 2)
+    return 2 * EARTH_RADIUS_KM * asin(sqrt(a.coerceIn(0.0, 1.0)))
+}
+
+internal fun localGuesserPoints(distanceKm: Double?): Int = if (distanceKm == null) {
+    0
+} else {
+    (MAX_ROUND_POINTS * exp(-distanceKm / POINT_DECAY_KM))
+        .roundToInt()
+        .coerceIn(0, MAX_ROUND_POINTS)
+}
+
+private const val EARTH_RADIUS_KM = 6_371.0088
+private const val MAX_ROUND_POINTS = 5_000
+private const val POINT_DECAY_KM = 2_000.0

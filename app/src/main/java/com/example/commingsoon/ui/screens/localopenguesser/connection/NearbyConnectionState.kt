@@ -19,12 +19,28 @@ internal enum class LocalGamePhase {
     WAITING_FOR_OTHER_PLAYER,
     TRANSFERRING_PHOTO,
     PLAYING_ROUND,
+    ROUND_RESULT,
     FINISHED
 }
 
 internal data class LocalGameSettings(
     val roundCount: Int = 5,
     val roundSeconds: Int = 30
+)
+
+internal data class GuessLocation(
+    val latitude: Double,
+    val longitude: Double
+)
+
+internal data class RoundResult(
+    val round: Int,
+    val localGuess: GuessLocation?,
+    val actualLocation: GuessLocation,
+    val localDistanceKm: Double?,
+    val localPoints: Int,
+    val opponentDistanceKm: Double?,
+    val opponentPoints: Int
 )
 
 internal data class LocalGameState(
@@ -34,6 +50,10 @@ internal data class LocalGameState(
     val receivedPhotoPath: String? = null,
     val transferProgress: Float = 0f,
     val secondsRemaining: Int = 0,
+    val currentGuess: GuessLocation? = null,
+    val currentRoundResult: RoundResult? = null,
+    val roundResults: List<RoundResult> = emptyList(),
+    val canContinueAfterRound: Boolean = false,
     val statusMessage: String? = null
 )
 

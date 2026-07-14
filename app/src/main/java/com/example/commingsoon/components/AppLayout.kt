@@ -43,7 +43,7 @@ fun AppLayout (
     val scope = rememberCoroutineScope()
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
-    val drawerGesturesEnabled = currentRoute != NavScreens.OpenGuesserLocalMap.route
+    val drawerGesturesEnabled = currentRoute != NavScreens.OpenGuesserLocalLobby.route
 
     when (overlayViewModel.overlayType) {
         OverlayType.SHARE_JOURNEY -> {

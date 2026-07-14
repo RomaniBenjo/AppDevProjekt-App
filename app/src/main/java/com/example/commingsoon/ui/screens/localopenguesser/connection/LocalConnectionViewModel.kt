@@ -21,6 +21,8 @@ internal class LocalConnectionViewModel(application: Application) : AndroidViewM
     fun reject() = manager.rejectPendingConnection()
     fun sendTestMessage(message: String) = manager.sendTestMessage(message)
     fun startGame(settings: LocalGameSettings) = manager.startGame(settings)
+    fun setGuess(latitude: Double, longitude: Double) = manager.setGuess(latitude, longitude)
+    fun continueAfterRound() = manager.continueAfterRound()
     fun stopSearching() = manager.stopSearching()
     fun disconnect() = manager.disconnect()
 

@@ -33,7 +33,6 @@ sealed class NavScreens (
     object OpenGuesserOnline : NavScreens("openguesser/online", "Online OpenGuesser")
     object OpenGuesserLocal : NavScreens("openguesser/local", "Local OpenGuesser")
     object OpenGuesserLocalLobby : NavScreens("openguesser/local/lobby", "Connect Players")
-    object OpenGuesserLocalMap : NavScreens("openguesser/local/map", "Local OpenGuesser Map")
     object Friends : NavScreens("friends","Friends", icon = Icons.Default.Groups)
     object FriendDetail : NavScreens("friend/{friendId}", "Friend") {
         fun createRoute(friendId: Int): String {
