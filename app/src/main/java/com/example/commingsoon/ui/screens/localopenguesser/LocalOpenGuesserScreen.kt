@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import org.json.JSONObject
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.Marker
 import org.maplibre.android.annotations.MarkerOptions
@@ -85,7 +86,9 @@ internal fun OfflineGuessMap(
                     runCatching {
                         val archiveUrl = prepareLocalPmTiles(context)
                         context.assets.open(OFFLINE_STYLE_ASSET).bufferedReader().use { reader ->
-                            reader.readText().replace(ARCHIVE_URL_PLACEHOLDER, archiveUrl)
+                            addPlaceLabels(
+                                reader.readText().replace(ARCHIVE_URL_PLACEHOLDER, archiveUrl)
+                            )
                         }
                     }.onSuccess { styleJson ->
                         post {
@@ -192,6 +195,68 @@ internal fun OfflineGuessMap(
 
 private const val OFFLINE_STYLE_ASSET = "maps/offline_map_style.json"
 private const val ARCHIVE_URL_PLACEHOLDER = "pmtiles://LOCAL_ARCHIVE"
+private const val MAP_FONT_NAME = "Roboto"
+private const val MAP_FONT_URL = "file:///system/fonts/Roboto-Regular.ttf"
+
+private val CITY_LABEL_LAYER = """
+    {
+      "id": "place_labels_city",
+      "type": "symbol",
+      "source": "protomaps",
+      "source-layer": "places",
+      "minzoom": 3,
+      "filter": ["==", ["get", "kind_detail"], "city"],
+      "layout": {
+        "symbol-sort-key": ["get", "sort_rank"],
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-font": ["Roboto"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 11, 8, 16],
+        "text-padding": 4,
+        "text-max-width": 8
+      },
+      "paint": {
+        "text-color": "#e0e0e0",
+        "text-halo-color": "#141414",
+        "text-halo-width": 1.5
+      }
+    }
+""".trimIndent()
+
+private val TOWN_LABEL_LAYER = """
+    {
+      "id": "place_labels_town",
+      "type": "symbol",
+      "source": "protomaps",
+      "source-layer": "places",
+      "minzoom": 7,
+      "filter": ["in", ["get", "kind_detail"], ["literal", ["town", "village"]]],
+      "layout": {
+        "symbol-sort-key": ["get", "sort_rank"],
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-font": ["Roboto"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 7, 11, 12, 14],
+        "text-padding": 3,
+        "text-max-width": 8
+      },
+      "paint": {
+        "text-color": "#c7c7c7",
+        "text-halo-color": "#141414",
+        "text-halo-width": 1.25
+      }
+    }
+""".trimIndent()
+
+private fun addPlaceLabels(styleJson: String): String {
+    val style = JSONObject(styleJson)
+    style.put(
+        "font-faces",
+        JSONObject().put(MAP_FONT_NAME, MAP_FONT_URL)
+    )
+    style.getJSONArray("layers")
+        .put(JSONObject(CITY_LABEL_LAYER))
+        .put(JSONObject(TOWN_LABEL_LAYER))
+    return style.toString()
+}
 
 private fun prepareLocalPmTiles(context: Context): String {
     check(isOfflineMapDownloaded(context)) {

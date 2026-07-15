@@ -693,12 +693,6 @@ private fun ZoomableRoundPhoto(bitmap: androidx.compose.ui.graphics.ImageBitmap)
             contentDescription = "Other player's round photo",
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                    translationX = offset.x
-                    translationY = offset.y
-                }
                 .pointerInput(bitmap) {
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false).consume()
@@ -711,6 +705,12 @@ private fun ZoomableRoundPhoto(bitmap: androidx.compose.ui.graphics.ImageBitmap)
                             event.changes.forEach { it.consume() }
                         } while (event.changes.any { it.pressed })
                     }
+                }
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = offset.x
+                    translationY = offset.y
                 },
             contentScale = ContentScale.Fit
         )
