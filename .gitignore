@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Downloaded at runtime for Local OpenGuesser; never package or commit this large archive.
+app/src/main/assets/maps/world_z7.pmtiles
+*.pmtiles.download
