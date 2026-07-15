@@ -98,14 +98,25 @@ internal class PhotoIndexDatabase(context: Context) : SQLiteOpenHelper(
             val deleteStatement = database.compileStatement(
                 "DELETE FROM $TABLE_PHOTOS WHERE $COL_MEDIA_ID = ?"
             )
-            readAll().keys.asSequence()
-                .filterNot(activeMediaIds::contains)
-                .forEach { staleId ->
-                    deleteStatement.clearBindings()
-                    deleteStatement.bindLong(1, staleId)
-                    deleteStatement.executeUpdateDelete()
+            database.query(
+                TABLE_PHOTOS,
+                arrayOf(COL_MEDIA_ID),
+                null,
+                null,
+                null,
+                null,
+                null
+            ).use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(COL_MEDIA_ID)
+                while (cursor.moveToNext()) {
+                    val staleId = cursor.getLong(idColumn)
+                    if (!activeMediaIds.contains(staleId)) {
+                        deleteStatement.clearBindings()
+                        deleteStatement.bindLong(1, staleId)
+                        deleteStatement.executeUpdateDelete()
+                    }
                 }
-
+            }
             val insertStatement = database.compileStatement(
                 """
                 INSERT OR REPLACE INTO $TABLE_PHOTOS (

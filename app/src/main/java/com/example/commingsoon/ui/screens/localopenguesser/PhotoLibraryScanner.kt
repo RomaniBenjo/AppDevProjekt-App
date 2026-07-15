@@ -100,7 +100,7 @@ internal suspend fun scanPhotoLibrary(
         }
     }
     indexDatabase.applyChanges(changedPhotos, activeMediaIds)
-
+    indexDatabase.close()
     val withLocation = currentPhotos.count { it.latitude != null && it.longitude != null }
     val unreadable = currentPhotos.count(IndexedPhoto::unreadable)
     val unresolved = currentPhotos.count {
