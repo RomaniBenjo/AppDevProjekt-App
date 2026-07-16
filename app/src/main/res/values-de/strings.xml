@@ -1,19 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Titles -->
     <string name="app_name">CommingSoon</string>
     <string name="home">Start</string>
     <string name="friends">Freunde</string>
     <string name="settings">Einstellungen</string>
+
+    <!-- Button-Confirmations -->
+    <string name="remove">Entfernen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="show">Anzeigen</string>
+    <string name="share">Teilen</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="new_pin">Pin hinzufügen</string>
     <string name="new_journey">Neue Reise</string>
+    <string name="new_friend">Neuer Freund</string>
+    <string name="discard">Verwerfen</string>
+    <string name="save">Speichern</string>
+    <string name="create">Erstellen</string>
+    <string name="ok">OK</string>
+    <string name="add">Hinzufügen</string>
+    <string name="back">Zurück</string>
+
+    <!-- Dialog-Confirmations -->
+    <string name="remove_friend">Freund entfernen</string>
+    <string name="remove_friend_dialog">Möchtest du %1$s wirklich entfernen?</string>
+    <string name="remove_pin">Pin entfernen</string>
+    <string name="remove_pin_dialog">Möchtest du %1$s wirklich entfernen?</string>
+    <string name="remove_journey">Reise entfernen</string>
+    <string name="remove_journey_dialog">Möchtest du %1$s wirklich entfernen?</string>
+
+    <!-- Phrases -->
     <string name="choose_language">Sprache wählen</string>
     <string name="choose_theme">Design wählen</string>
-    <string name="violet_theme">violete Schnörkel</string>
-    <string name="darkblue_theme">dunkelblaue Tropfen</string>
-    <string name="lightblue_theme">hellblaue Wolken</string>
-    <string name="teal_theme">türkise Wellen</string>
-    <string name="darkgreen_theme">dunkelgrüne Dreiecke</string>
-    <string name="lightgreen_theme">hellgrüne Ranken</string>
-    <string name="yellow_theme">gelbe Sonnen</string>
-    <string name="orange_theme">orange Früchte</string>
-    <string name="pink_theme">pinke Blumen</string>
+    <string name="light_mode">Tagmodus</string>
+    <string name="dark_mode">Nachtmodus</string>
+    <string name="change_photo">Foto ändern</string>
+    <string name="profile_name">Profil-Name</string>
+    <string name="journey_name">Reise-Name</string>
+    <string name="start_date">Start-Datum</string>
+    <string name="end_date">End-Datum</string>
+    <string name="shared_by_me">Von mir geteilt</string>
+    <string name="shared_with_me">Mit mir geteilt</string>
+    <string name="automatically_share">Automatisch mit deinen Freunden teilen</string>
+    <string name="live_location">Live Standort</string>
+    <string name="hide_map">Weltkarte verstecken</string>
+    <string name="show_map">Weltkarte anzeigen</string>
+    <string name="latitude">Breitengrad: %1$s</string>
+    <string name="longitude">Längengrad: %1$s</string>
+    <string name="latitude_name">Breitengrad</string>
+    <string name="longitude_name">Längengrad</string>
+
+    <string name="how_to_play">Wie möchtest du spielen?</string>
+    <string name="online_or_local">Wähle ein Online-Spiel oder erkunde eine lokale Karte.</string>
+    <string name="online_guesser">Online OpenGuesser</string>
+    <string name="online_guesser_text">Spiele eine geteilte Runde mit anderen Spielern.</string>
+    <string name="local_guesser">Lokaler OpenGuesser</string>
+    <string name="local_guesser_text">Probiere den lokalen Modus und den PMTiles-Kartenbetrachter aus.</string>
+
+    <string name="map_placeholder">Platzhalter für Karte</string>
+    <string name="map_live_placeholder">Platzhalter für Live Standort-Karte</string>
+    <string name="online_guesser_placeholder">Der Online-Modus wird als Nächstes implementiert.</string>
+
+    <!-- Theme Names -->
+    <string name="violet_theme">Violete Schnörkel</string>
+    <string name="darkblue_theme">Dunkelblaue Tropfen</string>
+    <string name="lightblue_theme">Hellblaue Wolken</string>
+    <string name="teal_theme">Türkise Wellen</string>
+    <string name="darkgreen_theme">Dunkelgrüne Dreiecke</string>
+    <string name="lightgreen_theme">Hellgrüne Ranken</string>
+    <string name="yellow_theme">Gelbe Sonnen</string>
+    <string name="orange_theme">Orange Früchte</string>
+    <string name="pink_theme">Pinke Blumen</string>
 </resources>
