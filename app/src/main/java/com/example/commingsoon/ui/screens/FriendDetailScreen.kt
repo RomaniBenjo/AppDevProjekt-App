@@ -61,7 +61,7 @@ fun FriendDetailScreen(
                     end = 20.dp,
                     top = 20.dp
                 ),
-            style = MaterialTheme.typography.titleLarge // TODO: change headline style
+            style = MaterialTheme.typography.titleLarge
         )
 
         Spacer(Modifier.height(16.dp))
