@@ -30,6 +30,7 @@ import androidx.navigation.NavHostController
 import com.example.commingsoon.navigation.NavScreens
 import androidx.compose.ui.res.stringResource
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 
 @Composable
 fun OpenGuesserScreen(navController: NavHostController) {
@@ -40,27 +41,27 @@ fun OpenGuesserScreen(navController: NavHostController) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = stringResource(R.string.how_to_play),
+            text = appString(R.string.how_to_play),
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.online_or_local),
+            text = appString(R.string.online_or_local),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge
         )
         Spacer(Modifier.height(28.dp))
 
         OpenGuesserModeCard(
-            title = stringResource(R.string.online_guesser),
-            description = stringResource(R.string.online_guesser_text),
+            title = appString(R.string.online_guesser),
+            description = appString(R.string.online_guesser_text),
             icon = Icons.Default.Cloud,
             onClick = { navController.navigate(NavScreens.OpenGuesserOnline.route) }
         )
         Spacer(Modifier.height(16.dp))
         OpenGuesserModeCard(
-            title = stringResource(R.string.local_guesser),
-            description = stringResource(R.string.local_guesser_text),
+            title = appString(R.string.local_guesser),
+            description = appString(R.string.local_guesser_text),
             icon = Icons.Default.Map,
             onClick = { navController.navigate(NavScreens.OpenGuesserLocal.route) }
         )
@@ -127,10 +128,10 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                 tint = MaterialTheme.colorScheme.primary
             )
             Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.online_guesser), style = MaterialTheme.typography.headlineSmall)
+            Text(appString(R.string.online_guesser), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(8.dp))
             Text(
-                stringResource(R.string.online_guesser_placeholder),
+                appString(R.string.online_guesser_placeholder),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -143,7 +144,7 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                 .height(56.dp)
         ) {
             Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null)
-            Text(stringResource(R.string.back), modifier = Modifier.padding(start = 8.dp))
+            Text(appString(R.string.back), modifier = Modifier.padding(start = 8.dp))
         }
     }
 }

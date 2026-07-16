@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalConfiguration
+import com.example.commingsoon.language.appString
 
 @Composable
 fun AppMenu (
@@ -93,7 +94,7 @@ fun AppMenu (
                         },
                         label = {
                             Text(
-                                text = screens.title,
+                                text = appString(screens.title),
                                 color = MaterialTheme.colorScheme.background
                             )
                         },

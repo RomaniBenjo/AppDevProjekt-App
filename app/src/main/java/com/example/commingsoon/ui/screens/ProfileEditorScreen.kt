@@ -42,6 +42,7 @@ import androidx.navigation.NavHostController
 import com.example.commingsoon.viewmodels.ProfileViewModel
 import com.example.commingsoon.R
 import androidx.compose.ui.res.stringResource
+import com.example.commingsoon.language.appString
 
 @Composable
 fun ProfileEditorScreen(
@@ -90,7 +91,7 @@ fun ProfileEditorScreen(
             )
             Spacer(Modifier.width(8.dp))
 
-            Text(stringResource(R.string.change_photo))
+            Text(appString(R.string.change_photo))
         }
 
         Spacer(Modifier.height(28.dp))
@@ -102,7 +103,7 @@ fun ProfileEditorScreen(
             },
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
-                Text(stringResource(R.string.profile_name))
+                Text(appString(R.string.profile_name))
             },
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
@@ -137,7 +138,7 @@ fun ProfileEditorScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    stringResource(R.string.discard),
+                    appString(R.string.discard),
                     color = MaterialTheme.colorScheme.primary
                 )
             }
@@ -163,7 +164,7 @@ fun ProfileEditorScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    stringResource(R.string.save),
+                    appString(R.string.save),
                     color = MaterialTheme.colorScheme.background
                 )
             }

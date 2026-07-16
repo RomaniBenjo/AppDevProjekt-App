@@ -39,6 +39,7 @@ import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.viewmodels.JourneyLocation
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 
 @Composable
 fun JourneyDetailScreen (
@@ -83,7 +84,7 @@ fun JourneyDetailScreen (
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(stringResource(R.string.map_placeholder))
+                Text(appString(R.string.map_placeholder))
 
             }
         }
@@ -147,7 +148,7 @@ fun JourneyDetailScreen (
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        text = stringResource(R.string.edit),
+                        text = appString(R.string.edit),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -188,7 +189,7 @@ fun JourneyDetailScreen (
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        text = stringResource(R.string.share),
+                        text = appString(R.string.share),
                         color = MaterialTheme.colorScheme.background,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -229,13 +230,13 @@ fun PinCard(
             horizontalAlignment = Alignment.End
         ) {
             Text(
-                text = stringResource(R.string.latitude, location.latitude),
+                text = appString(R.string.latitude, location.latitude),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
 
             Text(
-                text = stringResource(R.string.longitude, location.longitude),
+                text = appString(R.string.longitude, location.longitude),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )

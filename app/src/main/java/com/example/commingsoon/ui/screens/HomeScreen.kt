@@ -52,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.example.commingsoon.language.appString
 
 @Composable
 fun HomeScreen (
@@ -81,7 +82,7 @@ fun HomeScreen (
                 // TODO: world map with counrties visited marked
                 Card(modifier = Modifier.fillMaxSize()) {
                     Text(
-                        text = stringResource(R.string.map_placeholder),
+                        text = appString(R.string.map_placeholder),
                         modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 20.dp)
                     )
                 }
@@ -119,7 +120,7 @@ fun HomeScreen (
             shape = RoundedCornerShape(50),
             onClick = { navController.navigate(NavScreens.JourneyEditor.createRoute()) }
         ) {
-            Text(text = stringResource(R.string.new_journey))
+            Text(text = appString(R.string.new_journey))
         }
     }
 }
@@ -282,9 +283,9 @@ fun ExpandableMap(
         ) {
             Text(
                 if (expanded)
-                    stringResource(R.string.hide_map)
+                    appString(R.string.hide_map)
                 else
-                    stringResource(R.string.show_map)
+                    appString(R.string.show_map)
             )
 
             Spacer(Modifier.width(8.dp))
@@ -322,7 +323,7 @@ fun ExpandableMap(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(stringResource(R.string.map_placeholder))
+                        Text(appString(R.string.map_placeholder))
 
                         // TODO: world map hier einsetzen, dann ist es für beide (home und journey) screens sichtbar
 

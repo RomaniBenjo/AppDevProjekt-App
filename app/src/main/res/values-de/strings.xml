@@ -3,8 +3,19 @@
     <!-- Titles -->
     <string name="app_name">CommingSoon</string>
     <string name="home">Start</string>
+    <string name="journeys">Reisen</string>
+    <string name="journey_editor">Reisen-Editor</string>
+    <string name="journey_detail">Reise</string>
+    <string name="play_guesser">OpenGuesser spielen</string>
+    <string name="guesser_online">Online OpenGuesser"</string>
+    <string name="guesser_local">Lokaler OpenGuesser</string>
+    <string name="guesser_connect">Mit Spielern verbinden</string>
     <string name="friends">Freunde</string>
+    <string name="friend_detail">Freund</string>
+    <string name="live_location">Live Standort</string>
     <string name="settings">Einstellungen</string>
+    <string name="profile">Profil</string>
+    <string name="profile_editor">Profil-Editor</string>
 
     <!-- Button-Confirmations -->
     <string name="remove">Entfernen</string>
@@ -43,7 +54,6 @@
     <string name="shared_by_me">Von mir geteilt</string>
     <string name="shared_with_me">Mit mir geteilt</string>
     <string name="automatically_share">Automatisch mit deinen Freunden teilen</string>
-    <string name="live_location">Live Standort</string>
     <string name="hide_map">Weltkarte verstecken</string>
     <string name="show_map">Weltkarte anzeigen</string>
     <string name="latitude">Breitengrad: %1$s</string>

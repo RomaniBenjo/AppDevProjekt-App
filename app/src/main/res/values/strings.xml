@@ -2,8 +2,19 @@
     <!-- Titles -->
     <string name="app_name">CommingSoon</string>
     <string name="home">Home</string>
+    <string name="journeys">Journeys</string>
+    <string name="journey_editor">Journey Editor</string>
+    <string name="journey_detail">Journey</string>
+    <string name="play_guesser">Play OpenGuesser</string>
+    <string name="guesser_online">Online OpenGuesser"</string>
+    <string name="guesser_local">Local OpenGuesser</string>
+    <string name="guesser_connect">Connect Players</string>
     <string name="friends">Friends</string>
+    <string name="friend_detail">Friend</string>
+    <string name="live_location">Live Locations</string>
     <string name="settings">Settings</string>
+    <string name="profile">Profile</string>
+    <string name="profile_editor">Profile Editor</string>
 
     <!-- Button-Confirmations -->
     <string name="remove">Remove</string>
@@ -42,7 +53,6 @@
     <string name="shared_by_me">Shared By Me</string>
     <string name="shared_with_me">Shared With Me</string>
     <string name="automatically_share">Automatically share with your friends</string>
-    <string name="live_location">Live Location</string>
     <string name="hide_map">Hide World Map</string>
     <string name="show_map">Show World Map</string>
     <string name="latitude">Latitude: %1$s</string>

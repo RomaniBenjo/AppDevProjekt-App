@@ -2,6 +2,7 @@ package com.example.commingsoon.ui.screens
 
 
 import android.R.attr.theme
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.commingsoon.viewmodels.SettingsViewModel
@@ -42,11 +44,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.language.AppLanguage
 import com.example.commingsoon.language.AppLanguageViewModel
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.ui.theme.AppThemeType
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.viewmodels.SettingsViewModelFactory
 import kotlin.collections.forEach
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun SettingsScreen(
     themeViewModel: AppThemeViewModel,
@@ -68,7 +72,7 @@ fun SettingsScreen(
 
         item {
             Text(
-                text = stringResource(R.string.choose_language),
+                text = appString(R.string.choose_language),
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -92,7 +96,7 @@ fun SettingsScreen(
 
         item {
             Text(
-                text = stringResource(R.string.choose_theme),
+                text = appString(R.string.choose_theme),
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -167,7 +171,7 @@ fun LightDarkSwitch(
                 },
             contentAlignment = Alignment.Center
         ) {
-            Text(stringResource(R.string.light_mode))
+            Text(appString(R.string.light_mode))
         }
 
         Box(
@@ -182,7 +186,7 @@ fun LightDarkSwitch(
                 },
             contentAlignment = Alignment.Center
         ) {
-            Text(stringResource(R.string.dark_mode))
+            Text(appString(R.string.dark_mode))
         }
     }
 }
@@ -272,7 +276,7 @@ fun ThemeCard(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = stringResource(viewModel.getThemeName(theme)),
+                    text = appString(viewModel.getThemeName(theme)),
                     style = MaterialTheme.typography.bodyLarge,
                     color = colorScheme.background
                 )

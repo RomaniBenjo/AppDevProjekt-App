@@ -35,9 +35,8 @@ import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.FriendJourneyTab
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.Journey
-import com.example.commingsoon.viewmodels.JourneyViewModel
-import androidx.compose.ui.res.stringResource
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 
 @Composable
 fun FriendDetailScreen(
@@ -78,7 +77,7 @@ fun FriendDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    stringResource(R.string.map_placeholder)
+                    appString(R.string.map_placeholder)
                 )
             }
         }
@@ -158,7 +157,7 @@ fun JourneyTabSwitch(
         ) {
 
             Text(
-                text = stringResource(R.string.shared_by_me),
+                text = appString(R.string.shared_by_me),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -178,7 +177,7 @@ fun JourneyTabSwitch(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = stringResource(R.string.shared_with_me),
+                text = appString(R.string.shared_with_me),
                 style = MaterialTheme.typography.bodyMedium
             )
         }

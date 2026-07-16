@@ -60,6 +60,7 @@ import java.time.ZoneId
 import java.time.Instant
 import androidx.compose.ui.res.stringResource
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 
 @Composable
 fun JourneyEditorScreen (
@@ -98,7 +99,7 @@ fun JourneyEditorScreen (
                     onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text(stringResource(R.string.journey_name)) },
+                    label = { Text(appString(R.string.journey_name)) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
                         unfocusedContainerColor = Color.White,
@@ -123,7 +124,7 @@ fun JourneyEditorScreen (
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(R.string.start_date)) },
+                        label = { Text(appString(R.string.start_date)) },
                         trailingIcon = {
                             IconButton(
                                 onClick = {
@@ -156,7 +157,7 @@ fun JourneyEditorScreen (
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(R.string.end_date)) },
+                        label = { Text(appString(R.string.end_date)) },
                         trailingIcon = {
                             IconButton(
                                 onClick = { showDatePicker = true }
@@ -191,7 +192,7 @@ fun JourneyEditorScreen (
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.automatically_share),
+                        text = appString(R.string.automatically_share),
                         modifier = Modifier.weight(1f)
                     )
 
@@ -222,7 +223,7 @@ fun JourneyEditorScreen (
 
                     Spacer(Modifier.width(8.dp))
 
-                    Text(stringResource(R.string.new_pin))
+                    Text(appString(R.string.new_pin))
                 }
             }
 
@@ -265,7 +266,7 @@ fun JourneyEditorScreen (
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.discard),
+                    text = appString(R.string.discard),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -291,7 +292,7 @@ fun JourneyEditorScreen (
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (isEditing) stringResource(R.string.save) else stringResource(R.string.create),
+                    text = if (isEditing) appString(R.string.save) else appString(R.string.create),
                     color = MaterialTheme.colorScheme.background,
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -369,12 +370,12 @@ fun PinListItem (
 
             Column() {
                 Text(
-                    text = stringResource(R.string.latitude, location.latitude),
+                    text = appString(R.string.latitude, location.latitude),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
                 Text(
-                    text = stringResource(R.string.longitude, location.longitude),
+                    text = appString(R.string.longitude, location.longitude),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -427,12 +428,12 @@ fun JourneyDateRangePicker (
                         onConfirm(start, end)
                     }
                 }
-            ) { Text(stringResource(R.string.ok)) }
+            ) { Text(appString(R.string.ok)) }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss
-            ) { Text(stringResource(R.string.cancel)) }
+            ) { Text(appString(R.string.cancel)) }
         }
     ) {
         DateRangePicker(state = pickerState)
@@ -450,14 +451,14 @@ fun AddPinDialog (
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.new_pin)) },
+        title = { Text(appString(R.string.new_pin)) },
         text = {
             Column {
                 TextField(
                     value = name,
                     onValueChange = { name = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.journey_name)) },
+                    label = { Text(appString(R.string.journey_name)) },
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
@@ -474,7 +475,7 @@ fun AddPinDialog (
                     value = latitude,
                     onValueChange = { latitude = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.latitude_name)) },
+                    label = { Text(appString(R.string.latitude_name)) },
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
@@ -491,7 +492,7 @@ fun AddPinDialog (
                     value = longitude,
                     onValueChange = { longitude = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.longitude_name)) },
+                    label = { Text(appString(R.string.longitude_name)) },
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
@@ -520,10 +521,10 @@ fun AddPinDialog (
                         )
                     }
                 }
-            ) { Text(stringResource(R.string.add)) }
+            ) { Text(appString(R.string.add)) }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            OutlinedButton(onClick = onDismiss) { Text(appString(R.string.cancel)) }
         }
     )
 }
@@ -543,18 +544,18 @@ fun RemovePinDialog (
                 tint = MaterialTheme.colorScheme.error
             )
         },
-        title = { Text(stringResource(R.string.remove_pin)) },
-        text = { Text(stringResource(R.string.remove_pin, location.name)) },
+        title = { Text(appString(R.string.remove_pin)) },
+        text = { Text(appString(R.string.remove_pin, location.name)) },
         confirmButton = {
             Button(
                 onClick = onRemove,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error
                 )
-            ) { Text(stringResource(R.string.remove)) }
+            ) { Text(appString(R.string.remove)) }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            OutlinedButton(onClick = onDismiss) { Text(appString(R.string.cancel)) }
         }
     )
 }

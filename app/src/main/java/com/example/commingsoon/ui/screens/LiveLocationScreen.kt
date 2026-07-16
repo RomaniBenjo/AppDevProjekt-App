@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.compose.ui.res.stringResource
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 
 @Composable
 fun LiveLocationScreen(
@@ -42,7 +43,7 @@ fun LiveLocationScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.map_live_placeholder),
+                    text = appString(R.string.map_live_placeholder),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -67,7 +68,7 @@ fun LiveLocationScreen(
 
             Spacer(Modifier.width(8.dp))
 
-            Text(stringResource(R.string.back))
+            Text(appString(R.string.back))
         }
     }
 }

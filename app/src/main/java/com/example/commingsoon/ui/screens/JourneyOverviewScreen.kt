@@ -53,6 +53,7 @@ import com.example.commingsoon.R
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
 import androidx.compose.ui.res.stringResource
+import com.example.commingsoon.language.appString
 
 @Composable
 fun JourneyOverviewScreen (
@@ -116,10 +117,10 @@ fun JourneyOverviewScreen (
                     journeyToDelete = null
                 },
                 title = {
-                    Text(stringResource(R.string.remove_journey))
+                    Text(appString(R.string.remove_journey))
                 },
                 text = {
-                    Text(stringResource(R.string.remove_journey_dialog, journeyToDelete!!.title))
+                    Text(appString(R.string.remove_journey_dialog, journeyToDelete!!.title))
                 },
                 confirmButton = {
                     Button(
@@ -131,7 +132,7 @@ fun JourneyOverviewScreen (
                             journeyToDelete = null
                         }
                     ) {
-                        Text(stringResource(R.string.remove))
+                        Text(appString(R.string.remove))
                     }
                 },
                 dismissButton = {
@@ -140,7 +141,7 @@ fun JourneyOverviewScreen (
                             journeyToDelete = null
                         }
                     ) {
-                        Text(stringResource(R.string.cancel))
+                        Text(appString(R.string.cancel))
                     }
                 }
             )
@@ -161,7 +162,7 @@ fun JourneyOverviewScreen (
                 navController.navigate(NavScreens.JourneyEditor.createRoute())
             }
         ) {
-            Text(stringResource(R.string.new_journey))
+            Text(appString(R.string.new_journey))
         }
     }
 }
@@ -228,7 +229,7 @@ fun ExpandableJourneyCard(
                         Spacer(Modifier.width(6.dp))
 
                         Text(
-                            text = stringResource(R.string.show),
+                            text = appString(R.string.show),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -254,7 +255,7 @@ fun ExpandableJourneyCard(
                         Spacer(Modifier.width(6.dp))
 
                         Text(
-                            text = stringResource(R.string.remove),
+                            text = appString(R.string.remove),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -276,7 +277,7 @@ fun ExpandableJourneyCard(
                         Spacer(Modifier.width(6.dp))
 
                         Text(
-                            text = stringResource(R.string.share),
+                            text = appString(R.string.share),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
