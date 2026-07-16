@@ -45,11 +45,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
 
@@ -130,7 +132,7 @@ fun FriendOverviewScreen (
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        "Add Friend",
+                        text = appString(R.string.new_friend),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -165,7 +167,7 @@ fun FriendOverviewScreen (
 
                     Spacer(Modifier.width(8.dp))
 
-                    Text("Live Location")
+                    Text(appString(R.string.live_location))
                 }
             }
         }
@@ -174,9 +176,9 @@ fun FriendOverviewScreen (
     friendToRemove?.let { friend ->
         AlertDialog(
             onDismissRequest = { friendToRemove = null },
-            title = { Text("Remove Friend") },
+            title = { Text(appString(R.string.remove_friend)) },
             text = {
-                Text("Are you sure you want to remove ${friend.name}?")
+                Text(appString(R.string.remove_friend_dialog, friend.name))
             },
             confirmButton = {
                 Button(
@@ -187,12 +189,12 @@ fun FriendOverviewScreen (
                         }
                         friendToRemove = null
                     }
-                ) { Text("Remove") }
+                ) { Text(appString(R.string.remove)) }
             },
             dismissButton = {
                 OutlinedButton(
                     onClick = { friendToRemove = null }
-                ) { Text("Cancel") }
+                ) { Text(appString(R.string.cancel)) }
             }
         )
     }
@@ -240,7 +242,13 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(4.dp))
 
-                    Text("Show")
+                    Text(
+                        text = appString(R.string.show),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 OutlinedButton(
@@ -255,7 +263,13 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(4.dp))
 
-                    Text("Remove")
+                    Text(
+                        text = appString(R.string.remove),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Button(
@@ -270,7 +284,13 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(6.dp))
 
-                    Text("Share")
+                    Text(
+                        text = appString(R.string.share),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

@@ -8,29 +8,17 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import java.util.Locale
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.runtime.compositionLocalOf
 
 class AppLanguageViewModel : ViewModel() {
     var currentLanguage by mutableStateOf(AppLanguage.ENGLISH)
         private set
-
     fun setLanguage(language: AppLanguage) {
-        Log.d("LanguageVM", "setLanguage: $language")
-        currentLanguage = language
-
-        val locale = when(language) {
-            AppLanguage.ENGLISH -> Locale("en")
-            AppLanguage.GERMAN -> Locale("de")
+        if (language == currentLanguage) {
+            return
         }
-
-        // TODO: fix language switching
-
-        AppCompatDelegate.setApplicationLocales(
-            LocaleListCompat.create(locale)
-        )
-        Log.d("LanguageVM",AppCompatDelegate.getApplicationLocales().toLanguageTags())
+        currentLanguage = language
     }
 
-    fun getLanguages(): List<AppLanguage> {
-        return AppLanguage.entries
-    }
+    fun getLanguages(): List<AppLanguage> = AppLanguage.entries
 }

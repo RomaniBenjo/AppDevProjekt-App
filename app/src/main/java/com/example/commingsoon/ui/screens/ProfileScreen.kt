@@ -31,6 +31,8 @@ import androidx.navigation.NavController
 import com.example.commingsoon.R
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.ProfileViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.commingsoon.language.appString
 
 @Composable
 fun ProfileScreen(
@@ -94,7 +96,7 @@ fun ProfileScreen(
 
             Spacer(Modifier.width(8.dp))
 
-            Text("Edit Profile")
+            Text(appString(R.string.edit))
         }
     }
 }

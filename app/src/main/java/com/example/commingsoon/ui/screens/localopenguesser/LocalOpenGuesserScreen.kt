@@ -41,6 +41,7 @@ import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import com.example.commingsoon.R
 
 /** Offline map used by an active guessing round. */
 @Composable

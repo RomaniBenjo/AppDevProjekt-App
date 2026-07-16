@@ -27,6 +27,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.commingsoon.viewmodels.ProfileViewModel
 import com.example.commingsoon.R
+import androidx.compose.ui.res.stringResource
+import com.example.commingsoon.language.appString
 
 @Composable
 fun ProfileEditorScreen(
@@ -89,26 +93,23 @@ fun ProfileEditorScreen(
             )
             Spacer(Modifier.width(8.dp))
 
-            Text("Change Photo")
+            Text(appString(R.string.change_photo))
         }
 
         Spacer(Modifier.height(28.dp))
 
-        OutlinedTextField(
+        TextField(
             value = name,
-            onValueChange = {
-                name = it
-            },
+            onValueChange = { name = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = {
-                Text("Profile Name")
-            },
+            label = { Text(appString(R.string.profile_name)) },
             singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.LightGray.copy(alpha = .15f),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
                 unfocusedContainerColor = Color.White,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.primary
+
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
             )
         )
         Spacer(Modifier.weight(1f))
@@ -136,7 +137,7 @@ fun ProfileEditorScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Discard",
+                    appString(R.string.discard),
                     color = MaterialTheme.colorScheme.primary
                 )
             }
@@ -162,7 +163,7 @@ fun ProfileEditorScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Save",
+                    appString(R.string.save),
                     color = MaterialTheme.colorScheme.background
                 )
             }

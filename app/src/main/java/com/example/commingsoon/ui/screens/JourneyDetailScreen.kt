@@ -1,5 +1,6 @@
 package com.example.commingsoon.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,16 +28,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.viewmodels.JourneyLocation
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 
 @Composable
 fun JourneyDetailScreen (
@@ -46,6 +55,8 @@ fun JourneyDetailScreen (
     overlayViewModel: OverlayViewModel
 ) {
     val journey = viewModel.getJourney(journeyId) ?: return
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    var mapExpanded by rememberSaveable { mutableStateOf(isLandscape) }
 
     Column(
         modifier = Modifier
@@ -71,18 +82,28 @@ fun JourneyDetailScreen (
         Spacer(Modifier.height(16.dp))
 
         // Map Placeholder
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .padding(horizontal = 16.dp)
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+        // composable from HomeScreen.kt
+        if (isLandscape || mapExpanded) {
+            ExpandableMap(
+                expanded = mapExpanded,
+                onExpandedChange = {
+                    mapExpanded = it
+                }
+            )
+        } else {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .padding(horizontal = 16.dp)
             ) {
-                Text("Map Placeholder")
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(appString(R.string.map_placeholder))
 
+                }
             }
         }
 
@@ -145,7 +166,7 @@ fun JourneyDetailScreen (
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        text = "Edit",
+                        text = appString(R.string.edit),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -186,7 +207,7 @@ fun JourneyDetailScreen (
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        text = "Share",
+                        text = appString(R.string.share),
                         color = MaterialTheme.colorScheme.background,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -227,13 +248,13 @@ fun PinCard(
             horizontalAlignment = Alignment.End
         ) {
             Text(
-                text = "Lat: ${location.latitude}",
+                text = appString(R.string.latitude, location.latitude),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
 
             Text(
-                text = "Lng: ${location.longitude}",
+                text = appString(R.string.longitude, location.longitude),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )

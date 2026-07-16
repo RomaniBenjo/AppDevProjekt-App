@@ -52,6 +52,9 @@ import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.commingsoon.language.appString
 
 @Composable
 fun JourneyOverviewScreen (
@@ -67,34 +70,14 @@ fun JourneyOverviewScreen (
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Map Placeholder TODO: real map like on home screen
-        AnimatedContent(
-            targetState = mapExpanded,
-            label = ""
-        ) { expanded ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(if (expanded) 280.dp else 80.dp)
-                    .padding(16.dp)
-                    .clickable {
-                        mapExpanded = !mapExpanded
-                    }
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    Text(
-                        if (expanded)
-                            "World Map Placeholder"
-                        else
-                            "Tap to expand map"
-                    )
-                }
+        Spacer(Modifier.height(10.dp))
+        // composable from HomeScreen.kt
+        ExpandableMap(
+            expanded = mapExpanded,
+            onExpandedChange = {
+                mapExpanded = it
             }
-        }
+        )
 
         // journey list
         LazyColumn(
@@ -135,10 +118,10 @@ fun JourneyOverviewScreen (
                     journeyToDelete = null
                 },
                 title = {
-                    Text("Remove Journey")
+                    Text(appString(R.string.remove_journey))
                 },
                 text = {
-                    Text("Are you sure you want to remove \"${journeyToDelete!!.title}\"?")
+                    Text(appString(R.string.remove_journey_dialog, journeyToDelete!!.title))
                 },
                 confirmButton = {
                     Button(
@@ -150,7 +133,7 @@ fun JourneyOverviewScreen (
                             journeyToDelete = null
                         }
                     ) {
-                        Text("Remove")
+                        Text(appString(R.string.remove))
                     }
                 },
                 dismissButton = {
@@ -159,7 +142,7 @@ fun JourneyOverviewScreen (
                             journeyToDelete = null
                         }
                     ) {
-                        Text("Cancel")
+                        Text(appString(R.string.cancel))
                     }
                 }
             )
@@ -180,7 +163,7 @@ fun JourneyOverviewScreen (
                 navController.navigate(NavScreens.JourneyEditor.createRoute())
             }
         ) {
-            Text(stringResource(R.string.new_journey))
+            Text(appString(R.string.new_journey))
         }
     }
 }
@@ -247,8 +230,11 @@ fun ExpandableJourneyCard(
                         Spacer(Modifier.width(6.dp))
 
                         Text(
-                            text = "Show",
-                            style = MaterialTheme.typography.bodySmall
+                            text = appString(R.string.show),
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -273,8 +259,11 @@ fun ExpandableJourneyCard(
                         Spacer(Modifier.width(6.dp))
 
                         Text(
-                            text = "Remove",
-                            style = MaterialTheme.typography.bodySmall
+                            text = appString(R.string.remove),
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -295,8 +284,11 @@ fun ExpandableJourneyCard(
                         Spacer(Modifier.width(6.dp))
 
                         Text(
-                            text = "Share",
-                            style = MaterialTheme.typography.bodySmall
+                            text = appString(R.string.share),
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

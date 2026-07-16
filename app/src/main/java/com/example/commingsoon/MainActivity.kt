@@ -5,11 +5,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.commingsoon.components.AppLayout
+import com.example.commingsoon.components.AppLayoutViewModel
 import com.example.commingsoon.language.AppLanguageViewModel
+import com.example.commingsoon.language.LocalAppLanguage
+import com.example.commingsoon.language.LocalLocalizedContext
+import com.example.commingsoon.language.localized
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.ui.theme.CommingSoonTheme
@@ -36,23 +41,28 @@ class MainActivity : ComponentActivity() {
             }
             val currentAppTheme = themeViewModel.getThemeDefinition()
 
-            CommingSoonTheme(
-                theme = currentAppTheme,
-                darkTheme = themeViewModel.darkMode
+            val localizedContext = LocalContext.current.localized(languageViewModel.currentLanguage)
+            CompositionLocalProvider(
+                LocalAppLanguage provides languageViewModel.currentLanguage,
+                LocalLocalizedContext provides localizedContext
             ) {
-                AppLayout(
-                    navController = navController,
-                    themeDefinition = currentAppTheme,
-                    title = "Comming Soon",
-                    themeViewModel = themeViewModel,
-                    languageViewModel = languageViewModel,
-                    journeyViewModel = journeyViewModel,
-                    friendViewModel= friendViewModel,
-                    overlayViewModel = overlayViewModel,
-                    profileViewModel = profileViewModel
-                )
+                CommingSoonTheme(
+                    theme = currentAppTheme,
+                    darkTheme = themeViewModel.darkMode
+                ) {
+                    AppLayoutViewModel(
+                        navController = navController,
+                        themeDefinition = currentAppTheme,
+                        title = "Coming Soon",
+                        themeViewModel = themeViewModel,
+                        languageViewModel = languageViewModel,
+                        journeyViewModel = journeyViewModel,
+                        friendViewModel = friendViewModel,
+                        overlayViewModel = overlayViewModel,
+                        profileViewModel = profileViewModel
+                    )
+                }
             }
-
         }
     }
 }

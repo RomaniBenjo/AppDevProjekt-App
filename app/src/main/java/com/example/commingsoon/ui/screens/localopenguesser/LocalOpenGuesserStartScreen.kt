@@ -40,6 +40,7 @@ import androidx.navigation.NavHostController
 import com.example.commingsoon.navigation.NavScreens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.example.commingsoon.R
 
 @Composable
 fun LocalOpenGuesserStartScreen(navController: NavHostController) {

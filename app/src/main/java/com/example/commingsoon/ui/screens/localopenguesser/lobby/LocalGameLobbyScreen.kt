@@ -60,10 +60,13 @@ import com.example.commingsoon.ui.screens.localopenguesser.connection.NearbyEndp
 import com.example.commingsoon.ui.screens.localopenguesser.connection.NearbyPhase
 import com.example.commingsoon.ui.screens.localopenguesser.connection.NearbyRole
 import android.graphics.BitmapFactory
+import androidx.appcompat.R as AppCompatR
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.ui.screens.localopenguesser.connection.hasNearbyPermissions
 import com.example.commingsoon.ui.screens.localopenguesser.connection.requiredNearbyPermissions
 import org.maplibre.android.geometry.LatLng
 import kotlin.math.roundToInt
+import com.example.commingsoon.R
 
 @Composable
 internal fun LocalGameLobbyScreen(
@@ -146,7 +149,7 @@ internal fun LocalGameLobbyScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Back")
+            Text(appString(R.string.back))
         }
     }
 }
