@@ -36,6 +36,8 @@ import com.example.commingsoon.viewmodels.FriendJourneyTab
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.Journey
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.commingsoon.R
 
 @Composable
 fun FriendDetailScreen(
@@ -46,14 +48,11 @@ fun FriendDetailScreen(
 
     val friend = friendViewModel.getFriend(friendId) ?: return
 
-    var selectedTab by rememberSaveable {
-        mutableStateOf(FriendJourneyTab.SHARED_BY_ME)
-    }
+    var selectedTab by rememberSaveable { mutableStateOf(FriendJourneyTab.SHARED_BY_ME) }
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-
         Text(
             text = friend.name,
             modifier = Modifier
@@ -63,7 +62,7 @@ fun FriendDetailScreen(
                     end = 20.dp,
                     top = 20.dp
                 ),
-            style = MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineLarge // TODO: change headline style
         )
 
         Spacer(Modifier.height(16.dp))
@@ -74,14 +73,12 @@ fun FriendDetailScreen(
                 .height(220.dp)
                 .padding(horizontal = 16.dp)
         ) {
-
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-
                 Text(
-                    "Placeholder for Live Map"
+                    stringResource(R.string.map_placeholder)
                 )
             }
         }
@@ -101,7 +98,6 @@ fun FriendDetailScreen(
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-
             val journeys =
                 if (selectedTab == FriendJourneyTab.SHARED_BY_ME) {
                     friend.sharedByMe
@@ -162,7 +158,7 @@ fun JourneyTabSwitch(
         ) {
 
             Text(
-                text = "Shared by Me",
+                text = stringResource(R.string.shared_by_me),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -182,7 +178,7 @@ fun JourneyTabSwitch(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Shared with Me",
+                text = stringResource(R.string.shared_with_me),
                 style = MaterialTheme.typography.bodyMedium
             )
         }

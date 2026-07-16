@@ -81,7 +81,7 @@ fun HomeScreen (
                 // TODO: world map with counrties visited marked
                 Card(modifier = Modifier.fillMaxSize()) {
                     Text(
-                        text = "placeholder for world map",
+                        text = stringResource(R.string.map_placeholder),
                         modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 20.dp)
                     )
                 }
@@ -282,9 +282,9 @@ fun ExpandableMap(
         ) {
             Text(
                 if (expanded)
-                    "Hide World Map"
+                    stringResource(R.string.hide_map)
                 else
-                    "Show World Map"
+                    stringResource(R.string.show_map)
             )
 
             Spacer(Modifier.width(8.dp))
@@ -322,7 +322,7 @@ fun ExpandableMap(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("World Map Placeholder")
+                        Text(stringResource(R.string.map_placeholder))
 
                         // TODO: world map hier einsetzen, dann ist es für beide (home und journey) screens sichtbar
 

@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.commingsoon.viewmodels.Friend
@@ -130,7 +131,7 @@ fun FriendOverviewScreen (
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        "Add Friend",
+                        text = stringResource(R.string.new_friend),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -165,7 +166,7 @@ fun FriendOverviewScreen (
 
                     Spacer(Modifier.width(8.dp))
 
-                    Text("Live Location")
+                    Text(stringResource(R.string.live_location))
                 }
             }
         }
@@ -174,9 +175,9 @@ fun FriendOverviewScreen (
     friendToRemove?.let { friend ->
         AlertDialog(
             onDismissRequest = { friendToRemove = null },
-            title = { Text("Remove Friend") },
+            title = { Text(stringResource(R.string.remove_friend)) },
             text = {
-                Text("Are you sure you want to remove ${friend.name}?")
+                Text(stringResource(R.string.remove_friend_dialog, friend.name))
             },
             confirmButton = {
                 Button(
@@ -187,12 +188,12 @@ fun FriendOverviewScreen (
                         }
                         friendToRemove = null
                     }
-                ) { Text("Remove") }
+                ) { Text(stringResource(R.string.remove)) }
             },
             dismissButton = {
                 OutlinedButton(
                     onClick = { friendToRemove = null }
-                ) { Text("Cancel") }
+                ) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -240,7 +241,7 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(4.dp))
 
-                    Text("Show")
+                    Text(stringResource(R.string.show))
                 }
 
                 OutlinedButton(
@@ -255,7 +256,7 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(4.dp))
 
-                    Text("Remove")
+                    Text(stringResource(R.string.remove))
                 }
 
                 Button(
@@ -270,7 +271,7 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(6.dp))
 
-                    Text("Share")
+                    Text(stringResource(R.string.share))
                 }
             }
         }

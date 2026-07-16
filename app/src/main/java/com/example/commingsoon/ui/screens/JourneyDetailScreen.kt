@@ -31,12 +31,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.viewmodels.JourneyLocation
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import com.example.commingsoon.R
 
 @Composable
 fun JourneyDetailScreen (
@@ -81,7 +83,7 @@ fun JourneyDetailScreen (
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Map Placeholder")
+                Text(stringResource(R.string.map_placeholder))
 
             }
         }
@@ -145,7 +147,7 @@ fun JourneyDetailScreen (
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        text = "Edit",
+                        text = stringResource(R.string.edit),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -186,7 +188,7 @@ fun JourneyDetailScreen (
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        text = "Share",
+                        text = stringResource(R.string.share),
                         color = MaterialTheme.colorScheme.background,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -227,13 +229,13 @@ fun PinCard(
             horizontalAlignment = Alignment.End
         ) {
             Text(
-                text = "Lat: ${location.latitude}",
+                text = stringResource(R.string.latitude, location.latitude),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
 
             Text(
-                text = "Lng: ${location.longitude}",
+                text = stringResource(R.string.longitude, location.longitude),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )

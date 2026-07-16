@@ -167,7 +167,7 @@ fun LightDarkSwitch(
                 },
             contentAlignment = Alignment.Center
         ) {
-            Text("Light Mode")
+            Text(stringResource(R.string.light_mode))
         }
 
         Box(
@@ -182,7 +182,7 @@ fun LightDarkSwitch(
                 },
             contentAlignment = Alignment.Center
         ) {
-            Text("Dark Mode")
+            Text(stringResource(R.string.dark_mode))
         }
     }
 }
