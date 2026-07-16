@@ -54,6 +54,7 @@ import com.example.commingsoon.ui.screens.localopenguesser.connection.LocalConne
 import com.example.commingsoon.ui.screens.localopenguesser.OfflineGuessMap
 import com.example.commingsoon.ui.screens.localopenguesser.connection.LocalGamePhase
 import com.example.commingsoon.ui.screens.localopenguesser.connection.LocalGameSettings
+import com.example.commingsoon.ui.screens.localopenguesser.connection.LocalGuesserMessage
 import com.example.commingsoon.ui.screens.localopenguesser.connection.RoundResult
 import com.example.commingsoon.ui.screens.localopenguesser.connection.NearbyConnectionState
 import com.example.commingsoon.ui.screens.localopenguesser.connection.NearbyEndpoint
@@ -100,17 +101,15 @@ internal fun LocalGameLobbyScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Connect players", style = MaterialTheme.typography.headlineSmall)
+        Text(appString(R.string.guesser_connect), style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Nearby Connections uses Bluetooth and Wi-Fi directly between the two phones. " +
-                "No game server or internet connection is used.",
+            appString(R.string.local_guesser_nearby_description),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         if (!playServicesAvailable) {
             ErrorCard(
-                "Google Play services is unavailable or needs updating. " +
-                    "Nearby Connections cannot run on this phone."
+                appString(R.string.local_guesser_play_services_unavailable)
             )
         } else if (!permissionsGranted) {
             PermissionCard {
@@ -124,7 +123,7 @@ internal fun LocalGameLobbyScreen(
                     connectionViewModel.setLocalName(localName)
                 },
                 enabled = state.phase == NearbyPhase.IDLE || state.phase == NearbyPhase.ERROR,
-                label = { Text("Name shown to the other player") },
+                label = { Text(appString(R.string.local_guesser_player_name_label)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -169,20 +168,20 @@ private fun LobbyContent(
     when (state.phase) {
         NearbyPhase.IDLE -> RoleSelection(onHost, onJoin)
         NearbyPhase.ADVERTISING -> WaitingCard(
-            title = "Hosting nearby game",
-            detail = "Waiting for the second phone to find ${state.localName}…",
+            title = appString(R.string.local_guesser_hosting_game),
+            detail = appString(R.string.local_guesser_waiting_to_find_host, state.localName),
             onCancel = onCancel
         )
         NearbyPhase.DISCOVERING -> DiscoveryCard(state.discoveredEndpoints, onConnect, onCancel)
         NearbyPhase.REQUESTING_CONNECTION -> WaitingCard(
-            title = "Requesting connection",
-            detail = "Waiting for the other player…",
+            title = appString(R.string.local_guesser_requesting_connection),
+            detail = appString(R.string.local_guesser_waiting_other_player),
             onCancel = onCancel
         )
         NearbyPhase.AWAITING_CONFIRMATION,
         NearbyPhase.CONNECTING -> WaitingCard(
-            title = "Connecting securely",
-            detail = "Both players must confirm the same authentication code.",
+            title = appString(R.string.local_guesser_connecting_securely),
+            detail = appString(R.string.local_guesser_confirm_auth_code),
             onCancel = onCancel
         )
         NearbyPhase.CONNECTED -> ConnectedCard(
@@ -193,9 +192,12 @@ private fun LobbyContent(
             onDisconnect = onDisconnect
         )
         NearbyPhase.ERROR -> {
-            ErrorCard(state.errorMessage ?: "An unknown nearby connection error occurred.")
+            ErrorCard(
+                state.errorMessage?.resolve()
+                    ?: appString(R.string.local_guesser_unknown_connection_error)
+            )
             Button(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-                Text("Return to connection options")
+                Text(appString(R.string.local_guesser_return_connection_options))
             }
         }
     }
@@ -208,13 +210,13 @@ private fun RoleSelection(onHost: () -> Unit, onJoin: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Choose a role", style = MaterialTheme.typography.titleMedium)
-            Text("One phone hosts the session and the other phone joins it.")
+            Text(appString(R.string.local_guesser_choose_role), style = MaterialTheme.typography.titleMedium)
+            Text(appString(R.string.local_guesser_role_description))
             Button(onClick = onHost, modifier = Modifier.fillMaxWidth()) {
-                Text("Host game")
+                Text(appString(R.string.local_guesser_host_game))
             }
             OutlinedButton(onClick = onJoin, modifier = Modifier.fillMaxWidth()) {
-                Text("Join game")
+                Text(appString(R.string.local_guesser_join_game))
             }
         }
     }
@@ -232,7 +234,7 @@ private fun WaitingCard(title: String, detail: String, onCancel: () -> Unit) {
             Text(title, style = MaterialTheme.typography.titleMedium)
             Text(detail, textAlign = TextAlign.Center)
             OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-                Text("Cancel")
+                Text(appString(R.string.cancel))
             }
         }
     }
@@ -255,19 +257,19 @@ private fun DiscoveryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CircularProgressIndicator()
-                Text("Nearby games", style = MaterialTheme.typography.titleMedium)
+                Text(appString(R.string.local_guesser_nearby_games), style = MaterialTheme.typography.titleMedium)
             }
             if (endpoints.isEmpty()) {
-                Text("Searching… Make sure the other phone selected Host game.")
+                Text(appString(R.string.local_guesser_searching_games))
             } else {
                 endpoints.forEach { endpoint ->
                     Button(onClick = { onConnect(endpoint) }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Connect to ${endpoint.name}")
+                        Text(appString(R.string.local_guesser_connect_to_player, endpoint.name))
                     }
                 }
             }
             TextButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-                Text("Stop searching")
+                Text(appString(R.string.local_guesser_stop_searching))
             }
         }
     }
@@ -287,12 +289,18 @@ private fun ConnectedCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Connected", style = MaterialTheme.typography.titleMedium)
-            Text("Secure connection to ${state.connectedEndpoint?.name ?: "the other player"}")
+            Text(appString(R.string.local_guesser_connected), style = MaterialTheme.typography.titleMedium)
+            Text(
+                appString(
+                    R.string.local_guesser_secure_connection_to,
+                    state.connectedEndpoint?.name
+                        ?: appString(R.string.local_guesser_other_player_lowercase)
+                )
+            )
             when (state.game.phase) {
                 LocalGamePhase.SETUP -> {
                     state.game.statusMessage?.let {
-                        Text(it, color = MaterialTheme.colorScheme.error)
+                        Text(it.resolve(), color = MaterialTheme.colorScheme.error)
                     }
                     if (state.role == NearbyRole.HOST) {
                         HostGameOptions(
@@ -301,7 +309,7 @@ private fun ConnectedCard(
                             onStart = { onStartGame(settings) }
                         )
                     } else {
-                        Text("Waiting for the host to choose the game settings and start.")
+                        Text(appString(R.string.local_guesser_waiting_host_settings))
                     }
                 }
                 LocalGamePhase.PREPARING,
@@ -317,7 +325,7 @@ private fun ConnectedCard(
                 }
             }
             OutlinedButton(onClick = onDisconnect, modifier = Modifier.fillMaxWidth()) {
-                Text("Disconnect")
+                Text(appString(R.string.local_guesser_disconnect))
             }
         }
     }
@@ -329,9 +337,9 @@ private fun HostGameOptions(
     onSettingsChange: (LocalGameSettings) -> Unit,
     onStart: () -> Unit
 ) {
-    Text("Game options", style = MaterialTheme.typography.titleMedium)
+    Text(appString(R.string.local_guesser_game_options), style = MaterialTheme.typography.titleMedium)
     OptionStepper(
-        label = "Round count",
+        label = appString(R.string.local_guesser_round_count),
         value = settings.roundCount,
         onDecrease = {
             onSettingsChange(settings.copy(roundCount = (settings.roundCount - 1).coerceAtLeast(1)))
@@ -340,7 +348,7 @@ private fun HostGameOptions(
             onSettingsChange(settings.copy(roundCount = (settings.roundCount + 1).coerceAtMost(20)))
         }
     )
-    Text("Round length", style = MaterialTheme.typography.titleSmall)
+    Text(appString(R.string.local_guesser_round_length), style = MaterialTheme.typography.titleSmall)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -350,23 +358,22 @@ private fun HostGameOptions(
                 Button(
                     onClick = { onSettingsChange(settings.copy(roundSeconds = seconds)) },
                     modifier = Modifier.weight(1f)
-                ) { Text("${seconds}s") }
+                ) { Text(appString(R.string.local_guesser_seconds_short, seconds)) }
             } else {
                 OutlinedButton(
                     onClick = { onSettingsChange(settings.copy(roundSeconds = seconds)) },
                     modifier = Modifier.weight(1f)
-                ) { Text("${seconds}s") }
+                ) { Text(appString(R.string.local_guesser_seconds_short, seconds)) }
             }
         }
     }
     Text(
-        "Each device contributes one random geotagged photo per round. " +
-            "No device will use more than two photos from the same country.",
+        appString(R.string.local_guesser_game_options_description),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.bodySmall
     )
     Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
-        Text("Select photos and start")
+        Text(appString(R.string.local_guesser_select_photos_start))
     }
 }
 
@@ -399,21 +406,32 @@ private fun GameWaitingState(state: NearbyConnectionState) {
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         CircularProgressIndicator()
-        Text(state.game.statusMessage ?: "Preparing game…", textAlign = TextAlign.Center)
+        Text(
+            state.game.statusMessage?.resolve()
+                ?: appString(R.string.local_guesser_preparing_game),
+            textAlign = TextAlign.Center
+        )
     }
 }
 
 @Composable
 private fun PhotoTransferState(state: NearbyConnectionState) {
     Text(
-        "Round ${state.game.currentRound + 1} of ${state.game.settings.roundCount}",
+        appString(
+            R.string.local_guesser_round_of,
+            state.game.currentRound + 1,
+            state.game.settings.roundCount
+        ),
         style = MaterialTheme.typography.titleMedium
     )
     LinearProgressIndicator(
         progress = { state.game.transferProgress },
         modifier = Modifier.fillMaxWidth()
     )
-    Text(state.game.statusMessage ?: "Transferring photos…")
+    Text(
+        state.game.statusMessage?.resolve()
+            ?: appString(R.string.local_guesser_transferring_photos)
+    )
 }
 
 @Composable
@@ -422,11 +440,15 @@ private fun RoundPhoto(
     onGuess: (Double, Double) -> Unit
 ) {
     Text(
-        "Round ${state.game.currentRound + 1} of ${state.game.settings.roundCount}",
+        appString(
+            R.string.local_guesser_round_of,
+            state.game.currentRound + 1,
+            state.game.settings.roundCount
+        ),
         style = MaterialTheme.typography.titleMedium
     )
     Text(
-        "${state.game.secondsRemaining}s",
+        appString(R.string.local_guesser_seconds_short, state.game.secondsRemaining),
         style = MaterialTheme.typography.headlineMedium,
         color = MaterialTheme.colorScheme.primary
     )
@@ -442,20 +464,20 @@ private fun RoundPhoto(
     ) {
         if (roundView == RoundView.PHOTO) {
             Button(onClick = { roundView = RoundView.PHOTO }, modifier = Modifier.weight(1f)) {
-                Text("Photo")
+                Text(appString(R.string.local_guesser_photo))
             }
         } else {
             OutlinedButton(onClick = { roundView = RoundView.PHOTO }, modifier = Modifier.weight(1f)) {
-                Text("Photo")
+                Text(appString(R.string.local_guesser_photo))
             }
         }
         if (roundView == RoundView.MAP) {
             Button(onClick = { roundView = RoundView.MAP }, modifier = Modifier.weight(1f)) {
-                Text("Map")
+                Text(appString(R.string.local_guesser_map))
             }
         } else {
             OutlinedButton(onClick = { roundView = RoundView.MAP }, modifier = Modifier.weight(1f)) {
-                Text("Map")
+                Text(appString(R.string.local_guesser_map))
             }
         }
     }
@@ -463,11 +485,11 @@ private fun RoundPhoto(
     when (roundView) {
         RoundView.PHOTO -> {
             if (bitmap == null) {
-                Text("The other player's photo could not be displayed.")
+                Text(appString(R.string.local_guesser_photo_display_failed))
             } else {
                 ZoomableRoundPhoto(bitmap = bitmap)
                 Text(
-                    "Drag with one finger to move. Use the buttons to zoom; pinching also works.",
+                    appString(R.string.local_guesser_photo_zoom_help),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -487,9 +509,12 @@ private fun RoundPhoto(
             }
             Text(
                 selectedGuess?.let { guess ->
-                    "Guess pinned at %.4f, %.4f. Tap elsewhere to move it."
-                        .format(guess.latitude, guess.longitude)
-                } ?: "Tap the map to put down your guess pin.",
+                    appString(
+                        R.string.local_guesser_guess_pinned,
+                        "%.4f".format(guess.latitude),
+                        "%.4f".format(guess.longitude)
+                    )
+                } ?: appString(R.string.local_guesser_tap_map_to_guess),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -507,9 +532,10 @@ private fun RoundResultCard(
         GameWaitingState(state)
         return
     }
-    val opponentName = state.connectedEndpoint?.name ?: "Other player"
+    val opponentName = state.connectedEndpoint?.name
+        ?: appString(R.string.local_guesser_other_player)
     Text(
-        "Round ${result.round + 1} result",
+        appString(R.string.local_guesser_round_result, result.round + 1),
         style = MaterialTheme.typography.headlineSmall
     )
     Row(
@@ -517,7 +543,7 @@ private fun RoundResultCard(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         PlayerResultSummary(
-            name = "You",
+            name = appString(R.string.local_guesser_you),
             distanceKm = result.localDistanceKm,
             points = result.localPoints,
             modifier = Modifier.weight(1f)
@@ -542,7 +568,7 @@ private fun RoundResultCard(
             .height(420.dp)
     )
     Text(
-        "The pins show your guess and the real photo location; the orange line shows the distance.",
+        appString(R.string.local_guesser_result_map_help),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.bodySmall
     )
@@ -554,20 +580,20 @@ private fun RoundResultCard(
         ) {
             Text(
                 if (!state.game.canContinueAfterRound) {
-                    "Waiting for the other player…"
+                    appString(R.string.local_guesser_waiting_other_player)
                 } else if (result.round + 1 >= state.game.settings.roundCount) {
-                    "Show final results"
+                    appString(R.string.local_guesser_show_final_results)
                 } else {
-                    "Start round ${result.round + 2}"
+                    appString(R.string.local_guesser_start_round, result.round + 2)
                 }
             )
         }
     } else {
         Text(
             if (result.round + 1 >= state.game.settings.roundCount) {
-                "Waiting for the host to show the final results…"
+                appString(R.string.local_guesser_waiting_host_final_results)
             } else {
-                "Waiting for the host to start the next round…"
+                appString(R.string.local_guesser_waiting_host_next_round)
             },
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -589,7 +615,10 @@ private fun PlayerResultSummary(
         ) {
             Text(name, style = MaterialTheme.typography.titleSmall)
             Text(formatDistance(distanceKm), style = MaterialTheme.typography.bodyMedium)
-            Text("$points points", style = MaterialTheme.typography.titleMedium)
+            Text(
+                appString(R.string.local_guesser_points_value, points),
+                style = MaterialTheme.typography.titleMedium
+            )
         }
     }
 }
@@ -599,25 +628,29 @@ private fun FinalScoreboard(state: NearbyConnectionState) {
     val results = state.game.roundResults.sortedBy(RoundResult::round)
     val localTotal = results.sumOf(RoundResult::localPoints)
     val opponentTotal = results.sumOf(RoundResult::opponentPoints)
-    val opponentName = state.connectedEndpoint?.name ?: "Other player"
-    Text("Game complete", style = MaterialTheme.typography.headlineSmall)
+    val opponentName = state.connectedEndpoint?.name
+        ?: appString(R.string.local_guesser_other_player)
+    Text(appString(R.string.local_guesser_game_complete), style = MaterialTheme.typography.headlineSmall)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        TotalScore("You", localTotal, Modifier.weight(1f))
+        TotalScore(appString(R.string.local_guesser_you), localTotal, Modifier.weight(1f))
         TotalScore(opponentName, opponentTotal, Modifier.weight(1f))
     }
     Text(
         when {
-            localTotal > opponentTotal -> "You win!"
-            localTotal < opponentTotal -> "$opponentName wins!"
-            else -> "It's a tie!"
+            localTotal > opponentTotal -> appString(R.string.local_guesser_you_win)
+            localTotal < opponentTotal -> appString(
+                R.string.local_guesser_player_wins,
+                opponentName
+            )
+            else -> appString(R.string.local_guesser_tie)
         },
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.primary
     )
-    Text("Points by round", style = MaterialTheme.typography.titleMedium)
+    Text(appString(R.string.local_guesser_points_by_round), style = MaterialTheme.typography.titleMedium)
     results.forEachIndexed { index, result ->
         val localRunningTotal = results.take(index + 1).sumOf(RoundResult::localPoints)
         val opponentRunningTotal = results.take(index + 1).sumOf(RoundResult::opponentPoints)
@@ -626,14 +659,27 @@ private fun FinalScoreboard(state: NearbyConnectionState) {
                 modifier = Modifier.padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Round ${result.round + 1}", style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "You: +${result.localPoints}  ·  total $localRunningTotal  ·  " +
-                        formatDistance(result.localDistanceKm)
+                    appString(R.string.local_guesser_round_number, result.round + 1),
+                    style = MaterialTheme.typography.titleSmall
                 )
                 Text(
-                    "$opponentName: +${result.opponentPoints}  ·  total $opponentRunningTotal  ·  " +
+                    appString(
+                        R.string.local_guesser_round_score_line,
+                        appString(R.string.local_guesser_you),
+                        result.localPoints,
+                        localRunningTotal,
+                        formatDistance(result.localDistanceKm)
+                    )
+                )
+                Text(
+                    appString(
+                        R.string.local_guesser_round_score_line,
+                        opponentName,
+                        result.opponentPoints,
+                        opponentRunningTotal,
                         formatDistance(result.opponentDistanceKm)
+                    )
                 )
             }
         }
@@ -649,16 +695,23 @@ private fun TotalScore(name: String, points: Int, modifier: Modifier = Modifier)
         ) {
             Text(name, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center)
             Text(points.toString(), style = MaterialTheme.typography.headlineMedium)
-            Text("points")
+            Text(appString(R.string.local_guesser_points))
         }
     }
 }
 
+@Composable
 private fun formatDistance(distanceKm: Double?): String = when {
-    distanceKm == null -> "No guess"
-    distanceKm < 1.0 -> "${(distanceKm * 1_000).roundToInt()} m away"
-    distanceKm < 100.0 -> "%.1f km away".format(distanceKm)
-    else -> "${distanceKm.roundToInt()} km away"
+    distanceKm == null -> appString(R.string.local_guesser_no_guess)
+    distanceKm < 1.0 -> appString(
+        R.string.local_guesser_meters_away,
+        (distanceKm * 1_000).roundToInt()
+    )
+    distanceKm < 100.0 -> appString(
+        R.string.local_guesser_kilometers_away,
+        "%.1f".format(distanceKm)
+    )
+    else -> appString(R.string.local_guesser_kilometers_away, distanceKm.roundToInt())
 }
 
 private enum class RoundView { PHOTO, MAP }
@@ -693,7 +746,7 @@ private fun ZoomableRoundPhoto(bitmap: androidx.compose.ui.graphics.ImageBitmap)
     ) {
         Image(
             bitmap = bitmap,
-            contentDescription = "Other player's round photo",
+            contentDescription = appString(R.string.local_guesser_round_photo_description),
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(bitmap) {
@@ -731,7 +784,9 @@ private fun ZoomableRoundPhoto(bitmap: androidx.compose.ui.graphics.ImageBitmap)
                 Text("${(scale * 100).roundToInt()}%")
                 TextButton(onClick = { updateTransform(scale * 1.5f) }) { Text("+") }
                 if (scale > 1f) {
-                    TextButton(onClick = { updateTransform(1f) }) { Text("Reset") }
+                    TextButton(onClick = { updateTransform(1f) }) {
+                        Text(appString(R.string.local_guesser_reset_zoom))
+                    }
                 }
             }
         }
@@ -747,21 +802,29 @@ private fun AuthenticationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onReject,
-        title = { Text("Confirm $playerName") },
+        title = { Text(appString(R.string.local_guesser_confirm_player, playerName)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Check that this code is identical on both phones:")
+                Text(appString(R.string.local_guesser_check_auth_code))
                 Text(
                     digits,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineMedium
                 )
-                Text("Accept only if both players see the same code.")
+                Text(appString(R.string.local_guesser_accept_matching_code))
             }
         },
-        confirmButton = { TextButton(onClick = onAccept) { Text("Codes match") } },
-        dismissButton = { TextButton(onClick = onReject) { Text("Reject") } }
+        confirmButton = {
+            TextButton(onClick = onAccept) {
+                Text(appString(R.string.local_guesser_codes_match))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onReject) {
+                Text(appString(R.string.local_guesser_reject))
+            }
+        }
     )
 }
 
@@ -772,12 +835,15 @@ private fun PermissionCard(onRequestPermissions: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Nearby-device access required", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Android needs permission to discover and connect through Bluetooth and nearby Wi-Fi."
+                appString(R.string.local_guesser_nearby_access_required),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                appString(R.string.local_guesser_nearby_permission_description)
             )
             Button(onClick = onRequestPermissions, modifier = Modifier.fillMaxWidth()) {
-                Text("Allow nearby devices")
+                Text(appString(R.string.local_guesser_allow_nearby_devices))
             }
         }
     }
@@ -793,3 +859,7 @@ private fun ErrorCard(message: String) {
         )
     }
 }
+
+@Composable
+private fun LocalGuesserMessage.resolve(): String =
+    appString(resourceId, *args.toTypedArray())

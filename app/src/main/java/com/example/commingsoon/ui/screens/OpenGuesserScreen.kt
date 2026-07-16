@@ -34,7 +34,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.commingsoon.navigation.NavScreens
-import androidx.compose.ui.res.stringResource
 import com.example.commingsoon.R
 import com.example.commingsoon.language.appString
 
