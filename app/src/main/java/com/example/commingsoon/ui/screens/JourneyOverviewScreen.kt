@@ -53,6 +53,7 @@ import com.example.commingsoon.R
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.commingsoon.language.appString
 
 @Composable
@@ -230,7 +231,10 @@ fun ExpandableJourneyCard(
 
                         Text(
                             text = appString(R.string.show),
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -256,7 +260,10 @@ fun ExpandableJourneyCard(
 
                         Text(
                             text = appString(R.string.remove),
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -278,7 +285,10 @@ fun ExpandableJourneyCard(
 
                         Text(
                             text = appString(R.string.share),
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

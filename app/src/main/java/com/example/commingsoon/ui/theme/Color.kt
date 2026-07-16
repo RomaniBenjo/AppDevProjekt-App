@@ -8,7 +8,7 @@ val PinkLight = Color(0xffFFD2DD)
 
 val Green1Dark = Color(0xff306100)
 val Green1Normal = Color(0xff93C572)
-val Green1Light = Color(0xffB3D69C)
+val Green1Light = Color(0xffC1DDAE)
 
 val Green2Dark = Color(0xff264D00)
 val Green2Normal = Color(0xff447019)
@@ -24,7 +24,7 @@ val Blue2Light = Color(0xff87B8DC)
 
 val TealDark = Color(0xff006B6F)
 val TealNormal = Color(0xff43B3AE)
-val TealLight = Color(0xffA1D9D6)
+val TealLight = Color(0xffADE0DE)
 
 val RedDark = Color(0xff4A0601)
 val RedNormal = Color(0xff7C0A02)

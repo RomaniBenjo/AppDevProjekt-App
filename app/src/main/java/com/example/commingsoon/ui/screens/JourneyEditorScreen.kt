@@ -541,16 +541,16 @@ fun RemovePinDialog (
             Icon(
                 Icons.Outlined.Delete,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.primary
             )
         },
         title = { Text(appString(R.string.remove_pin)) },
-        text = { Text(appString(R.string.remove_pin, location.name)) },
+        text = { Text(appString(R.string.remove_pin_dialog, location.name)) },
         confirmButton = {
             Button(
                 onClick = onRemove,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) { Text(appString(R.string.remove)) }
         },

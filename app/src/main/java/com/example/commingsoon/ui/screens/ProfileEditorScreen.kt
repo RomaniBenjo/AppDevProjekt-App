@@ -27,6 +27,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -96,21 +98,18 @@ fun ProfileEditorScreen(
 
         Spacer(Modifier.height(28.dp))
 
-        OutlinedTextField(
+        TextField(
             value = name,
-            onValueChange = {
-                name = it
-            },
+            onValueChange = { name = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = {
-                Text(appString(R.string.profile_name))
-            },
+            label = { Text(appString(R.string.profile_name)) },
             singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.LightGray.copy(alpha = .15f),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
                 unfocusedContainerColor = Color.White,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.primary
+
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
             )
         )
         Spacer(Modifier.weight(1f))

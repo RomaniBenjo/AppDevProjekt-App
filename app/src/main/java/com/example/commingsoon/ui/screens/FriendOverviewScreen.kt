@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.commingsoon.viewmodels.Friend
@@ -241,7 +242,13 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(4.dp))
 
-                    Text(appString(R.string.show))
+                    Text(
+                        text = appString(R.string.show),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 OutlinedButton(
@@ -256,7 +263,13 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(4.dp))
 
-                    Text(appString(R.string.remove))
+                    Text(
+                        text = appString(R.string.remove),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Button(
@@ -271,7 +284,13 @@ fun ExpandableFriendCard(
 
                     Spacer(Modifier.width(6.dp))
 
-                    Text(appString(R.string.share))
+                    Text(
+                        text = appString(R.string.share),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

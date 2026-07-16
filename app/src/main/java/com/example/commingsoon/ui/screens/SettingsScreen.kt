@@ -3,6 +3,7 @@ package com.example.commingsoon.ui.screens
 
 import android.R.attr.theme
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,11 +36,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.commingsoon.viewmodels.SettingsViewModel
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.language.AppLanguage
@@ -135,7 +140,7 @@ fun LanguageSelection (
                         onSelected(language) }
                 )
 
-                Text(language.name)
+                Text(language.displayName)
             }
         }
     }
@@ -200,6 +205,9 @@ fun ThemeGrid(
 ) {
     val rows = allThemes.chunked(2)
 
+    val configuration = LocalConfiguration.current
+    val fontSize = (configuration.screenWidthDp * 0.035f).sp
+
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -216,7 +224,8 @@ fun ThemeGrid(
                         selected = theme == selected,
                         onClick = {
                             onSelected(theme)
-                        }
+                        },
+                        fontSize = fontSize
                     )
                 }
                 if (row.size == 1) {
@@ -233,7 +242,8 @@ fun ThemeCard(
     theme: AppThemeType,
     viewModel: SettingsViewModel,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    fontSize: TextUnit
 ) {
     val definition = viewModel.getThemeDefinition(theme)
 
@@ -277,8 +287,11 @@ fun ThemeCard(
 
                 Text(
                     text = appString(viewModel.getThemeName(theme)),
-                    style = MaterialTheme.typography.bodyLarge,
+                    fontSize = fontSize,
                     color = colorScheme.background
+//                    maxLines = 2,
+//                    softWrap = false,
+//                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
