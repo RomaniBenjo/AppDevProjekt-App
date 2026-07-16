@@ -30,6 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.ui.theme.AppThemeAssets
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.LocalConfiguration
 
 @Composable
 fun AppMenu (
@@ -47,13 +52,15 @@ fun AppMenu (
         NavScreens.Profile
     )
 
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     ModalDrawerSheet(
         modifier = Modifier
-            .fillMaxWidth(0.66f)
+            .fillMaxWidth(if (isLandscape) 0.33f else 0.66f)
             .navigationBarsPadding(),
         drawerContainerColor = MaterialTheme.colorScheme.tertiary
     ) {
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(if (isLandscape) 8.dp else 32.dp))
 
         Box(
             modifier = Modifier.fillMaxSize()
@@ -65,8 +72,14 @@ fun AppMenu (
                     .fillMaxSize()
             )
 
-            Column() {
-                items.forEach { screens ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = if (isLandscape) 8.dp else 24.dp,
+                    bottom = 24.dp
+                )
+            ) {
+                items(items) { screens ->
                     NavigationDrawerItem(
                         icon = {
                             screens.icon?.let {
@@ -84,7 +97,7 @@ fun AppMenu (
                                 color = MaterialTheme.colorScheme.background
                             )
                         },
-                        selected = currentRoute == screens.route,
+                        selected = false /* currentRoute == screens.route */,
                         onClick = {
                             navController.navigate(screens.route) { launchSingleTop = true }
                             closeMenu()

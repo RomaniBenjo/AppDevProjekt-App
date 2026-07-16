@@ -28,7 +28,7 @@ import com.example.commingsoon.viewmodels.ProfileViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun AppLayout (
+fun AppLayoutViewModel (
     navController: NavHostController,
     themeDefinition: AppThemeDefinition,
     title: String,

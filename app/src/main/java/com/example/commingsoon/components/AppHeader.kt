@@ -25,6 +25,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import com.example.commingsoon.ui.theme.AppThemeAssets
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun AppHeader(
@@ -32,58 +36,95 @@ fun AppHeader(
     onMenuClick: () -> Unit,
     assets: AppThemeAssets
 ) {
-    Box (
-        modifier = Modifier.height(150.dp).fillMaxWidth()
-    ) {
-       // Background with Fade at the end
-       Box(
-           modifier = Modifier
-               .fillMaxSize()
-               .padding(bottom = 25.dp)
-               .background(MaterialTheme.colorScheme.secondary)
-       )
-       Box(
-           modifier = Modifier
-               .fillMaxWidth()
-               .height(40.dp)
-               .align(Alignment.BottomCenter)
-               .offset(y = 15.dp)
-               .background(
-                   Brush.verticalGradient(
-                       colors = listOf(
-                           MaterialTheme.colorScheme.secondary,
-                           Color.Transparent
-                       )
-                   )
-               )
-       )
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val configuration = LocalConfiguration.current
+    val titleSize = (configuration.screenWidthDp * 0.09f).sp
 
-        // Graphic at Bottom of Header
-        Image(
-            painter = painterResource(assets.headerShape),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .align(Alignment.BottomCenter)
-                .offset(y = 10.dp),
-            contentScale = ContentScale.FillBounds,
-            alpha = 0.9f
-        )
+    if (!isLandscape) {
+        Box(
+            modifier = Modifier.height(150.dp).fillMaxWidth()
+        ) {
+            // Background with Fade at the end
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 25.dp)
+                    .background(MaterialTheme.colorScheme.secondary)
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .align(Alignment.BottomCenter)
+                    .offset(y = 15.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.secondary,
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
 
-        // Content (Title & Burger Menu)
+            // Graphic at Bottom of Header
+            Image(
+                painter = painterResource(assets.headerShape),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .align(Alignment.BottomCenter)
+                    .offset(y = 10.dp),
+                contentScale = ContentScale.FillBounds,
+                alpha = 0.9f
+            )
+
+            // Content (Title & Burger Menu)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp)
+                    .padding(horizontal = 10.dp)
+                    .padding(top = 50.dp)
+            ) {
+                IconButton(
+                    onClick = onMenuClick,
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Menu",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontSize = titleSize,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    } else {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp)
+                .height(56.dp)
                 .padding(horizontal = 10.dp)
-                .padding(top= 50.dp)
+                .padding(top = 20.dp)
         ) {
             IconButton(
                 onClick = onMenuClick,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = 16.dp)
+                modifier = Modifier.align(Alignment.CenterStart)
             ) {
                 Icon(
                     imageVector = Icons.Default.Menu,
@@ -91,14 +132,6 @@ fun AppHeader(
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .align(Alignment.Center)
-            )
         }
     }
 }
