@@ -15,6 +15,7 @@ import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.language.LocalAppLanguage
 import com.example.commingsoon.language.LocalLocalizedContext
 import com.example.commingsoon.language.localized
+import com.example.commingsoon.notifications.NotificationsHelper
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.ui.theme.CommingSoonTheme
@@ -25,7 +26,9 @@ import com.example.commingsoon.viewmodels.ProfileViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NotificationsHelper(this).createNotificationChannel()
         enableEdgeToEdge()
+
         setContent {
             val navController = rememberNavController()
             val themeViewModel: AppThemeViewModel = viewModel()

@@ -26,12 +26,23 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,9 +61,11 @@ import com.example.commingsoon.R
 import com.example.commingsoon.language.AppLanguage
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.language.appString
+import com.example.commingsoon.notifications.NotificationsHelper
 import com.example.commingsoon.ui.theme.AppThemeType
 import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.viewmodels.SettingsViewModelFactory
+import java.time.LocalTime
 import kotlin.collections.forEach
 
 @SuppressLint("LocalContextGetResourceValueCall")
@@ -61,12 +74,16 @@ fun SettingsScreen(
     themeViewModel: AppThemeViewModel,
     languageViewModel: AppLanguageViewModel
 ) {
+    val context = LocalContext.current
+
     val viewModel: SettingsViewModel = viewModel(
         factory = SettingsViewModelFactory(
             languageViewModel,
             themeViewModel
         )
     )
+
+    var showTimePicker by rememberSaveable { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier
@@ -114,6 +131,57 @@ fun SettingsScreen(
                 viewModel = viewModel
             )
         }
+
+        item {
+            Text(
+                text = appString(R.string.choose_notification),
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            JourneyNotificationSetting(
+                enabled = viewModel.isJourneyReminderEnabled(),
+                reminderTime = viewModel.getReminderTime(),
+                onEnabledChanged = viewModel::updateJourneyReminderEnabled,
+                onTimeClicked = {
+                    showTimePicker = true
+                }
+//                onConfirm = { time ->
+//                    viewModel.updateReminderTime(time)
+//                    showTimePicker = false
+//                }
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth(0.45f)
+                        .height(58.dp),
+                    onClick = { NotificationsHelper(context).showTestNotification() }
+                ) {
+                    Text(appString(R.string.test_notification))
+                }
+            }
+        }
+    }
+
+    if (showTimePicker) {
+        ReminderTimePicker(
+            initialTime = viewModel.getReminderTime(),
+            onDismiss = {
+                showTimePicker = false
+            },
+            onConfirm = { time ->
+                viewModel.updateReminderTime(time)
+                showTimePicker = false
+            }
+        )
     }
 }
 
@@ -293,6 +361,145 @@ fun ThemeCard(
 //                    softWrap = false,
 //                    overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun JourneyNotificationSetting(
+    enabled: Boolean,
+    reminderTime: LocalTime,
+    onEnabledChanged: (Boolean) -> Unit,
+    onTimeClicked: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Linke Seite
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = appString(R.string.journey_notification),
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = appString(R.string.journey_notification_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        // Rechte Seite
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(0.45f)
+                .height(50.dp)
+                .clip(RoundedCornerShape(50))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outline,
+                    RoundedCornerShape(50)
+                ),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            val selectedColor = MaterialTheme.colorScheme.secondary
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(
+                        if (!enabled) selectedColor
+                        else Color.Transparent
+                    )
+                    .clickable {
+                        onEnabledChanged(false)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(appString(R.string.never))
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(
+                        if (enabled) selectedColor
+                        else Color.Transparent
+                    )
+                    .clickable {
+                        onEnabledChanged(true)
+                        onTimeClicked()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = String.format("%02d:%02d", reminderTime.hour, reminderTime.minute)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ReminderTimePicker(
+    initialTime: LocalTime,
+    onDismiss: () -> Unit,
+    onConfirm: (LocalTime) -> Unit
+) {
+
+    val state = rememberTimePickerState(
+        initialHour = initialTime.hour,
+        initialMinute = initialTime.minute,
+        is24Hour = true
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(
+                    text = appString(R.string.choose_notification_time),
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                TimePicker(state = state)
+
+                Spacer(Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text(appString(R.string.cancel)) }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    TextButton(
+                        onClick = {
+                            onConfirm(LocalTime.of( state.hour, state.minute))
+                        }
+                    ) {
+                        Text(appString(R.string.ok))
+                    }
+                }
             }
         }
     }

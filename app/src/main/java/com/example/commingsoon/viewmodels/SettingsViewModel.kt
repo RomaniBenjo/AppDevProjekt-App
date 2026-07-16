@@ -1,6 +1,10 @@
 package com.example.commingsoon.viewmodels
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import com.example.commingsoon.language.AppLanguage
@@ -19,6 +23,7 @@ import com.example.commingsoon.ui.theme.VioletTheme
 import com.example.commingsoon.ui.theme.YellowTheme
 import kotlin.to
 import com.example.commingsoon.R
+import java.time.LocalTime
 
 class SettingsViewModel(
     private val languageViewModel: AppLanguageViewModel,
@@ -36,6 +41,20 @@ class SettingsViewModel(
         AppThemeType.LIGHTGREEN to R.string.lightgreen_theme,
         AppThemeType.YELLOW to R.string.yellow_theme
     )
+    private var journeyReminderEnabledState  by mutableStateOf(true)
+    private var reminderTimeState by mutableStateOf(LocalTime.of(9, 0))
+
+    fun isJourneyReminderEnabled() = journeyReminderEnabledState
+
+    fun getReminderTime() = reminderTimeState
+
+    fun updateJourneyReminderEnabled(enabled: Boolean) {
+        journeyReminderEnabledState  = enabled
+    }
+
+    fun updateReminderTime(time: LocalTime) {
+        reminderTimeState = time
+    }
 
     fun getThemeName(theme: AppThemeType): Int {
         return themeNames[theme]!!
