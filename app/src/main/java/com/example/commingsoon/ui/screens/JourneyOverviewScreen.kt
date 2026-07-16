@@ -67,34 +67,14 @@ fun JourneyOverviewScreen (
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Map Placeholder TODO: real map like on home screen
-        AnimatedContent(
-            targetState = mapExpanded,
-            label = ""
-        ) { expanded ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(if (expanded) 280.dp else 80.dp)
-                    .padding(16.dp)
-                    .clickable {
-                        mapExpanded = !mapExpanded
-                    }
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    Text(
-                        if (expanded)
-                            "World Map Placeholder"
-                        else
-                            "Tap to expand map"
-                    )
-                }
+        Spacer(Modifier.height(10.dp))
+        // composable from HomeScreen.kt
+        ExpandableMap(
+            expanded = mapExpanded,
+            onExpandedChange = {
+                mapExpanded = it
             }
-        }
+        )
 
         // journey list
         LazyColumn(

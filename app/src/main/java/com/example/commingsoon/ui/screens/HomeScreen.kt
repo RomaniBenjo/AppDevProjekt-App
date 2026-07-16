@@ -35,29 +35,56 @@ import androidx.navigation.NavController
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.viewmodels.Journey
+import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material3.CardDefaults
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 
 @Composable
 fun HomeScreen (
     viewModel: JourneyViewModel,
     navController: NavController
 ) {
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    var mapExpanded by rememberSaveable { mutableStateOf(isLandscape) }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // TODO: world map with counrties visited marked
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(.33f)
-                .padding(16.dp)
-        ) {
-            Card(
-                modifier = Modifier.fillMaxSize(),
+        if (isLandscape || mapExpanded) {
+            ExpandableMap(
+                expanded = mapExpanded,
+                onExpandedChange = {
+                    mapExpanded = it
+                }
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(.33f)
+                    .padding(16.dp)
             ) {
-                Text(
-                    "placeholder for world map",
-                    Modifier.align(Alignment.CenterHorizontally).padding(top = 20.dp)
-                )
+                // TODO: world map with counrties visited marked
+                Card(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = "placeholder for world map",
+                        modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 20.dp)
+                    )
+                }
             }
         }
 
@@ -218,5 +245,90 @@ fun JourneyCard (
             color = Color.LightGray.copy(alpha = .3f),
             modifier = Modifier.padding(start = 50.dp)
         )
+    }
+}
+
+@Composable
+fun ExpandableMap(
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .animateContentSize()
+    ) {
+        // Header
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                onExpandedChange(!expanded)
+            },
+            border = BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(
+                topStart = 28.dp,
+                topEnd = 28.dp,
+                bottomStart = if (expanded) 0.dp else 28.dp,
+                bottomEnd = if (expanded) 0.dp else 28.dp
+            ),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text(
+                if (expanded)
+                    "Hide World Map"
+                else
+                    "Show World Map"
+            )
+
+            Spacer(Modifier.width(8.dp))
+
+            Icon(
+                imageVector =
+                    if (expanded)
+                        Icons.Default.KeyboardArrowUp
+                    else
+                        Icons.Default.KeyboardArrowDown,
+                contentDescription = null
+            )
+        }
+
+        AnimatedContent(
+            targetState = expanded,
+            label = ""
+        ) { isExpanded ->
+            if (isExpanded) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp),
+                    shape = RoundedCornerShape(
+                        topStart = 0.dp,
+                        topEnd = 0.dp,
+                        bottomStart = 28.dp,
+                        bottomEnd = 28.dp
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("World Map Placeholder")
+
+                        // TODO: world map hier einsetzen, dann ist es für beide (home und journey) screens sichtbar
+
+                    }
+                }
+            }
+        }
     }
 }

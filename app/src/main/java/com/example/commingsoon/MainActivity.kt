@@ -8,7 +8,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.commingsoon.components.AppLayout
+import com.example.commingsoon.components.AppLayoutViewModel
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.ui.theme.AppThemeViewModel
@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                 theme = currentAppTheme,
                 darkTheme = themeViewModel.darkMode
             ) {
-                AppLayout(
+                AppLayoutViewModel(
                     navController = navController,
                     themeDefinition = currentAppTheme,
                     title = "Comming Soon",
