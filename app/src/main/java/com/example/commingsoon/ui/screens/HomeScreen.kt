@@ -23,11 +23,29 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.commingsoon.R
 import androidx.compose.ui.draw.clip
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,16 +53,102 @@ import androidx.navigation.NavController
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.viewmodels.Journey
+import com.example.commingsoon.components.InteractiveWorldMap
+
+private fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
+}
 
 @Composable
 fun HomeScreen (
     viewModel: JourneyViewModel,
     navController: NavController
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.loadWorldMap(context)
+    }
+
+    var testSelectedCountryId by rememberSaveable { mutableStateOf<String?>("United States") }
+    var isFullscreen by rememberSaveable { mutableStateOf(false) }
+
+    DisposableEffect(isFullscreen) {
+        if (isFullscreen) {
+            val activity = context.findActivity()
+            val originalOrientation = activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            onDispose {
+                activity?.requestedOrientation = originalOrientation
+            }
+        } else {
+            onDispose {}
+        }
+    }
+
+    // Option B: Wir erstellen eine Map von Länder-IDs zu Compose-Farben
+    val customCountryColors = remember(testSelectedCountryId) {
+        val colors = mutableMapOf(
+            "United States" to Color(0xFFFF5722), // Orange/Rot (USA wird über den class-Namen gefärbt)
+            "DE" to Color(0xFF4CAF50), // Grün
+            "FR" to Color(0xFFFFC107)  // Gelb
+        )
+        testSelectedCountryId?.let { selectedId ->
+            colors[selectedId] = Color.Blue // Das ausgewählte Land wird blau markiert
+        }
+        colors
+    }
+
+    if (isFullscreen) {
+        Dialog(
+            onDismissRequest = { isFullscreen = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFD4F0FC))
+            ) {
+                InteractiveWorldMap(
+                    countries = viewModel.countries,
+                    countryColors = customCountryColors,
+                    zoomable = true,
+                    oceanColor = Color(0xFFD4F0FC),
+                    borderColor = Color(0xFF222222),
+                    borderWidth = 0.4f,
+                    modifier = Modifier.fillMaxSize(),
+                    onCountrySelected = { clickedId ->
+                        testSelectedCountryId = clickedId
+                    }
+                )
+
+                IconButton(
+                    onClick = { isFullscreen = false },
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .align(Alignment.TopStart)
+                        .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Schließen",
+                        tint = Color.Black
+                    )
+                }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // TODO: world map with counrties visited marked
+        // world map with countries visited marked
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -54,10 +158,33 @@ fun HomeScreen (
             Card(
                 modifier = Modifier.fillMaxSize(),
             ) {
-                Text(
-                    "placeholder for world map",
-                    Modifier.align(Alignment.CenterHorizontally).padding(top = 20.dp)
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (viewModel.countries.isEmpty()) {
+                        Text(
+                            text = "Loading Map...",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else {
+                        InteractiveWorldMap(
+                            countries = viewModel.countries,
+                            countryColors = customCountryColors, // Die Farb-Map übergeben
+                            oceanColor = Color(0xFFD4F0FC),      // Individuelle Ozeanfarbe (Hellblau)
+                            borderColor = Color(0xFF222222),     // Randfarbe (Dunkelgrau)
+                            borderWidth = 0.4f,                  // Randstärke
+                            zoomable = false,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
+                                .clickable { isFullscreen = true },
+                            onCountrySelected = { _ ->
+                                isFullscreen = true
+                            }
+                        )
+                    }
+                }
             }
         }
 

@@ -1,8 +1,19 @@
 package com.example.commingsoon.viewmodels
 
+import android.content.Context
+import android.util.Xml
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.asComposePath
+import androidx.core.graphics.PathParser
 import androidx.lifecycle.ViewModel
-import java.nio.file.Files.copy
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.xmlpull.v1.XmlPullParser
 import java.time.LocalDate
 
 data class Journey(
@@ -29,6 +40,45 @@ class JourneyViewModel : ViewModel() {
 
     val journeys: List<Journey>
         get() = _journeys
+
+    var countries by mutableStateOf<List<MapCountry>>(emptyList())
+        private set
+
+    fun loadWorldMap(context: Context) {
+        if (countries.isNotEmpty()) return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val list = mutableListOf<MapCountry>()
+                context.assets.open("world.svg").use { inputStream ->
+                    val parser = Xml.newPullParser()
+                    parser.setInput(inputStream, null)
+                    var eventType = parser.eventType
+                    while (eventType != XmlPullParser.END_DOCUMENT) {
+                        if (eventType == XmlPullParser.START_TAG && parser.name == "path") {
+                            val id = parser.getAttributeValue(null, "id")
+                                ?: parser.getAttributeValue(null, "class")
+                            val d = parser.getAttributeValue(null, "d")
+                            if (id != null && d != null) {
+                                try {
+                                    val androidPath = PathParser.createPathFromPathData(d)
+                                    val composePath = androidPath.asComposePath()
+                                    list.add(MapCountry(id, composePath))
+                                } catch (e: Exception) {
+                                    // Ignore malformed paths
+                                }
+                            }
+                        }
+                        eventType = parser.next()
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    countries = list
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     init {
         _journeys.addAll(JourneyPlaceholder.journeys)
