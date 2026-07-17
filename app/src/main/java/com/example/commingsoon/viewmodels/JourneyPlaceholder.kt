@@ -13,7 +13,8 @@ object JourneyPlaceholder {
                 JourneyLocation(1, "Tokyo", 35.6764, 139.6500),
                 JourneyLocation(2, "Kyoto", 35.0116, 135.7681),
                 JourneyLocation(3, "Osaka", 34.6937, 135.5023)
-            )
+            ),
+            visitedCountries = listOf("Japan")
         ),
         Journey(
             id = 2,
@@ -26,7 +27,8 @@ object JourneyPlaceholder {
                 JourneyLocation(6, "Gullfoss", 64.3275, -20.1218),
                 JourneyLocation(7, "Skógafoss", 63.5321, -19.5114),
                 JourneyLocation(8, "Vík", 63.4186, -19.0060)
-            )
+            ),
+            visitedCountries = listOf("Iceland")
         ),
         Journey(
             id = 3,
@@ -39,7 +41,8 @@ object JourneyPlaceholder {
                 JourneyLocation(11, "Örebro", 59.2741, 15.2066),
                 JourneyLocation(12, "Göteborg", 57.7089, 11.9746),
                 JourneyLocation(13, "Malmö", 55.6050, 13.0038)
-            )
+            ),
+            visitedCountries = listOf("Sweden")
         ),
         Journey(
             id = 4,
@@ -57,7 +60,8 @@ object JourneyPlaceholder {
                 JourneyLocation(21, "Montréal", 45.5019, -73.5674),
                 JourneyLocation(22, "Québec", 46.8139, -71.2080),
                 JourneyLocation(23, "Niagara Falls", 43.0896, -79.0849)
-            )
+            ),
+            visitedCountries = listOf("Canada")
         ),
         Journey(
             id = 5,
@@ -77,7 +81,8 @@ object JourneyPlaceholder {
                 JourneyLocation(33, "Haarlem", 52.3874, 4.6462),
                 JourneyLocation(34, "Kinderdijk", 51.8820, 4.6333),
                 JourneyLocation(35, "Zaanse Schans", 52.4731, 4.8177)
-            )
+            ),
+            visitedCountries = listOf("Netherlands")
         ),
         Journey(
             id = 6,
@@ -89,7 +94,8 @@ object JourneyPlaceholder {
                 JourneyLocation(37, "Shanghai", 31.2304, 121.4737),
                 JourneyLocation(38, "Xi'an", 34.3416, 108.9398),
                 JourneyLocation(39, "Chengdu", 30.5728, 104.0668)
-            )
+            ),
+            visitedCountries = listOf("China")
         ),
         Journey(
             id = 7,
@@ -109,11 +115,12 @@ object JourneyPlaceholder {
                 JourneyLocation(49, "Adelaide", -34.9285, 138.6007),
                 JourneyLocation(50, "Hobart", -42.8821, 147.3272),
                 JourneyLocation(51, "Canberra", -35.2809, 149.1300)
-            )
+            ),
+            visitedCountries = listOf("Australia")
         ),
         Journey(
             id = 8,
-            title = "Netherlands",
+            title = "Netherlands & Germany",
             startDate = LocalDate.of(2028, 5, 16),
             endDate = LocalDate.of(2028, 5, 20),
             locations = listOf(
@@ -129,7 +136,8 @@ object JourneyPlaceholder {
                 JourneyLocation(61, "Haarlem", 52.3874, 4.6462),
                 JourneyLocation(62, "Kinderdijk", 51.8820, 4.6333),
                 JourneyLocation(63, "Zaanse Schans", 52.4731, 4.8177)
-            )
+            ),
+            visitedCountries = listOf("Netherlands", "Germany")
         )
     )
 }

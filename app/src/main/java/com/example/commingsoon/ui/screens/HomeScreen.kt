@@ -54,6 +54,8 @@ import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.viewmodels.Journey
 import com.example.commingsoon.components.InteractiveWorldMap
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 private fun Context.findActivity(): Activity? {
     var context = this
@@ -74,7 +76,7 @@ fun HomeScreen (
         viewModel.loadWorldMap(context)
     }
 
-    var testSelectedCountryId by rememberSaveable { mutableStateOf<String?>("United States") }
+    var testSelectedCountryId by rememberSaveable { mutableStateOf<String?>(null) }
     var isFullscreen by rememberSaveable { mutableStateOf(false) }
 
     DisposableEffect(isFullscreen) {
@@ -90,15 +92,52 @@ fun HomeScreen (
         }
     }
 
-    // Option B: Wir erstellen eine Map von Länder-IDs zu Compose-Farben
-    val customCountryColors = remember(testSelectedCountryId) {
-        val colors = mutableMapOf(
-            "United States" to Color(0xFFFF5722), // Orange/Rot (USA wird über den class-Namen gefärbt)
-            "DE" to Color(0xFF4CAF50), // Grün
-            "FR" to Color(0xFFFFC107)  // Gelb
-        )
+    val isLight = MaterialTheme.colorScheme.background == Color.White
+    val oceanColor = if (isLight) Color(0xFFD4F0FC) else Color(0xFF1E293B)
+    val defaultCountryColor = if (isLight) Color(0xFFECECEC) else Color(0xFF334155)
+    val borderColor = if (isLight) Color(0xFFCCCCCC) else Color(0xFF475569)
+
+    val visitedCountryColor = MaterialTheme.colorScheme.primary
+    val selectedCountryColor = MaterialTheme.colorScheme.secondary
+
+    val customCountryColors = remember(
+        viewModel.journeys,
+        viewModel.countries,
+        testSelectedCountryId,
+        visitedCountryColor,
+        selectedCountryColor
+    ) {
+        val countryLatestEndDate = mutableMapOf<String, LocalDate>()
+        viewModel.journeys.forEach { journey ->
+            journey.visitedCountries.forEach { countryNameOrId ->
+                val svgId = viewModel.countries.find { country ->
+                    country.id.equals(countryNameOrId, ignoreCase = true) ||
+                    country.name?.equals(countryNameOrId, ignoreCase = true) == true
+                }?.id
+                if (svgId != null) {
+                    val existing = countryLatestEndDate[svgId]
+                    if (existing == null || journey.endDate.isAfter(existing)) {
+                        countryLatestEndDate[svgId] = journey.endDate
+                    }
+                }
+            }
+        }
+
+        val colors = mutableMapOf<String, Color>()
+        val today = LocalDate.now()
+        countryLatestEndDate.forEach { (svgId, endDate) ->
+            val days = ChronoUnit.DAYS.between(endDate, today)
+            val years = days / 365.25
+            val opacity = if (years <= 1.0) {
+                1.0f
+            } else {
+                kotlin.math.max(0.25f, 1.0f - 0.05f * (years.toFloat() - 1.0f))
+            }
+            colors[svgId] = visitedCountryColor.copy(alpha = opacity)
+        }
+
         testSelectedCountryId?.let { selectedId ->
-            colors[selectedId] = Color.Blue // Das ausgewählte Land wird blau markiert
+            colors[selectedId] = selectedCountryColor
         }
         colors
     }
@@ -113,14 +152,15 @@ fun HomeScreen (
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFD4F0FC))
+                    .background(oceanColor)
             ) {
                 InteractiveWorldMap(
                     countries = viewModel.countries,
                     countryColors = customCountryColors,
                     zoomable = true,
-                    oceanColor = Color(0xFFD4F0FC),
-                    borderColor = Color(0xFF222222),
+                    oceanColor = oceanColor,
+                    defaultCountryColor = defaultCountryColor,
+                    borderColor = borderColor,
                     borderWidth = 0.4f,
                     modifier = Modifier.fillMaxSize(),
                     onCountrySelected = { clickedId ->
@@ -170,10 +210,11 @@ fun HomeScreen (
                     } else {
                         InteractiveWorldMap(
                             countries = viewModel.countries,
-                            countryColors = customCountryColors, // Die Farb-Map übergeben
-                            oceanColor = Color(0xFFD4F0FC),      // Individuelle Ozeanfarbe (Hellblau)
-                            borderColor = Color(0xFF222222),     // Randfarbe (Dunkelgrau)
-                            borderWidth = 0.4f,                  // Randstärke
+                            countryColors = customCountryColors,
+                            oceanColor = oceanColor,
+                            defaultCountryColor = defaultCountryColor,
+                            borderColor = borderColor,
+                            borderWidth = 0.4f,
                             zoomable = false,
                             modifier = Modifier
                                 .fillMaxSize()

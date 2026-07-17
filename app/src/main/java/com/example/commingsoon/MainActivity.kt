@@ -30,9 +30,11 @@ class MainActivity : ComponentActivity() {
             val overlayViewModel: OverlayViewModel = viewModel()
             val profileViewModel: ProfileViewModel = viewModel()
 
+            val context = androidx.compose.ui.platform.LocalContext.current
             val isDark = isSystemInDarkTheme()
             LaunchedEffect(Unit) {
                 themeViewModel.setMode(isDark)
+                journeyViewModel.loadJourneys(context)
             }
             val currentAppTheme = themeViewModel.getThemeDefinition()
 

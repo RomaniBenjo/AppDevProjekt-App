@@ -23,13 +23,13 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import com.example.commingsoon.viewmodels.MapCountry
-
 @Composable
 fun InteractiveWorldMap(
     countries: List<MapCountry>,
     countryColors: Map<String, Color>,
     modifier: Modifier = Modifier,
     oceanColor: Color = Color(0xFFC4E8FC), // Soft ocean blue
+    defaultCountryColor: Color = Color(0xFFECECEC), // Default unvisited country color
     borderColor: Color = Color(0xFF555555), // Dark gray borders
     borderWidth: Float = 0.3f,             // Border line thickness
     zoomable: Boolean = false,             // Allows zoom and pan when in fullscreen
@@ -153,7 +153,7 @@ fun InteractiveWorldMap(
             scale(scale, pivot = Offset.Zero) {
                 scale(baseScale, pivot = Offset.Zero) {
                     countries.forEach { country ->
-                        val fillPayloadColor = countryColors[country.id] ?: Color(0xFFECECEC)
+                        val fillPayloadColor = countryColors[country.id] ?: defaultCountryColor
                         drawPath(
                             path = country.path,
                             color = fillPayloadColor,
