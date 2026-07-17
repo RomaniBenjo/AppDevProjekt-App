@@ -99,7 +99,7 @@ fun JourneyEditorScreen (
                     label = { Text(appString(R.string.journey_name)) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                        unfocusedContainerColor = Color.White,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
@@ -136,7 +136,7 @@ fun JourneyEditorScreen (
                         },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                            unfocusedContainerColor = Color.White,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                             unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
@@ -167,7 +167,7 @@ fun JourneyEditorScreen (
                         },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                            unfocusedContainerColor = Color.White,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                             unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
@@ -459,7 +459,7 @@ fun AddPinDialog (
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                        unfocusedContainerColor = Color.White,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
@@ -476,7 +476,7 @@ fun AddPinDialog (
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                        unfocusedContainerColor = Color.White,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
@@ -493,7 +493,7 @@ fun AddPinDialog (
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                        unfocusedContainerColor = Color.White,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
