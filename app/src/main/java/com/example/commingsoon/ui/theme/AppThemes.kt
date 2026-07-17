@@ -1,6 +1,5 @@
 package com.example.commingsoon.ui.theme
 
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Typography
 
 data class AppThemeDefinition(

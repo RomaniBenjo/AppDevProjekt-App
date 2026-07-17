@@ -48,12 +48,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.commingsoon.viewmodels.Friend
-import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.language.appString
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
+import com.example.commingsoon.viewmodels.Friend
+import com.example.commingsoon.viewmodels.FriendViewModel
 
 @Composable
 fun FriendOverviewScreen (

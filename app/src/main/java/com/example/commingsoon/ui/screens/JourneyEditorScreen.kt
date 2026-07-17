@@ -32,8 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,15 +50,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.viewmodels.Journey
 import com.example.commingsoon.viewmodels.JourneyLocation
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.Instant
-import androidx.compose.ui.res.stringResource
-import com.example.commingsoon.R
-import com.example.commingsoon.language.appString
 
 @Composable
 fun JourneyEditorScreen (
@@ -102,7 +99,7 @@ fun JourneyEditorScreen (
                     label = { Text(appString(R.string.journey_name)) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                        unfocusedContainerColor = Color.White,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
@@ -139,7 +136,7 @@ fun JourneyEditorScreen (
                         },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                            unfocusedContainerColor = Color.White,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                             unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
@@ -170,7 +167,7 @@ fun JourneyEditorScreen (
                         },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                            unfocusedContainerColor = Color.White,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                             unfocusedIndicatorColor = MaterialTheme.colorScheme.primary,
@@ -462,7 +459,7 @@ fun AddPinDialog (
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                        unfocusedContainerColor = Color.White,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
@@ -479,7 +476,7 @@ fun AddPinDialog (
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                        unfocusedContainerColor = Color.White,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.primary
@@ -496,7 +493,7 @@ fun AddPinDialog (
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                        unfocusedContainerColor = Color.White,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                         focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = MaterialTheme.colorScheme.primary

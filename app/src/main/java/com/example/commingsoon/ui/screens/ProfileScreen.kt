@@ -1,6 +1,5 @@
 package com.example.commingsoon.ui.screens
 
-import android.widget.Button
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,10 +28,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.ProfileViewModel
-import androidx.compose.ui.res.stringResource
-import com.example.commingsoon.language.appString
 
 @Composable
 fun ProfileScreen(
