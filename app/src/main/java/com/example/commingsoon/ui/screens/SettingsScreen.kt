@@ -1,9 +1,7 @@
 package com.example.commingsoon.ui.screens
 
 
-import android.R.attr.theme
 import android.annotation.SuppressLint
-import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,13 +16,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -52,8 +46,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.commingsoon.viewmodels.SettingsViewModel
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -64,7 +56,6 @@ import com.example.commingsoon.language.appString
 import com.example.commingsoon.notifications.NotificationsHelper
 import com.example.commingsoon.ui.theme.AppThemeType
 import com.example.commingsoon.ui.theme.AppThemeViewModel
-import com.example.commingsoon.viewmodels.SettingsViewModelFactory
 import java.time.LocalTime
 import kotlin.collections.forEach
 
@@ -72,16 +63,10 @@ import kotlin.collections.forEach
 @Composable
 fun SettingsScreen(
     themeViewModel: AppThemeViewModel,
-    languageViewModel: AppLanguageViewModel
+    languageViewModel: AppLanguageViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
     val context = LocalContext.current
-
-    val viewModel: SettingsViewModel = viewModel(
-        factory = SettingsViewModelFactory(
-            languageViewModel,
-            themeViewModel
-        )
-    )
 
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
 
@@ -101,17 +86,17 @@ fun SettingsScreen(
             Spacer(Modifier.height(10.dp))
 
             LanguageSelection(
-                selected = viewModel.getCurrentLanguage(),
-                onSelected = viewModel::setLanguage,
-                allLanguages = viewModel.getAllLanguages()
+                selected = languageViewModel.currentLanguage,
+                onSelected = languageViewModel::updateLanguage,
+                allLanguages = languageViewModel.getLanguages()
             )
         }
 
         item {
             LightDarkSwitch(
-                isDarkMode = viewModel.getCurrentMode(),
+                isDarkMode = themeViewModel.isDarkMode(),
                 onChanged = {
-                    viewModel.setDarkLightMode(it)
+                    themeViewModel.updateMode(it)
                 }
             )
         }
@@ -125,10 +110,10 @@ fun SettingsScreen(
             Spacer(Modifier.height(10.dp))
 
             ThemeGrid(
-                selected = viewModel.getCurrentTheme(),
-                onSelected = viewModel::setTheme,
-                allThemes = viewModel.getAllThemes(),
-                viewModel = viewModel
+                selected = themeViewModel.currentTheme,
+                onSelected = themeViewModel::updateTheme,
+                allThemes = themeViewModel.getAllThemes(),
+                viewModel = themeViewModel
             )
         }
 
@@ -141,9 +126,9 @@ fun SettingsScreen(
             Spacer(Modifier.height(10.dp))
 
             JourneyNotificationSetting(
-                enabled = viewModel.isJourneyReminderEnabled(),
-                reminderTime = viewModel.getReminderTime(),
-                onEnabledChanged = viewModel::updateJourneyReminderEnabled,
+                enabled = settingsViewModel.isJourneyReminderEnabled(),
+                reminderTime = settingsViewModel.getReminderTime(),
+                onEnabledChanged = settingsViewModel::updateJourneyReminderEnabled,
                 onTimeClicked = {
                     showTimePicker = true
                 }
@@ -173,12 +158,12 @@ fun SettingsScreen(
 
     if (showTimePicker) {
         ReminderTimePicker(
-            initialTime = viewModel.getReminderTime(),
+            initialTime = settingsViewModel.getReminderTime(),
             onDismiss = {
                 showTimePicker = false
             },
             onConfirm = { time ->
-                viewModel.updateReminderTime(time)
+                settingsViewModel.updateReminderTime(time)
                 showTimePicker = false
             }
         )
@@ -269,7 +254,7 @@ fun ThemeGrid(
     selected: AppThemeType,
     onSelected: (AppThemeType) -> Unit,
     allThemes: List<AppThemeType>,
-    viewModel: SettingsViewModel
+    viewModel: AppThemeViewModel
 ) {
     val rows = allThemes.chunked(2)
 
@@ -308,7 +293,7 @@ fun ThemeGrid(
 fun ThemeCard(
     modifier: Modifier = Modifier,
     theme: AppThemeType,
-    viewModel: SettingsViewModel,
+    viewModel: AppThemeViewModel,
     selected: Boolean,
     onClick: () -> Unit,
     fontSize: TextUnit
@@ -316,7 +301,7 @@ fun ThemeCard(
     val definition = viewModel.getThemeDefinition(theme)
 
     val colorScheme =
-        if (viewModel.getCurrentMode())
+        if (viewModel.isDarkMode())
             definition.colorScheme.light
         else
             definition.colorScheme.dark

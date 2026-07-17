@@ -24,12 +24,14 @@ import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.viewmodels.ProfileViewModel
+import com.example.commingsoon.viewmodels.SettingsViewModel
 
 @Composable
 fun AppNavHost (
     navController: NavHostController,
     themeViewModel: AppThemeViewModel,
     languageViewModel: AppLanguageViewModel,
+    settingsViewModel: SettingsViewModel,
     journeyViewModel: JourneyViewModel,
     friendViewModel: FriendViewModel,
     overlayViewModel: OverlayViewModel,
@@ -130,7 +132,8 @@ fun AppNavHost (
         composable(NavScreens.Settings.route) {
             SettingsScreen(
                 themeViewModel = themeViewModel,
-                languageViewModel = languageViewModel
+                languageViewModel = languageViewModel,
+                settingsViewModel = settingsViewModel
             )
         }
 

@@ -25,6 +25,7 @@ import com.example.commingsoon.ui.theme.AppThemeViewModel
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.viewmodels.ProfileViewModel
+import com.example.commingsoon.viewmodels.SettingsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -34,6 +35,7 @@ fun AppLayoutViewModel (
     title: String,
     themeViewModel: AppThemeViewModel,
     languageViewModel: AppLanguageViewModel,
+    settingsViewModel: SettingsViewModel,
     journeyViewModel: JourneyViewModel,
     friendViewModel: FriendViewModel,
     overlayViewModel: OverlayViewModel,
@@ -112,6 +114,7 @@ fun AppLayoutViewModel (
                     navController = navController,
                     themeViewModel = themeViewModel,
                     languageViewModel = languageViewModel,
+                    settingsViewModel = settingsViewModel,
                     journeyViewModel = journeyViewModel,
                     friendViewModel = friendViewModel,
                     overlayViewModel = overlayViewModel,

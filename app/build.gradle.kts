@@ -60,4 +60,5 @@ dependencies {
     implementation("com.google.android.gms:play-services-nearby:19.3.0")
     implementation("org.maplibre.gl:android-sdk:13.3.1")
     implementation("androidx.work:work-runtime-ktx:2.10.2")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }
