@@ -45,6 +45,7 @@ import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.R.drawable.profile_placeholder
+import com.example.commingsoon.language.appString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,12 +85,12 @@ fun AddFriendOverlay(
             )
 
             Text(
-                text = "Add Friend",
+                text = appString(R.string.new_friend),
                 style = MaterialTheme.typography.titleLarge
             )
 
             Text(
-                text = "Search for a friend or scan a QR code",
+                text = appString(R.string.search_friend_or_qr),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
@@ -97,8 +98,8 @@ fun AddFriendOverlay(
             ShareModeSwitch(
                 selected = currentTab,
                 onSelected = { currentTab = it },
-                leftTitle = "Search",
-                rightTitle = "QR Code"
+                leftTitle = appString(R.string.search),
+                rightTitle = appString(R.string.qr_code)
             )
 
             when (currentTab) {
@@ -138,7 +139,7 @@ fun FriendSearchView(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 label = {
-                    Text("Friend Name")
+                    Text(appString(R.string.friend_name))
                 }
             )
 
@@ -187,9 +188,7 @@ fun FriendSearchItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(
-                friend.image ?: profile_placeholder
-            ),
+            painter = painterResource(friend.image ?: profile_placeholder),
             contentDescription = null,
             modifier = Modifier
                 .size(44.dp)
@@ -207,7 +206,6 @@ fun FriendSearchItem(
         FilledTonalButton(
             onClick = onAdd
         ) {
-
             Icon(
                 Icons.Outlined.PersonAdd,
                 null,
@@ -245,7 +243,7 @@ fun ScanQrPlaceholder() {
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "Scan a friend's QR code to add them.",
+            text = appString(R.string.scan_friend_qr_description),
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )

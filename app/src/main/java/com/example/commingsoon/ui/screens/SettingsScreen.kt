@@ -44,11 +44,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import com.example.commingsoon.viewmodels.SettingsViewModel
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.language.AppLanguage
 import com.example.commingsoon.language.AppLanguageViewModel
@@ -56,8 +54,8 @@ import com.example.commingsoon.language.appString
 import com.example.commingsoon.notifications.NotificationsHelper
 import com.example.commingsoon.ui.theme.AppThemeType
 import com.example.commingsoon.ui.theme.AppThemeViewModel
+import com.example.commingsoon.viewmodels.SettingsViewModel
 import java.time.LocalTime
-import kotlin.collections.forEach
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @Composable

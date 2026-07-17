@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.viewmodels.Journey
 
 enum class ShareTab {
@@ -97,7 +98,7 @@ fun ShareJourneyOverlay(
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Share Journey",
+                text = appString(R.string.share_journey),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
@@ -107,8 +108,8 @@ fun ShareJourneyOverlay(
                 onSelected = {
                     currentTab = it
                 },
-                leftTitle = "Friends",
-                rightTitle = "QR Code"
+                leftTitle = appString(R.string.friends),
+                rightTitle = appString(R.string.qr_code)
             )
 
             when (currentTab) {
@@ -260,7 +261,7 @@ fun FriendShareItem(
 
             Spacer(Modifier.width(6.dp))
 
-            Text("Share")
+            Text(appString(R.string.share))
         }
     }
 }
@@ -283,7 +284,7 @@ fun QrCodeView(
         Spacer(Modifier.height(6.dp))
 
         Text(
-            text = "Scan this QR code to access the journey.",
+            text = appString(R.string.share_journey_qr_description),
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
@@ -302,7 +303,7 @@ fun QrCodeView(
             ) {
                 Image(
                     painter = painterResource(R.drawable.qr_placeholder), // TODO: creating real QR codes
-                    contentDescription = "QR Code",
+                    contentDescription = appString(R.string.qr_code),
                     modifier = Modifier.size(190.dp)
                 )
             }
@@ -311,7 +312,7 @@ fun QrCodeView(
         Spacer(Modifier.height(28.dp))
 
         Text(
-            text = "Friends can scan this code to instantly add your journey.",
+            text = appString(R.string.friends_can_scan),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray,
@@ -336,7 +337,7 @@ fun QrCodeView(
 
             Spacer(Modifier.width(8.dp))
 
-            Text("Save QR Code")
+            Text(appString(R.string.save_qr_code))
         }
 
         Spacer(Modifier.height(20.dp))

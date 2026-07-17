@@ -1,6 +1,5 @@
 package com.example.commingsoon.ui.theme
 
-import android.R.attr.enabled
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.commingsoon.R
 import com.example.commingsoon.data.AppPreferenceRepository
 import kotlinx.coroutines.launch
-import kotlin.collections.get
 
 class AppThemeViewModel (
     private val repository: AppPreferenceRepository

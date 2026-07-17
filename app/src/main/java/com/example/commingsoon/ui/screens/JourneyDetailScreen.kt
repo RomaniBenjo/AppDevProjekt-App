@@ -37,15 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.viewmodels.JourneyLocation
 import com.example.commingsoon.viewmodels.JourneyViewModel
-import com.example.commingsoon.R
-import com.example.commingsoon.language.appString
 
 @Composable
 fun JourneyDetailScreen (

@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.compose.ui.res.stringResource
 import com.example.commingsoon.R
 import com.example.commingsoon.language.appString
 

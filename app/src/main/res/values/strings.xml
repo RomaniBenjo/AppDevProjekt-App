@@ -32,6 +32,8 @@
     <string name="add">Add</string>
     <string name="back">Back</string>
     <string name="never">Never</string>
+    <string name="qr_code">QR Code</string>
+    <string name="search">Search</string>
 
     <!-- Dialog-Confirmations -->
     <string name="remove_friend">Remove Friend</string>
@@ -72,6 +74,15 @@
     <string name="online_guesser_text">Play a shared game with other players.</string>
     <string name="local_guesser">Local OpenGuesser</string>
     <string name="local_guesser_text">Try the local mode and PMTiles map viewer.</string>
+
+    <string name="save_qr_code">Save QR Code</string>
+    <string name="share_journey_with_friend">Share a journey with this friend</string>
+    <string name="share_journey">Share Journey</string>
+    <string name="share_journey_qr_description">Scan this QR code to access the journey.</string>
+    <string name="friends_can_scan">Friends can scan this code to instantly add your journey.</string>
+    <string name="search_friend_or_qr">Search for a friend or scan a QR code</string>
+    <string name="friend_name">Friend Name</string>
+    <string name="scan_friend_qr_description">Scan a friend's QR code to add them.</string>
 
     <string name="notification_journey_title">Your Journey starts today!</string>
     <string name="notification_journey_text">Your Journey "%1$s" starts today. Click to see more information!</string>

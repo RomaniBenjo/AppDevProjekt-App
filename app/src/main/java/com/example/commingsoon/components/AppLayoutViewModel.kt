@@ -17,8 +17,8 @@ import com.example.commingsoon.navigation.AppNavHost
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.AddFriendOverlay
 import com.example.commingsoon.overlays.OverlayType
-import com.example.commingsoon.overlays.ShareJourneyOverlay
 import com.example.commingsoon.overlays.OverlayViewModel
+import com.example.commingsoon.overlays.ShareJourneyOverlay
 import com.example.commingsoon.overlays.ShareWithFriendOverlay
 import com.example.commingsoon.ui.theme.AppThemeDefinition
 import com.example.commingsoon.ui.theme.AppThemeViewModel

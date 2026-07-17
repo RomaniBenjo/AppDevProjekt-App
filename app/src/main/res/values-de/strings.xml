@@ -33,6 +33,8 @@
     <string name="add">Hinzufügen</string>
     <string name="back">Zurück</string>
     <string name="never">Nie</string>
+    <string name="qr_code">QR Code</string>
+    <string name="search">Suchen</string>
 
     <!-- Dialog-Confirmations -->
     <string name="remove_friend">Freund entfernen</string>
@@ -73,6 +75,15 @@
     <string name="online_guesser_text">Spiele eine geteilte Runde mit anderen Spielern.</string>
     <string name="local_guesser">Lokaler OpenGuesser</string>
     <string name="local_guesser_text">Probiere den lokalen Modus und den PMTiles-Kartenbetrachter aus.</string>
+
+    <string name="save_qr_code">QR Code speichern</string>
+    <string name="share_journey_with_friend">Teile eine Reise mit diesem Freund</string>
+    <string name="share_journey">Reise teilen</string>
+    <string name="share_journey_qr_description">Scanne diesen QR-Code, um auf die Reise zuzugreifen.</string>
+    <string name="friends_can_scan">Freunde können diesen Code scannen, um die Reise sofort hinzuzufügen.</string>
+    <string name="search_friend_or_qr">Suche nach einem Freund oder scanne einen QR-Code</string>
+    <string name="friend_name">Name des Freundes</string>
+    <string name="scan_friend_qr_description">Scanne den QR-Code eines Freundes, um ihn hinzuzufügen.</string>
 
     <string name="notification_journey_title">Deine Reise startet heute!</string>
     <string name="notification_journey_text">Deine Reise "%1$s" startet heute. Klicke hier für mehr Informationen!</string>
