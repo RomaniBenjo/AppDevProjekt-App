@@ -95,6 +95,7 @@ fun AddFriendOverlay(
                 color = Color.Gray
             )
 
+            // composable in ShareJourneyOverlay.kt
             ShareModeSwitch(
                 selected = currentTab,
                 onSelected = { currentTab = it },

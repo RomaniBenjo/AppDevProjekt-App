@@ -136,12 +136,12 @@ fun ShareModeSwitch(
     leftTitle: String,
     rightTitle: String
 ) {
-
     Row(
         modifier = Modifier
             .padding(vertical = 20.dp)
             .fillMaxWidth()
             .height(56.dp)
+            .clip(RoundedCornerShape(50))
             .border(
                 1.dp,
                 MaterialTheme.colorScheme.outline,
