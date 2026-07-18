@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.annotation.StringRes
 import com.example.commingsoon.R
 import com.example.commingsoon.ui.screens.localopenguesser.IndexedPhoto
+import com.example.commingsoon.ui.screens.localopenguesser.OfflineCountryResolver
 import com.example.commingsoon.ui.screens.localopenguesser.PhotoIndexDatabase
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
@@ -48,6 +49,7 @@ internal class NearbyConnectionManager(context: Context) {
     private val serviceId = "${appContext.packageName}.localopenguesser.v2"
     private val strategy = Strategy.P2P_POINT_TO_POINT
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val countryResolver by lazy { OfflineCountryResolver.load(appContext) }
     private val endpointNames = mutableMapOf<String, String>()
     private val mutableState = MutableStateFlow(NearbyConnectionState())
     val state: StateFlow<NearbyConnectionState> = mutableState.asStateFlow()
@@ -424,11 +426,25 @@ internal class NearbyConnectionManager(context: Context) {
             joinerActual = joiner.actual,
             hostDistanceKm = hostDistance,
             joinerDistanceKm = joinerDistance,
-            hostPoints = localGuesserPoints(hostDistance),
-            joinerPoints = localGuesserPoints(joinerDistance)
+            hostPoints = localGuesserPoints(
+                hostDistance,
+                correctCountry = isSameCountry(host.guess, joiner.actual)
+            ),
+            joinerPoints = localGuesserPoints(
+                joinerDistance,
+                correctCountry = isSameCountry(joiner.guess, host.actual)
+            )
         )
         sendControl(LocalGameProtocol.TYPE_ROUND_RESULT, result.toValues())
         applyRoundResult(result)
+    }
+
+    private fun isSameCountry(guess: GuessLocation?, actual: GuessLocation): Boolean {
+        val guessedCountry = guess?.let { countryResolver.countryAt(it.latitude, it.longitude) }
+            ?: return false
+        val actualCountry = countryResolver.countryAt(actual.latitude, actual.longitude)
+            ?: return false
+        return guessedCountry == actualCountry
     }
 
     private fun maybeRevealRound() {
@@ -941,21 +957,25 @@ internal fun localGuesserDistanceKm(first: GuessLocation, second: GuessLocation)
     return 2 * EARTH_RADIUS_KM * asin(sqrt(a.coerceIn(0.0, 1.0)))
 }
 
-internal fun localGuesserPoints(distanceKm: Double?): Int = if (distanceKm == null) {
-    0
-} else if (distanceKm <= MAX_SCORE_DISTANCE_KM) {
-    MAX_ROUND_POINTS
-} else {
-    val normalizedDistance =
-        (distanceKm - MAX_SCORE_DISTANCE_KM) / (LONG_DISTANCE_REFERENCE_KM - MAX_SCORE_DISTANCE_KM)
-    val decay = ln(MAX_ROUND_POINTS.toDouble() / LONG_DISTANCE_REFERENCE_POINTS)
-    (MAX_ROUND_POINTS * exp(-decay * sqrt(normalizedDistance)))
-        .roundToInt()
-        .coerceIn(0, MAX_ROUND_POINTS)
+internal fun localGuesserPoints(distanceKm: Double?, correctCountry: Boolean = false): Int {
+    if (distanceKm == null) return 0
+    val distancePoints = if (distanceKm <= MAX_SCORE_DISTANCE_KM) {
+        MAX_ROUND_POINTS
+    } else {
+        val normalizedDistance =
+            (distanceKm - MAX_SCORE_DISTANCE_KM) / (LONG_DISTANCE_REFERENCE_KM - MAX_SCORE_DISTANCE_KM)
+        val decay = ln(MAX_ROUND_POINTS.toDouble() / LONG_DISTANCE_REFERENCE_POINTS)
+        (MAX_ROUND_POINTS * exp(-decay * sqrt(normalizedDistance)))
+            .roundToInt()
+            .coerceIn(0, MAX_ROUND_POINTS)
+    }
+    val countryBonus = if (correctCountry) CORRECT_COUNTRY_BONUS else 0
+    return (distancePoints + countryBonus).coerceAtMost(MAX_ROUND_POINTS)
 }
 
 private const val EARTH_RADIUS_KM = 6_371.0088
 private const val MAX_ROUND_POINTS = 5_000
+private const val CORRECT_COUNTRY_BONUS = 1_000
 private const val MAX_SCORE_DISTANCE_KM = 5.0
 private const val LONG_DISTANCE_REFERENCE_KM = 300.0
 private const val LONG_DISTANCE_REFERENCE_POINTS = 2_000

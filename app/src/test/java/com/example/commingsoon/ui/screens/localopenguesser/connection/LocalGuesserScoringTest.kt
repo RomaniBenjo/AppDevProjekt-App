@@ -28,6 +28,17 @@ class LocalGuesserScoringTest {
     }
 
     @Test
+    fun correctCountryAddsOneThousandPoints() {
+        assertEquals(3_000, localGuesserPoints(300.0, correctCountry = true))
+    }
+
+    @Test
+    fun correctCountryBonusDoesNotExceedRoundMaximum() {
+        assertEquals(5_000, localGuesserPoints(0.0, correctCountry = true))
+        assertEquals(5_000, localGuesserPoints(6.0, correctCountry = true))
+    }
+
+    @Test
     fun distanceCalculationUsesKilometers() {
         val vienna = GuessLocation(48.2082, 16.3738)
         val berlin = GuessLocation(52.5200, 13.4050)
