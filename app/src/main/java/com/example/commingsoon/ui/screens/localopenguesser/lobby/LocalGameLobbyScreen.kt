@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,7 @@ import com.example.commingsoon.ui.screens.localopenguesser.connection.requiredNe
 @Composable
 internal fun LocalGameLobbyScreen(
     navController: NavHostController,
+    profileName: String,
     connectionViewModel: LocalConnectionViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -48,6 +50,12 @@ internal fun LocalGameLobbyScreen(
         ActivityResultContracts.RequestMultiplePermissions()
     ) {
         permissionsGranted = hasNearbyPermissions(context)
+    }
+
+    LaunchedEffect(profileName) {
+        if (profileName.isNotBlank()) {
+            connectionViewModel.setLocalName(profileName)
+        }
     }
 
     state.pendingConnection?.let { pending ->

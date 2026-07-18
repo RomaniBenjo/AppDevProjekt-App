@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
@@ -40,6 +41,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.example.commingsoon.R
 import com.example.commingsoon.language.appString
 import com.example.commingsoon.ui.screens.localopenguesser.OfflineGuessMap
@@ -158,8 +160,14 @@ private fun RoundPhoto(state: NearbyConnectionState, onGuess: (Double, Double) -
         }
     }
 
-    when (roundView) {
-        RoundView.PHOTO -> {
+    Box(modifier = Modifier.fillMaxWidth().height(448.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (roundView == RoundView.PHOTO) 1f else 0f)
+                .zIndex(if (roundView == RoundView.PHOTO) 1f else 0f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             if (bitmap == null) {
                 Text(appString(R.string.local_guesser_photo_display_failed))
             } else {
@@ -171,7 +179,14 @@ private fun RoundPhoto(state: NearbyConnectionState, onGuess: (Double, Double) -
                 )
             }
         }
-        RoundView.MAP -> {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (roundView == RoundView.MAP) 1f else 0f)
+                .zIndex(if (roundView == RoundView.MAP) 1f else 0f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Box(modifier = Modifier.fillMaxWidth().height(420.dp)) {
                 OfflineGuessMap(
                     selectedLocation = selectedGuess,

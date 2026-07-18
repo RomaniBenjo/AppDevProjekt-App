@@ -100,7 +100,10 @@ fun AppNavHost (
             LocalOpenGuesserStartScreen(navController = navController)
         }
         composable(NavScreens.OpenGuesserLocalLobby.route) {
-            LocalGameLobbyScreen(navController = navController)
+            LocalGameLobbyScreen(
+                navController = navController,
+                profileName = profileViewModel.profile.name
+            )
         }
         composable(NavScreens.Friends.route) {
             FriendOverviewScreen(
