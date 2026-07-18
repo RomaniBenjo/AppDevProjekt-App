@@ -52,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.commingsoon.ui.screens.localopenguesser.connection.LocalConnectionViewModel
 import com.example.commingsoon.ui.screens.localopenguesser.OfflineGuessMap
+import com.example.commingsoon.ui.screens.localopenguesser.connection.HomePhotoExclusionMode
 import com.example.commingsoon.ui.screens.localopenguesser.connection.LocalGamePhase
 import com.example.commingsoon.ui.screens.localopenguesser.connection.LocalGameSettings
 import com.example.commingsoon.ui.screens.localopenguesser.connection.LocalGuesserMessage
@@ -368,12 +369,70 @@ private fun HostGameOptions(
         }
     }
     Text(
+        appString(R.string.local_guesser_home_photo_filter),
+        style = MaterialTheme.typography.titleSmall
+    )
+    HomePhotoFilterOption(
+        selected = settings.homePhotoExclusionMode == HomePhotoExclusionMode.NONE,
+        label = appString(R.string.local_guesser_home_photo_filter_none),
+        onClick = {
+            onSettingsChange(
+                settings.copy(homePhotoExclusionMode = HomePhotoExclusionMode.NONE)
+            )
+        }
+    )
+    HomePhotoFilterOption(
+        selected = settings.homePhotoExclusionMode ==
+            HomePhotoExclusionMode.MOST_PHOTOGRAPHED_COUNTRY,
+        label = appString(R.string.local_guesser_home_photo_filter_country),
+        onClick = {
+            onSettingsChange(
+                settings.copy(
+                    homePhotoExclusionMode = HomePhotoExclusionMode.MOST_PHOTOGRAPHED_COUNTRY
+                )
+            )
+        }
+    )
+    HomePhotoFilterOption(
+        selected = settings.homePhotoExclusionMode == HomePhotoExclusionMode.LARGEST_HOME_CLUSTER,
+        label = appString(R.string.local_guesser_home_photo_filter_cluster),
+        onClick = {
+            onSettingsChange(
+                settings.copy(
+                    homePhotoExclusionMode = HomePhotoExclusionMode.LARGEST_HOME_CLUSTER
+                )
+            )
+        }
+    )
+    Text(
+        appString(R.string.local_guesser_home_photo_filter_description),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall
+    )
+    Text(
         appString(R.string.local_guesser_game_options_description),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.bodySmall
     )
     Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
         Text(appString(R.string.local_guesser_select_photos_start))
+    }
+}
+
+@Composable
+private fun HomePhotoFilterOption(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit
+) {
+    if (selected) {
+        Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+            Text(label)
+        }
+    } else {
+        OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+            Text(label)
+        }
     }
 }
 

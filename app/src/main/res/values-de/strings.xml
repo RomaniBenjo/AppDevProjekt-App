@@ -140,6 +140,11 @@
     <string name="local_guesser_round_count">Rundenanzahl</string>
     <string name="local_guesser_round_length">Rundenlänge</string>
     <string name="local_guesser_seconds_short">%1$ds</string>
+    <string name="local_guesser_home_photo_filter">Filter für Fotos aus der Heimat</string>
+    <string name="local_guesser_home_photo_filter_none">Alle Länder und Regionen behalten</string>
+    <string name="local_guesser_home_photo_filter_country">Meistfotografiertes Land ausschließen</string>
+    <string name="local_guesser_home_photo_filter_cluster">Größtes Heimatgebiets-Cluster ausschließen</string>
+    <string name="local_guesser_home_photo_filter_description">Wird getrennt auf die Bibliothek jedes Spielers angewendet. Ein Heimatgebiets-Cluster verbindet Fotos, die höchstens 50 km voneinander entfernt sind.</string>
     <string name="local_guesser_game_options_description">Jedes Gerät steuert pro Runde ein zufälliges Foto mit Standortdaten bei. Kein Gerät verwendet mehr als zwei Fotos aus demselben Land.</string>
     <string name="local_guesser_select_photos_start">Fotos auswählen und starten</string>
     <string name="local_guesser_preparing_game">Spiel wird vorbereitet…</string>
@@ -187,7 +192,7 @@
     <string name="local_guesser_error_send_test_message">Die Testnachricht konnte nicht gesendet werden: %1$s</string>
     <string name="local_guesser_status_waiting_phone_prepare">Es wird gewartet, bis das andere Smartphone seine Fotos vorbereitet…</string>
     <string name="local_guesser_status_selecting_photos">Zufällige Fotos werden auf diesem Gerät ausgewählt…</string>
-    <string name="local_guesser_error_not_enough_photos">Dieses Gerät hat nicht genügend Fotos mit Standortdaten für %1$d Runden, wenn höchstens zwei Fotos pro Land verwendet werden.</string>
+    <string name="local_guesser_error_not_enough_photos">Dieses Gerät hat nicht genügend geeignete Fotos mit Standortdaten für %1$d Runden mit dem ausgewählten Heimatfilter und Länderlimit.</string>
     <string name="local_guesser_status_photos_selected">Fotos ausgewählt. Warten auf den Host…</string>
     <string name="local_guesser_error_round_missing_photo">Für Runde %1$d wurde kein lokales Foto ausgewählt.</string>
     <string name="local_guesser_status_exchanging_photos">Fotos für Runde %1$d werden ausgetauscht…</string>

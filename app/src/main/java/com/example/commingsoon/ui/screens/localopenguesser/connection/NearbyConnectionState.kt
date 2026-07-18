@@ -30,9 +30,16 @@ internal enum class LocalGamePhase {
     FINISHED
 }
 
+internal enum class HomePhotoExclusionMode {
+    NONE,
+    MOST_PHOTOGRAPHED_COUNTRY,
+    LARGEST_HOME_CLUSTER
+}
+
 internal data class LocalGameSettings(
     val roundCount: Int = 5,
-    val roundSeconds: Int = 30
+    val roundSeconds: Int = 30,
+    val homePhotoExclusionMode: HomePhotoExclusionMode = HomePhotoExclusionMode.NONE
 )
 
 internal data class GuessLocation(

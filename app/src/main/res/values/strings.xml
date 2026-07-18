@@ -139,6 +139,11 @@
     <string name="local_guesser_round_count">Round count</string>
     <string name="local_guesser_round_length">Round length</string>
     <string name="local_guesser_seconds_short">%1$ds</string>
+    <string name="local_guesser_home_photo_filter">Home photo filter</string>
+    <string name="local_guesser_home_photo_filter_none">Keep all countries and regions</string>
+    <string name="local_guesser_home_photo_filter_country">Exclude most-photographed country</string>
+    <string name="local_guesser_home_photo_filter_cluster">Exclude largest home-area cluster</string>
+    <string name="local_guesser_home_photo_filter_description">Applied separately to each player’s library. A home-area cluster connects photos up to 50 km apart.</string>
     <string name="local_guesser_game_options_description">Each device contributes one random geotagged photo per round. No device will use more than two photos from the same country.</string>
     <string name="local_guesser_select_photos_start">Select photos and start</string>
     <string name="local_guesser_preparing_game">Preparing game…</string>
@@ -186,7 +191,7 @@
     <string name="local_guesser_error_send_test_message">Could not send the test message: %1$s</string>
     <string name="local_guesser_status_waiting_phone_prepare">Waiting for the other phone to prepare its photos…</string>
     <string name="local_guesser_status_selecting_photos">Selecting random photos from this device…</string>
-    <string name="local_guesser_error_not_enough_photos">This device does not have enough geotagged photos to create %1$d rounds while using at most two photos per country.</string>
+    <string name="local_guesser_error_not_enough_photos">This device does not have enough eligible geotagged photos to create %1$d rounds with the selected home filter and country limit.</string>
     <string name="local_guesser_status_photos_selected">Photos selected. Waiting for the host…</string>
     <string name="local_guesser_error_round_missing_photo">Round %1$d has no selected local photo.</string>
     <string name="local_guesser_status_exchanging_photos">Exchanging round %1$d photos…</string>

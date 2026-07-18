@@ -150,7 +150,8 @@ internal class NearbyConnectionManager(context: Context) {
                 LocalGameProtocol.TYPE_GAME_SETTINGS,
                 mapOf(
                     "roundCount" to safeSettings.roundCount,
-                    "roundSeconds" to safeSettings.roundSeconds
+                    "roundSeconds" to safeSettings.roundSeconds,
+                    "homePhotoExclusionMode" to safeSettings.homePhotoExclusionMode.name
                 )
             )
             updateGame {
@@ -228,7 +229,7 @@ internal class NearbyConnectionManager(context: Context) {
             )
         }
         scope.launch {
-            val selection = withContext(Dispatchers.IO) { selectRandomPhotos(settings.roundCount) }
+            val selection = withContext(Dispatchers.IO) { selectRandomPhotos(settings) }
             if (selection.size != settings.roundCount) {
                 showGameError(
                     message(
@@ -255,15 +256,20 @@ internal class NearbyConnectionManager(context: Context) {
         }
     }
 
-    private fun selectRandomPhotos(roundCount: Int): List<IndexedPhoto> {
+    private fun selectRandomPhotos(settings: LocalGameSettings): List<IndexedPhoto> {
         val database = PhotoIndexDatabase(appContext)
-        val candidates = try {
+        val eligiblePhotos = try {
             database.readAll().values.filter {
                 !it.unreadable && it.latitude != null && it.longitude != null && it.country != null
-            }.shuffled()
+            }
         } finally {
             database.close()
         }
+        val excludedMediaIds = homePhotosToExclude(
+            eligiblePhotos,
+            settings.homePhotoExclusionMode
+        )
+        val candidates = eligiblePhotos.filterNot { it.mediaId in excludedMediaIds }.shuffled()
         val countryCounts = mutableMapOf<String, Int>()
         return candidates.filter { photo ->
             val country = photo.country ?: return@filter false
@@ -274,7 +280,7 @@ internal class NearbyConnectionManager(context: Context) {
                 countryCounts[country] = count + 1
                 true
             }
-        }.take(roundCount)
+        }.take(settings.roundCount)
     }
 
     private fun startRound(round: Int) {
@@ -459,7 +465,15 @@ internal class NearbyConnectionManager(context: Context) {
                 if (mutableState.value.role != NearbyRole.JOINER) return
                 val settings = LocalGameSettings(
                     roundCount = json.optInt("roundCount").coerceIn(1, 20),
-                    roundSeconds = json.optInt("roundSeconds").coerceIn(10, 300)
+                    roundSeconds = json.optInt("roundSeconds").coerceIn(10, 300),
+                    homePhotoExclusionMode = runCatching {
+                        HomePhotoExclusionMode.valueOf(
+                            json.optString(
+                                "homePhotoExclusionMode",
+                                HomePhotoExclusionMode.NONE.name
+                            )
+                        )
+                    }.getOrDefault(HomePhotoExclusionMode.NONE)
                 )
                 prepareLocalSelection(settings, notifyHostWhenReady = true)
             }
