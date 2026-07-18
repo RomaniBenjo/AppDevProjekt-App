@@ -24,8 +24,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -41,10 +39,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.commingsoon.viewmodels.ProfileViewModel
 import com.example.commingsoon.R
-import androidx.compose.ui.res.stringResource
 import com.example.commingsoon.language.appString
+import com.example.commingsoon.viewmodels.ProfileViewModel
 
 @Composable
 fun ProfileEditorScreen(
@@ -106,7 +103,7 @@ fun ProfileEditorScreen(
             singleLine = true,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.LightGray.copy(alpha = 0.15f),
-                unfocusedContainerColor = Color.White,
+                unfocusedContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.15f),
 
                 focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                 unfocusedIndicatorColor = MaterialTheme.colorScheme.primary

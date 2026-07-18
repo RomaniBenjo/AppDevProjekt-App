@@ -32,6 +32,9 @@
     <string name="ok">OK</string>
     <string name="add">Hinzufügen</string>
     <string name="back">Zurück</string>
+    <string name="never">Nie</string>
+    <string name="qr_code">QR Code</string>
+    <string name="search">Suchen</string>
 
     <!-- Dialog-Confirmations -->
     <string name="remove_friend">Freund entfernen</string>
@@ -40,10 +43,13 @@
     <string name="remove_pin_dialog">Möchtest du %1$s wirklich entfernen?</string>
     <string name="remove_journey">Reise entfernen</string>
     <string name="remove_journey_dialog">Möchtest du %1$s wirklich entfernen?</string>
+    <string name="choose_notification_time">Benachrichtigungszeit</string>
 
     <!-- Phrases -->
     <string name="choose_language">Sprache wählen</string>
     <string name="choose_theme">Design wählen</string>
+    <string name="choose_notification">Passe die Benachrichtigungen an</string>
+    <string name="test_notification">Test Benachrichtigung</string>
     <string name="light_mode">Tagmodus</string>
     <string name="dark_mode">Nachtmodus</string>
     <string name="change_photo">Foto ändern</string>
@@ -60,6 +66,8 @@
     <string name="longitude">Längengrad: %1$s</string>
     <string name="latitude_name">Breitengrad</string>
     <string name="longitude_name">Längengrad</string>
+    <string name="journey_notification">Reisebenachrichtigung</string>
+    <string name="journey_notification_description">Erhalte am Morgen des Starttags deiner Reise eine Erinnerung.</string>
 
     <string name="how_to_play">Wie möchtest du spielen?</string>
     <string name="online_or_local">Wähle ein Online-Spiel oder erkunde eine lokale Karte.</string>
@@ -67,6 +75,22 @@
     <string name="online_guesser_text">Spiele eine geteilte Runde mit anderen Spielern.</string>
     <string name="local_guesser">Lokaler OpenGuesser</string>
     <string name="local_guesser_text">Probiere den lokalen Modus und den PMTiles-Kartenbetrachter aus.</string>
+
+    <string name="save_qr_code">QR Code speichern</string>
+    <string name="share_journey_with_friend">Teile eine Reise mit diesem Freund</string>
+    <string name="share_journey">Reise teilen</string>
+    <string name="share_journey_qr_description">Scanne diesen QR-Code, um auf die Reise zuzugreifen.</string>
+    <string name="friends_can_scan">Freunde können diesen Code scannen, um die Reise sofort hinzuzufügen.</string>
+    <string name="search_friend_or_qr">Suche nach einem Freund oder scanne einen QR-Code</string>
+    <string name="friend_name">Name des Freundes</string>
+    <string name="scan_friend_qr_description">Scanne den QR-Code eines Freundes, um ihn hinzuzufügen.</string>
+
+    <string name="notification_journey_title">Deine Reise startet heute!</string>
+    <string name="notification_journey_text">Deine Reise "%1$s" startet heute. Klicke hier für mehr Informationen!</string>
+    <string name="notification_country_title">Du bist in einem anderen Land!</string>
+    <string name="notification_country_text">Du bist von %1$s nach %2$s gereist. Willst du eine Reise hinzufügen?</string>
+    <string name="notification_test_title">Test Benachrichtigung</string>
+    <string name="notification_test_text">Die Benachrichtigungen funktionieren.</string>
 
     <string name="map_placeholder">Platzhalter für Karte</string>
     <string name="map_live_placeholder">Platzhalter für Live Standort-Karte</string>

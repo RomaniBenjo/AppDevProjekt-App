@@ -31,6 +31,9 @@
     <string name="ok">OK</string>
     <string name="add">Add</string>
     <string name="back">Back</string>
+    <string name="never">Never</string>
+    <string name="qr_code">QR Code</string>
+    <string name="search">Search</string>
 
     <!-- Dialog-Confirmations -->
     <string name="remove_friend">Remove Friend</string>
@@ -39,10 +42,13 @@
     <string name="remove_pin_dialog">Are you sure you want to remove %1$s?</string>
     <string name="remove_journey">Remove Journey</string>
     <string name="remove_journey_dialog">Are you sure you want to remove %1$s?</string>
+    <string name="choose_notification_time">Reminder Time</string>
 
     <!-- Phrases -->
     <string name="choose_language">Choose a Language</string>
     <string name="choose_theme">Choose a Theme</string>
+    <string name="choose_notification">Customize your Notifications</string>
+    <string name="test_notification">Test Notification</string>
     <string name="light_mode">Light Mode</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="change_photo">Change Photo</string>
@@ -59,6 +65,8 @@
     <string name="longitude">Longitude: %1$s</string>
     <string name="latitude_name">Latitude</string>
     <string name="longitude_name">Longitude</string>
+    <string name="journey_notification">Journey Reminder</string>
+    <string name="journey_notification_description">Receive a reminder on the morning your journey begins.</string>
 
     <string name="how_to_play">How do you want to play?</string>
     <string name="online_or_local">Choose an online game or explore a local map.</string>
@@ -66,6 +74,22 @@
     <string name="online_guesser_text">Play a shared game with other players.</string>
     <string name="local_guesser">Local OpenGuesser</string>
     <string name="local_guesser_text">Try the local mode and PMTiles map viewer.</string>
+
+    <string name="save_qr_code">Save QR Code</string>
+    <string name="share_journey_with_friend">Share a journey with this friend</string>
+    <string name="share_journey">Share Journey</string>
+    <string name="share_journey_qr_description">Scan this QR code to access the journey.</string>
+    <string name="friends_can_scan">Friends can scan this code to instantly add your journey.</string>
+    <string name="search_friend_or_qr">Search for a friend or scan a QR code</string>
+    <string name="friend_name">Friend Name</string>
+    <string name="scan_friend_qr_description">Scan a friend\'s QR code to add them.</string>
+
+    <string name="notification_journey_title">Your Journey starts today!</string>
+    <string name="notification_journey_text">Your Journey "%1$s" starts today. Click to see more information!</string>
+    <string name="notification_country_title">You travelled to another country!</string>
+    <string name="notification_country_text">You travelled from %1$s to %2$s. Do you want to add a Journey?</string>
+    <string name="notification_test_title">Test Notification</string>
+    <string name="notification_test_text">Notifications are working correctly.</string>
 
     <string name="map_placeholder">Placeholder for Map</string>
     <string name="map_live_placeholder">Placeholder for Live Location Map</string>

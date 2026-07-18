@@ -2,7 +2,6 @@ package com.example.commingsoon.viewmodels
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-import java.nio.file.Files.copy
 import java.time.LocalDate
 
 data class Journey(

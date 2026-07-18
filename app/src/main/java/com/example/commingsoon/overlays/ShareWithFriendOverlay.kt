@@ -1,5 +1,6 @@
 package com.example.commingsoon.overlays
 
+//import androidx.appcompat.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,8 +32,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.viewmodels.Journey
+import com.example.commingsoon.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +77,7 @@ fun ShareWithFriendOverlay (
             )
 
             Text(
-                text = "Share a journey with this friend",
+                text = appString(R.string.share_journey_with_friend),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
@@ -166,7 +169,7 @@ fun JourneyShareItem(
 
             Spacer(Modifier.width(6.dp))
 
-            Text("Share")
+            Text(appString(R.string.share))
         }
     }
 }
