@@ -42,6 +42,7 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 
 /** Offline map used by an active guessing round. */
 @Composable
@@ -53,6 +54,10 @@ internal fun OfflineGuessMap(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val loadMapError = appString(R.string.local_guesser_map_load_failed)
+    val missingMapError = appString(R.string.local_guesser_download_map_before_playing)
+    val guessMarkerTitle = appString(R.string.local_guesser_your_guess)
+    val actualMarkerTitle = appString(R.string.local_guesser_real_location)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mapController by remember { mutableStateOf<MapLibreMap?>(null) }
@@ -85,7 +90,7 @@ internal fun OfflineGuessMap(
                 map.addOnMapClickListener(mapClickListener)
                 Thread {
                     runCatching {
-                        val archiveUrl = prepareLocalPmTiles(context)
+                        val archiveUrl = prepareLocalPmTiles(context, missingMapError)
                         context.assets.open(OFFLINE_STYLE_ASSET).bufferedReader().use { reader ->
                             addPlaceLabels(
                                 reader.readText().replace(ARCHIVE_URL_PLACEHOLDER, archiveUrl)
@@ -101,8 +106,8 @@ internal fun OfflineGuessMap(
                                 isStyleReady = true
                             }
                         }
-                    }.onFailure { error ->
-                        post { errorMessage = error.message ?: "Could not load the offline map" }
+                    }.onFailure {
+                        post { errorMessage = loadMapError }
                     }
                 }.start()
             }
@@ -116,10 +121,10 @@ internal fun OfflineGuessMap(
         actualMarker?.let(map::removeMarker)
         resultLine?.let(map::removePolyline)
         guessMarker = selectedLocation?.let { location ->
-            map.addMarker(MarkerOptions().position(location).title("Your guess"))
+            map.addMarker(MarkerOptions().position(location).title(guessMarkerTitle))
         }
         actualMarker = actualLocation?.let { location ->
-            map.addMarker(MarkerOptions().position(location).title("Real location"))
+            map.addMarker(MarkerOptions().position(location).title(actualMarkerTitle))
         }
         resultLine = if (selectedLocation != null && actualLocation != null) {
             map.addPolyline(
@@ -259,9 +264,9 @@ private fun addPlaceLabels(styleJson: String): String {
     return style.toString()
 }
 
-private fun prepareLocalPmTiles(context: Context): String {
+private fun prepareLocalPmTiles(context: Context, missingMapError: String): String {
     check(isOfflineMapDownloaded(context)) {
-        "Download the offline map before playing Local OpenGuesser"
+        missingMapError
     }
     val localFile = offlineMapArchive(context)
     return "pmtiles://file://${localFile.absolutePath}"

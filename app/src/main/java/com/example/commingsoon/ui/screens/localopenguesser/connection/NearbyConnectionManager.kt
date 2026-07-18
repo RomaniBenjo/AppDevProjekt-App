@@ -1,7 +1,10 @@
 package com.example.commingsoon.ui.screens.localopenguesser.connection
 
 import android.content.Context
+import androidx.annotation.StringRes
+import com.example.commingsoon.R
 import com.example.commingsoon.ui.screens.localopenguesser.IndexedPhoto
+import com.example.commingsoon.ui.screens.localopenguesser.OfflineCountryResolver
 import com.example.commingsoon.ui.screens.localopenguesser.PhotoIndexDatabase
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
@@ -35,6 +38,7 @@ import java.io.File
 import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -45,6 +49,7 @@ internal class NearbyConnectionManager(context: Context) {
     private val serviceId = "${appContext.packageName}.localopenguesser.v2"
     private val strategy = Strategy.P2P_POINT_TO_POINT
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val countryResolver by lazy { OfflineCountryResolver.load(appContext) }
     private val endpointNames = mutableMapOf<String, String>()
     private val mutableState = MutableStateFlow(NearbyConnectionState())
     val state: StateFlow<NearbyConnectionState> = mutableState.asStateFlow()
@@ -69,7 +74,9 @@ internal class NearbyConnectionManager(context: Context) {
         .isGooglePlayServicesAvailable(appContext) == ConnectionResult.SUCCESS
 
     fun startHosting() {
-        val localName = mutableState.value.localName.ifBlank { "Local OpenGuesser Host" }
+        val localName = mutableState.value.localName.ifBlank {
+            appContext.getString(R.string.local_guesser_default_host_name)
+        }
         stopSearchOperations()
         mutableState.value = mutableState.value.copy(
             phase = NearbyPhase.ADVERTISING,
@@ -79,7 +86,9 @@ internal class NearbyConnectionManager(context: Context) {
         )
         val options = AdvertisingOptions.Builder().setStrategy(strategy).build()
         client.startAdvertising(localName, serviceId, connectionLifecycleCallback, options)
-            .addOnFailureListener { showConnectionError("Could not host a nearby game", it) }
+            .addOnFailureListener {
+                showConnectionError(R.string.local_guesser_error_host_game, it)
+            }
     }
 
     fun startJoining() {
@@ -92,18 +101,24 @@ internal class NearbyConnectionManager(context: Context) {
         )
         val options = DiscoveryOptions.Builder().setStrategy(strategy).build()
         client.startDiscovery(serviceId, endpointDiscoveryCallback, options)
-            .addOnFailureListener { showConnectionError("Could not search for nearby games", it) }
+            .addOnFailureListener {
+                showConnectionError(R.string.local_guesser_error_search_games, it)
+            }
     }
 
     fun requestConnection(endpoint: NearbyEndpoint) {
-        val localName = mutableState.value.localName.ifBlank { "Local OpenGuesser Player" }
+        val localName = mutableState.value.localName.ifBlank {
+            appContext.getString(R.string.local_guesser_default_player_name)
+        }
         client.stopDiscovery()
         mutableState.value = mutableState.value.copy(
             phase = NearbyPhase.REQUESTING_CONNECTION,
             errorMessage = null
         )
         client.requestConnection(localName, endpoint.id, connectionLifecycleCallback)
-            .addOnFailureListener { showConnectionError("Could not request the connection", it) }
+            .addOnFailureListener {
+                showConnectionError(R.string.local_guesser_error_request_connection, it)
+            }
     }
 
     fun acceptPendingConnection() {
@@ -113,7 +128,9 @@ internal class NearbyConnectionManager(context: Context) {
             pendingConnection = null
         )
         client.acceptConnection(pending.endpoint.id, payloadCallback)
-            .addOnFailureListener { showConnectionError("Could not accept the connection", it) }
+            .addOnFailureListener {
+                showConnectionError(R.string.local_guesser_error_accept_connection, it)
+            }
     }
 
     fun rejectPendingConnection() {
@@ -136,13 +153,16 @@ internal class NearbyConnectionManager(context: Context) {
                 LocalGameProtocol.TYPE_GAME_SETTINGS,
                 mapOf(
                     "roundCount" to safeSettings.roundCount,
-                    "roundSeconds" to safeSettings.roundSeconds
+                    "roundSeconds" to safeSettings.roundSeconds,
+                    "homePhotoExclusionMode" to safeSettings.homePhotoExclusionMode.name
                 )
             )
             updateGame {
                 it.copy(
                     phase = LocalGamePhase.WAITING_FOR_OTHER_PLAYER,
-                    statusMessage = "Waiting for the other phone to prepare its photos…"
+                    statusMessage = message(
+                        R.string.local_guesser_status_waiting_phone_prepare
+                    )
                 )
             }
         }
@@ -154,7 +174,9 @@ internal class NearbyConnectionManager(context: Context) {
         client.sendPayload(
             endpoint.id,
             Payload.fromBytes(LocalGameProtocol.encodeTestMessage(message.trim()))
-        ).addOnFailureListener { showConnectionError("Could not send the test message", it) }
+        ).addOnFailureListener {
+            showConnectionError(R.string.local_guesser_error_send_test_message, it)
+        }
     }
 
     fun setGuess(latitude: Double, longitude: Double) {
@@ -206,15 +228,19 @@ internal class NearbyConnectionManager(context: Context) {
             it.copy(
                 phase = LocalGamePhase.PREPARING,
                 settings = settings,
-                statusMessage = "Selecting random photos from this device…"
+                statusMessage = message(R.string.local_guesser_status_selecting_photos)
             )
         }
         scope.launch {
-            val selection = withContext(Dispatchers.IO) { selectRandomPhotos(settings.roundCount) }
+            val selection = withContext(Dispatchers.IO) { selectRandomPhotos(settings) }
             if (selection.size != settings.roundCount) {
-                val message = "This device does not have enough geotagged photos to create " +
-                    "${settings.roundCount} rounds while using at most two photos per country."
-                showGameError(message, notifyOtherPlayer = true)
+                showGameError(
+                    message(
+                        R.string.local_guesser_error_not_enough_photos,
+                        settings.roundCount
+                    ),
+                    notifyOtherPlayer = true
+                )
                 return@launch
             }
             selectedPhotos = selection
@@ -223,7 +249,9 @@ internal class NearbyConnectionManager(context: Context) {
                 updateGame {
                     it.copy(
                         phase = LocalGamePhase.WAITING_FOR_OTHER_PLAYER,
-                        statusMessage = "Photos selected. Waiting for the host…"
+                        statusMessage = message(
+                            R.string.local_guesser_status_photos_selected
+                        )
                     )
                 }
                 sendControl(LocalGameProtocol.TYPE_PLAYER_READY)
@@ -231,15 +259,20 @@ internal class NearbyConnectionManager(context: Context) {
         }
     }
 
-    private fun selectRandomPhotos(roundCount: Int): List<IndexedPhoto> {
+    private fun selectRandomPhotos(settings: LocalGameSettings): List<IndexedPhoto> {
         val database = PhotoIndexDatabase(appContext)
-        val candidates = try {
+        val eligiblePhotos = try {
             database.readAll().values.filter {
                 !it.unreadable && it.latitude != null && it.longitude != null && it.country != null
-            }.shuffled()
+            }
         } finally {
             database.close()
         }
+        val excludedMediaIds = homePhotosToExclude(
+            eligiblePhotos,
+            settings.homePhotoExclusionMode
+        )
+        val candidates = eligiblePhotos.filterNot { it.mediaId in excludedMediaIds }.shuffled()
         val countryCounts = mutableMapOf<String, Int>()
         return candidates.filter { photo ->
             val country = photo.country ?: return@filter false
@@ -250,7 +283,7 @@ internal class NearbyConnectionManager(context: Context) {
                 countryCounts[country] = count + 1
                 true
             }
-        }.take(roundCount)
+        }.take(settings.roundCount)
     }
 
     private fun startRound(round: Int) {
@@ -266,7 +299,10 @@ internal class NearbyConnectionManager(context: Context) {
 
     private fun beginRound(round: Int) {
         if (round !in selectedPhotos.indices) {
-            showGameError("Round ${round + 1} has no selected local photo.", notifyOtherPlayer = true)
+            showGameError(
+                message(R.string.local_guesser_error_round_missing_photo, round + 1),
+                notifyOtherPlayer = true
+            )
             return
         }
         timerJob?.cancel()
@@ -285,7 +321,10 @@ internal class NearbyConnectionManager(context: Context) {
                 currentGuess = null,
                 currentRoundResult = null,
                 canContinueAfterRound = false,
-                statusMessage = "Exchanging round ${round + 1} photos…"
+                statusMessage = message(
+                    R.string.local_guesser_status_exchanging_photos,
+                    round + 1
+                )
             )
         }
         sendRoundPhoto(round)
@@ -310,10 +349,16 @@ internal class NearbyConnectionManager(context: Context) {
                     outgoingPayloads.remove(payload.id)
                     payload.close()
                     file.delete()
-                    showGameError("Could not send this round's photo.", notifyOtherPlayer = true)
+                    showGameError(
+                        message(R.string.local_guesser_error_send_round_photo),
+                        notifyOtherPlayer = true
+                    )
                 }
             }.onFailure {
-                showGameError("Could not prepare this round's photo.", notifyOtherPlayer = true)
+                showGameError(
+                    message(R.string.local_guesser_error_prepare_round_photo),
+                    notifyOtherPlayer = true
+                )
             }
         }
     }
@@ -359,7 +404,9 @@ internal class NearbyConnectionManager(context: Context) {
             values["guessLon"] = it.longitude
         }
         sendControl(LocalGameProtocol.TYPE_ROUND_GUESS, values)
-        updateGame { it.copy(statusMessage = "Waiting for the other player's result…") }
+        updateGame {
+            it.copy(statusMessage = message(R.string.local_guesser_status_waiting_result))
+        }
         maybeFinalizeRound()
     }
 
@@ -379,11 +426,25 @@ internal class NearbyConnectionManager(context: Context) {
             joinerActual = joiner.actual,
             hostDistanceKm = hostDistance,
             joinerDistanceKm = joinerDistance,
-            hostPoints = localGuesserPoints(hostDistance),
-            joinerPoints = localGuesserPoints(joinerDistance)
+            hostPoints = localGuesserPoints(
+                hostDistance,
+                correctCountry = isSameCountry(host.guess, joiner.actual)
+            ),
+            joinerPoints = localGuesserPoints(
+                joinerDistance,
+                correctCountry = isSameCountry(joiner.guess, host.actual)
+            )
         )
         sendControl(LocalGameProtocol.TYPE_ROUND_RESULT, result.toValues())
         applyRoundResult(result)
+    }
+
+    private fun isSameCountry(guess: GuessLocation?, actual: GuessLocation): Boolean {
+        val guessedCountry = guess?.let { countryResolver.countryAt(it.latitude, it.longitude) }
+            ?: return false
+        val actualCountry = countryResolver.countryAt(actual.latitude, actual.longitude)
+            ?: return false
+        return guessedCountry == actualCountry
     }
 
     private fun maybeRevealRound() {
@@ -402,7 +463,10 @@ internal class NearbyConnectionManager(context: Context) {
             it.copy(
                 phase = LocalGamePhase.FINISHED,
                 secondsRemaining = 0,
-                statusMessage = "All ${it.settings.roundCount} rounds are complete."
+                statusMessage = message(
+                    R.string.local_guesser_status_all_rounds_complete,
+                    it.settings.roundCount
+                )
             )
         }
     }
@@ -418,7 +482,15 @@ internal class NearbyConnectionManager(context: Context) {
                 if (mutableState.value.role != NearbyRole.JOINER) return
                 val settings = LocalGameSettings(
                     roundCount = json.optInt("roundCount").coerceIn(1, 20),
-                    roundSeconds = json.optInt("roundSeconds").coerceIn(10, 300)
+                    roundSeconds = json.optInt("roundSeconds").coerceIn(10, 300),
+                    homePhotoExclusionMode = runCatching {
+                        HomePhotoExclusionMode.valueOf(
+                            json.optString(
+                                "homePhotoExclusionMode",
+                                HomePhotoExclusionMode.NONE.name
+                            )
+                        )
+                    }.getOrDefault(HomePhotoExclusionMode.NONE)
                 )
                 prepareLocalSelection(settings, notifyHostWhenReady = true)
             }
@@ -475,10 +547,28 @@ internal class NearbyConnectionManager(context: Context) {
                 }
             }
             LocalGameProtocol.TYPE_GAME_FINISHED -> finishGame()
-            LocalGameProtocol.TYPE_GAME_ERROR -> showGameError(
-                json.optString("message", "The other phone could not prepare the game."),
-                notifyOtherPlayer = false
-            )
+            LocalGameProtocol.TYPE_GAME_ERROR -> {
+                val resourceName = json.optString("messageResource")
+                val resourceId = appContext.resources.getIdentifier(
+                    resourceName,
+                    "string",
+                    appContext.packageName
+                )
+                val argsJson = json.optJSONArray("messageArgs")
+                val args = buildList {
+                    if (argsJson != null) {
+                        repeat(argsJson.length()) { index -> add(argsJson.get(index)) }
+                    }
+                }
+                showGameError(
+                    if (resourceId != 0) {
+                        LocalGuesserMessage(resourceId, args)
+                    } else {
+                        message(R.string.local_guesser_error_other_phone_prepare)
+                    },
+                    notifyOtherPlayer = false
+                )
+            }
         }
     }
 
@@ -515,14 +605,19 @@ internal class NearbyConnectionManager(context: Context) {
                     it.copy(
                         receivedPhotoPath = destination.absolutePath,
                         transferProgress = 1f,
-                        statusMessage = "Photo received. Waiting for both phones…"
+                        statusMessage = message(
+                            R.string.local_guesser_status_photo_received
+                        )
                     )
                 }
                 sendControl(LocalGameProtocol.TYPE_PHOTO_READY, mapOf("round" to round))
                 maybeRevealRound()
             }.onFailure {
                 processingPayloads.remove(payloadId)
-                showGameError("Could not save the received photo.", notifyOtherPlayer = true)
+                showGameError(
+                    message(R.string.local_guesser_error_save_received_photo),
+                    notifyOtherPlayer = true
+                )
             }
         }
     }
@@ -569,14 +664,24 @@ internal class NearbyConnectionManager(context: Context) {
         val endpoint = mutableState.value.connectedEndpoint ?: return
         client.sendPayload(endpoint.id, Payload.fromBytes(LocalGameProtocol.encode(type, values)))
             .addOnFailureListener {
-                showGameError("Could not synchronize the game with the other phone.", false)
+                showGameError(
+                    message(R.string.local_guesser_error_sync_game),
+                    notifyOtherPlayer = false
+                )
             }
     }
 
-    private fun showGameError(message: String, notifyOtherPlayer: Boolean) {
+    private fun showGameError(message: LocalGuesserMessage, notifyOtherPlayer: Boolean) {
         timerJob?.cancel()
         if (notifyOtherPlayer) {
-            sendControl(LocalGameProtocol.TYPE_GAME_ERROR, mapOf("message" to message))
+            sendControl(
+                LocalGameProtocol.TYPE_GAME_ERROR,
+                mapOf(
+                    "messageResource" to appContext.resources
+                        .getResourceEntryName(message.resourceId),
+                    "messageArgs" to message.args
+                )
+            )
         }
         updateGame {
             it.copy(
@@ -596,12 +701,15 @@ internal class NearbyConnectionManager(context: Context) {
         client.stopDiscovery()
     }
 
-    private fun showConnectionError(prefix: String, error: Exception) {
+    private fun showConnectionError(@StringRes messageId: Int, error: Exception) {
         stopSearchOperations()
         mutableState.value = mutableState.value.copy(
             phase = NearbyPhase.ERROR,
             pendingConnection = null,
-            errorMessage = "$prefix: ${error.localizedMessage ?: error.javaClass.simpleName}"
+            errorMessage = message(
+                messageId,
+                error.localizedMessage ?: error.javaClass.simpleName
+            )
         )
     }
 
@@ -657,7 +765,9 @@ internal class NearbyConnectionManager(context: Context) {
                 ConnectionsStatusCodes.STATUS_OK -> {
                     val endpoint = NearbyEndpoint(
                         endpointId,
-                        endpointNames[endpointId] ?: "Other player"
+                        endpointNames[endpointId] ?: appContext.getString(
+                            R.string.local_guesser_other_player
+                        )
                     )
                     stopSearchOperations()
                     mutableState.value = mutableState.value.copy(
@@ -673,13 +783,17 @@ internal class NearbyConnectionManager(context: Context) {
                     mutableState.value = mutableState.value.copy(
                         phase = NearbyPhase.ERROR,
                         pendingConnection = null,
-                        errorMessage = "The other player rejected the connection."
+                        errorMessage = message(
+                            R.string.local_guesser_error_connection_rejected
+                        )
                     )
                 }
                 else -> mutableState.value = mutableState.value.copy(
                     phase = NearbyPhase.ERROR,
                     pendingConnection = null,
-                    errorMessage = "The nearby connection could not be established."
+                    errorMessage = message(
+                        R.string.local_guesser_error_connection_failed
+                    )
                 )
             }
         }
@@ -691,7 +805,7 @@ internal class NearbyConnectionManager(context: Context) {
             mutableState.value = mutableState.value.copy(
                 phase = NearbyPhase.ERROR,
                 connectedEndpoint = null,
-                errorMessage = "The other player disconnected."
+                errorMessage = message(R.string.local_guesser_error_player_disconnected)
             )
         }
     }
@@ -734,7 +848,7 @@ internal class NearbyConnectionManager(context: Context) {
                     }
                     PayloadTransferUpdate.Status.FAILURE,
                     PayloadTransferUpdate.Status.CANCELED -> showGameError(
-                        "The photo transfer did not complete.",
+                        message(R.string.local_guesser_error_photo_transfer),
                         notifyOtherPlayer = true
                     )
                 }
@@ -745,6 +859,9 @@ internal class NearbyConnectionManager(context: Context) {
     private companion object {
         const val MAX_PHOTOS_PER_COUNTRY = 2
     }
+
+    private fun message(@StringRes resourceId: Int, vararg args: Any) =
+        LocalGuesserMessage(resourceId, args.toList())
 }
 
 private data class RoundSubmission(
@@ -840,14 +957,25 @@ internal fun localGuesserDistanceKm(first: GuessLocation, second: GuessLocation)
     return 2 * EARTH_RADIUS_KM * asin(sqrt(a.coerceIn(0.0, 1.0)))
 }
 
-internal fun localGuesserPoints(distanceKm: Double?): Int = if (distanceKm == null) {
-    0
-} else {
-    (MAX_ROUND_POINTS * exp(-distanceKm / POINT_DECAY_KM))
-        .roundToInt()
-        .coerceIn(0, MAX_ROUND_POINTS)
+internal fun localGuesserPoints(distanceKm: Double?, correctCountry: Boolean = false): Int {
+    if (distanceKm == null) return 0
+    val distancePoints = if (distanceKm <= MAX_SCORE_DISTANCE_KM) {
+        MAX_ROUND_POINTS
+    } else {
+        val normalizedDistance =
+            (distanceKm - MAX_SCORE_DISTANCE_KM) / (LONG_DISTANCE_REFERENCE_KM - MAX_SCORE_DISTANCE_KM)
+        val decay = ln(MAX_ROUND_POINTS.toDouble() / LONG_DISTANCE_REFERENCE_POINTS)
+        (MAX_ROUND_POINTS * exp(-decay * sqrt(normalizedDistance)))
+            .roundToInt()
+            .coerceIn(0, MAX_ROUND_POINTS)
+    }
+    val countryBonus = if (correctCountry) CORRECT_COUNTRY_BONUS else 0
+    return (distancePoints + countryBonus).coerceAtMost(MAX_ROUND_POINTS)
 }
 
 private const val EARTH_RADIUS_KM = 6_371.0088
 private const val MAX_ROUND_POINTS = 5_000
-private const val POINT_DECAY_KM = 2_000.0
+private const val CORRECT_COUNTRY_BONUS = 1_000
+private const val MAX_SCORE_DISTANCE_KM = 5.0
+private const val LONG_DISTANCE_REFERENCE_KM = 300.0
+private const val LONG_DISTANCE_REFERENCE_POINTS = 2_000
