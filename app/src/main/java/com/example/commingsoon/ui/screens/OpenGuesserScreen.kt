@@ -36,7 +36,6 @@ import androidx.navigation.NavHostController
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.R
 import com.example.commingsoon.language.appString
-import com.example.commingsoon.navigation.NavScreens
 
 @Composable
 fun OpenGuesserScreen(navController: NavHostController) {
