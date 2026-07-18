@@ -37,6 +37,7 @@ import java.io.File
 import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -942,12 +943,19 @@ internal fun localGuesserDistanceKm(first: GuessLocation, second: GuessLocation)
 
 internal fun localGuesserPoints(distanceKm: Double?): Int = if (distanceKm == null) {
     0
+} else if (distanceKm <= MAX_SCORE_DISTANCE_KM) {
+    MAX_ROUND_POINTS
 } else {
-    (MAX_ROUND_POINTS * exp(-distanceKm / POINT_DECAY_KM))
+    val normalizedDistance =
+        (distanceKm - MAX_SCORE_DISTANCE_KM) / (LONG_DISTANCE_REFERENCE_KM - MAX_SCORE_DISTANCE_KM)
+    val decay = ln(MAX_ROUND_POINTS.toDouble() / LONG_DISTANCE_REFERENCE_POINTS)
+    (MAX_ROUND_POINTS * exp(-decay * sqrt(normalizedDistance)))
         .roundToInt()
         .coerceIn(0, MAX_ROUND_POINTS)
 }
 
 private const val EARTH_RADIUS_KM = 6_371.0088
 private const val MAX_ROUND_POINTS = 5_000
-private const val POINT_DECAY_KM = 2_000.0
+private const val MAX_SCORE_DISTANCE_KM = 5.0
+private const val LONG_DISTANCE_REFERENCE_KM = 300.0
+private const val LONG_DISTANCE_REFERENCE_POINTS = 2_000
