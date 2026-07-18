@@ -6,10 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [JourneyEntity::class], version = 1, exportSchema = false)
+@Database(entities = [JourneyEntity::class, ClaimedCountryEntity::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun journeyDao(): JourneyDao
+    abstract fun claimedCountryDao(): ClaimedCountryDao
 
     companion object {
         @Volatile

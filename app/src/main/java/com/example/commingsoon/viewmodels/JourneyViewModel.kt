@@ -14,9 +14,21 @@ import androidx.compose.ui.graphics.asComposePath
 import androidx.core.graphics.PathParser
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.location.Geocoder
+import android.location.Address
+import android.location.Location
+import android.location.LocationManager
+import android.location.LocationListener
+import android.os.Looper
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import android.content.pm.PackageManager
+import java.util.Locale
 import com.example.commingsoon.db.AppDatabase
 import com.example.commingsoon.db.JourneyDao
 import com.example.commingsoon.db.JourneyEntity
+import com.example.commingsoon.db.ClaimedCountryDao
+import com.example.commingsoon.db.ClaimedCountryEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,11 +55,25 @@ data class JourneyLocation (
     val longitude: Double
 )
 
+sealed interface ClaimStatus {
+    object Idle : ClaimStatus
+    object Detecting : ClaimStatus
+    data class Success(val countryName: String, val isNew: Boolean) : ClaimStatus
+    data class Error(val message: String) : ClaimStatus
+}
+
 class JourneyViewModel : ViewModel() {
     private val _journeys = mutableStateListOf<Journey>()
 
     val journeys: List<Journey>
         get() = _journeys
+
+    private val _claimedCountries = mutableStateListOf<String>()
+    val claimedCountries: List<String>
+        get() = _claimedCountries
+
+    var claimStatus by mutableStateOf<ClaimStatus>(ClaimStatus.Idle)
+        private set
 
     var countries by mutableStateOf<List<MapCountry>>(emptyList())
         private set
@@ -93,6 +119,8 @@ class JourneyViewModel : ViewModel() {
     private var database: AppDatabase? = null
     private val dao: JourneyDao?
         get() = database?.journeyDao()
+    private val claimedDao: ClaimedCountryDao?
+        get() = database?.claimedCountryDao()
 
     var isNetworkAvailable by mutableStateOf(false)
         private set
@@ -122,10 +150,172 @@ class JourneyViewModel : ViewModel() {
                     }
                     list = currentDao.getAllJourneys()
                 }
+                val dbClaimedDao = claimedDao
+                val claims = dbClaimedDao?.getAllClaims() ?: emptyList()
                 withContext(Dispatchers.Main) {
                     _journeys.clear()
                     _journeys.addAll(list.map { it.toDomain() })
+                    _claimedCountries.clear()
+                    _claimedCountries.addAll(claims.map { it.id })
                     triggerSync()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun resetClaimStatus() {
+        claimStatus = ClaimStatus.Idle
+    }
+
+    fun claimCurrentCountry(context: Context, latitudeOverride: Double? = null, longitudeOverride: Double? = null) {
+        claimStatus = ClaimStatus.Detecting
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val lat: Double
+                val lng: Double
+
+                if (latitudeOverride != null && longitudeOverride != null) {
+                    lat = latitudeOverride
+                    lng = longitudeOverride
+                } else {
+                    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                    if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        withContext(Dispatchers.Main) {
+                            claimStatus = ClaimStatus.Error("Standortberechtigung nicht erteilt.")
+                        }
+                        return@launch
+                    }
+
+                    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                    val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+
+                    val location = when {
+                        isGpsEnabled -> locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                        isNetworkEnabled -> locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                        else -> null
+                    }
+
+                    if (location != null) {
+                        lat = location.latitude
+                        lng = location.longitude
+                    } else {
+                        val provider = if (isGpsEnabled) LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER
+                        val locResult = kotlinx.coroutines.suspendCancellableCoroutine<Location?> { continuation ->
+                            val listener = object : LocationListener {
+                                override fun onLocationChanged(loc: Location) {
+                                    locationManager.removeUpdates(this)
+                                    if (continuation.isActive) continuation.resume(loc, onCancellation = null)
+                                }
+                                @Deprecated("Deprecated in Java")
+                                override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
+                                override fun onProviderEnabled(provider: String) {}
+                                override fun onProviderDisabled(provider: String) {}
+                            }
+                            
+                            try {
+                                locationManager.requestSingleUpdate(provider, listener, Looper.getMainLooper())
+                                continuation.invokeOnCancellation {
+                                    locationManager.removeUpdates(listener)
+                                }
+                            } catch (e: Exception) {
+                                if (continuation.isActive) continuation.resume(null, onCancellation = null)
+                            }
+                        }
+
+                        if (locResult != null) {
+                            lat = locResult.latitude
+                            lng = locResult.longitude
+                        } else {
+                            withContext(Dispatchers.Main) {
+                                claimStatus = ClaimStatus.Error("Standort konnte nicht ermittelt werden.")
+                            }
+                            return@launch
+                        }
+                    }
+                }
+
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    var list: List<Address>? = null
+                    val latch = java.util.concurrent.CountDownLatch(1)
+                    geocoder.getFromLocation(lat, lng, 1, object : Geocoder.GeocodeListener {
+                        override fun onGeocode(addrList: List<Address>) {
+                            list = addrList
+                            latch.countDown()
+                        }
+                        override fun onError(errorMessage: String?) {
+                            latch.countDown()
+                        }
+                    })
+                    latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
+                    list
+                } else {
+                    @Suppress("DEPRECATION")
+                    geocoder.getFromLocation(lat, lng, 1)
+                }
+
+                val countryName = addresses?.firstOrNull()?.countryName
+                val countryCode = addresses?.firstOrNull()?.countryCode
+
+                if (countryCode == null || countryName == null) {
+                    withContext(Dispatchers.Main) {
+                        claimStatus = ClaimStatus.Error("Land für Koordinaten ($lat, $lng) nicht erkannt.")
+                    }
+                    return@launch
+                }
+
+                val matchedCountry = countries.find { country ->
+                    country.id.equals(countryCode, ignoreCase = true) ||
+                    country.name?.equals(countryName, ignoreCase = true) == true
+                }
+
+                if (matchedCountry == null) {
+                    withContext(Dispatchers.Main) {
+                        claimStatus = ClaimStatus.Error("Erkanntes Land ($countryName, Code: $countryCode) ist auf der Karte nicht verfügbar.")
+                    }
+                    return@launch
+                }
+
+                val svgId = matchedCountry.id
+                val dbClaimedDao = claimedDao
+                val allClaims = dbClaimedDao?.getAllClaims() ?: emptyList()
+                val alreadyClaimed = allClaims.any { it.id.equals(svgId, ignoreCase = true) }
+
+                if (!alreadyClaimed) {
+                    dbClaimedDao?.insertClaim(
+                        ClaimedCountryEntity(
+                            id = svgId,
+                            name = matchedCountry.name ?: countryName,
+                            claimedAt = System.currentTimeMillis()
+                        )
+                    )
+                }
+
+                withContext(Dispatchers.Main) {
+                    if (!alreadyClaimed) {
+                        _claimedCountries.add(svgId)
+                    }
+                    claimStatus = ClaimStatus.Success(matchedCountry.name ?: countryName, !alreadyClaimed)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    claimStatus = ClaimStatus.Error("Fehler beim Claimen: ${e.localizedMessage}")
+                }
+            }
+        }
+    }
+
+    fun clearAllClaims() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                claimedDao?.deleteAllClaims()
+                withContext(Dispatchers.Main) {
+                    _claimedCountries.clear()
+                    claimStatus = ClaimStatus.Idle
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

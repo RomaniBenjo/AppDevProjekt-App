@@ -30,3 +30,19 @@ interface JourneyDao {
     @Query("SELECT * FROM journeys WHERE pendingSync = 1")
     suspend fun getUnsyncedJourneys(): List<JourneyEntity>
 }
+
+@Dao
+interface ClaimedCountryDao {
+    @Query("SELECT * FROM claimed_countries")
+    suspend fun getAllClaims(): List<ClaimedCountryEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertClaim(claim: ClaimedCountryEntity): Long
+
+    @Query("DELETE FROM claimed_countries WHERE id = :id")
+    suspend fun deleteClaimById(id: String)
+
+    @Query("DELETE FROM claimed_countries")
+    suspend fun deleteAllClaims()
+}
+
