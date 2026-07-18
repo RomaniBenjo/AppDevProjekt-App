@@ -38,11 +38,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.commingsoon.R
@@ -50,6 +65,23 @@ import com.example.commingsoon.language.appString
 import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.viewmodels.Journey
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import com.example.commingsoon.components.InteractiveWorldMap
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.Arrangement
+import com.example.commingsoon.viewmodels.ClaimStatus
+
+private fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
+}
 
 @Composable
 fun HomeScreen (
@@ -58,6 +90,125 @@ fun HomeScreen (
 ) {
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var mapExpanded by rememberSaveable { mutableStateOf(isLandscape) }
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.loadWorldMap(context)
+    }
+
+    var testSelectedCountryId by rememberSaveable { mutableStateOf<String?>(null) }
+    var isFullscreen by rememberSaveable { mutableStateOf(false) }
+
+    DisposableEffect(isFullscreen) {
+        if (isFullscreen) {
+            val activity = context.findActivity()
+            val originalOrientation = activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            onDispose {
+                activity?.requestedOrientation = originalOrientation
+            }
+        } else {
+            onDispose {}
+        }
+    }
+
+    val isLight = MaterialTheme.colorScheme.background == Color.White
+    val oceanColor = if (isLight) Color(0xFFD4F0FC) else Color(0xFF1E293B)
+    val defaultCountryColor = if (isLight) Color(0xFFECECEC) else Color(0xFF334155)
+    val borderColor = if (isLight) Color(0xFFCCCCCC) else Color(0xFF475569)
+
+    val visitedCountryColor = MaterialTheme.colorScheme.primary
+    val selectedCountryColor = MaterialTheme.colorScheme.secondary
+
+    val customCountryColors = remember(
+        viewModel.journeys,
+        viewModel.countries,
+        viewModel.claimedCountries.toList(),
+        testSelectedCountryId,
+        visitedCountryColor,
+        selectedCountryColor
+    ) {
+        val countryLatestEndDate = mutableMapOf<String, LocalDate>()
+        viewModel.journeys.forEach { journey ->
+            journey.visitedCountries.forEach { countryNameOrId ->
+                val svgId = viewModel.countries.find { country ->
+                    country.id.equals(countryNameOrId, ignoreCase = true) ||
+                    country.name?.equals(countryNameOrId, ignoreCase = true) == true
+                }?.id
+                if (svgId != null) {
+                    val existing = countryLatestEndDate[svgId]
+                    if (existing == null || journey.endDate.isAfter(existing)) {
+                        countryLatestEndDate[svgId] = journey.endDate
+                    }
+                }
+            }
+        }
+
+        val colors = mutableMapOf<String, Color>()
+        val today = LocalDate.now()
+        countryLatestEndDate.forEach { (svgId, endDate) ->
+            val days = ChronoUnit.DAYS.between(endDate, today)
+            val years = days / 365.25
+            val opacity = if (years <= 1.0) {
+                1.0f
+            } else {
+                kotlin.math.max(0.25f, 1.0f - 0.05f * (years.toFloat() - 1.0f))
+            }
+            colors[svgId] = visitedCountryColor.copy(alpha = opacity)
+        }
+
+        // Highlight claimed countries in gold/amber
+        viewModel.claimedCountries.forEach { svgId ->
+            colors[svgId] = Color(0xFFFFB300)
+        }
+
+        testSelectedCountryId?.let { selectedId ->
+            colors[selectedId] = selectedCountryColor
+        }
+        colors
+    }
+
+    if (isFullscreen) {
+        Dialog(
+            onDismissRequest = { isFullscreen = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(oceanColor)
+            ) {
+                InteractiveWorldMap(
+                    countries = viewModel.countries,
+                    countryColors = customCountryColors,
+                    zoomable = true,
+                    oceanColor = oceanColor,
+                    defaultCountryColor = defaultCountryColor,
+                    borderColor = borderColor,
+                    borderWidth = 0.4f,
+                    modifier = Modifier.fillMaxSize(),
+                    onCountrySelected = { clickedId ->
+                        testSelectedCountryId = clickedId
+                    }
+                )
+
+                IconButton(
+                    onClick = { isFullscreen = false },
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .align(Alignment.TopStart)
+                        .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Schließen",
+                        tint = Color.Black
+                    )
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -83,6 +234,79 @@ fun HomeScreen (
                         modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 20.dp)
                     )
                 }
+        // world map with countries visited marked
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(.33f)
+                .padding(16.dp)
+        ) {
+            Card(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (viewModel.countries.isEmpty()) {
+                        Text(
+                            text = "Loading Map...",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else {
+                        InteractiveWorldMap(
+                            countries = viewModel.countries,
+                            countryColors = customCountryColors,
+                            oceanColor = oceanColor,
+                            defaultCountryColor = defaultCountryColor,
+                            borderColor = borderColor,
+                            borderWidth = 0.4f,
+                            zoomable = false,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
+                                .clickable { isFullscreen = true },
+                            onCountrySelected = { _ ->
+                                isFullscreen = true
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+            contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
+            onResult = { permissions ->
+                val granted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                              permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+                if (granted) {
+                    viewModel.claimCurrentCountry(context)
+                } else {
+                    viewModel.resetClaimStatus()
+                }
+            }
+        )
+
+        val onClaimClick = {
+            val fineGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val coarseGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (fineGranted || coarseGranted) {
+                viewModel.claimCurrentCountry(context)
+            } else {
+                permissionLauncher.launch(
+                    arrayOf(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
             }
         }
 
@@ -90,6 +314,188 @@ fun HomeScreen (
         LazyColumn(
             modifier = Modifier.weight(.67f).fillMaxSize()
         ) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.MyLocation,
+                                    contentDescription = "Claim Location",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "Länder beanspruchen",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
+                            if (viewModel.claimedCountries.isNotEmpty()) {
+                                IconButton(
+                                    onClick = { viewModel.clearAllClaims() }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Claims löschen",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(Modifier.height(8.dp))
+                        
+                        Text(
+                            text = "Bist du gerade in diesem Land? Claimen schaltet es dauerhaft in Gold auf deiner Karte frei.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                        
+                        Spacer(Modifier.height(12.dp))
+
+                        when (val status = viewModel.claimStatus) {
+                            is ClaimStatus.Idle -> {
+                                Button(
+                                    onClick = onClaimClick,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Aktuellen Standort verifizieren & claimen")
+                                }
+                            }
+                            is ClaimStatus.Detecting -> {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                ) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                    Spacer(Modifier.width(12.dp))
+                                    Text("Ermittle Standort...", style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                            is ClaimStatus.Success -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color(0xFFE8F5E9), RoundedCornerShape(8.dp))
+                                        .padding(12.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = if (status.isNew) 
+                                                "🎉 Erfolgreich! Du hast ${status.countryName} beansprucht!" 
+                                            else 
+                                                "Du hast ${status.countryName} bereits beansprucht!",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color(0xFF2E7D32)
+                                        )
+                                        Spacer(Modifier.height(8.dp))
+                                        Button(
+                                            onClick = { viewModel.resetClaimStatus() },
+                                            modifier = Modifier.align(Alignment.End)
+                                        ) {
+                                            Text("OK")
+                                        }
+                                    }
+                                }
+                            }
+                            is ClaimStatus.Error -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
+                                        .padding(12.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "❌ Fehler: ${status.message}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color(0xFFC62828)
+                                        )
+                                        Spacer(Modifier.height(8.dp))
+                                        Row(modifier = Modifier.align(Alignment.End)) {
+                                            Button(
+                                                onClick = { viewModel.resetClaimStatus() },
+                                                colors = androidx.compose.material3.ButtonDefaults.textButtonColors()
+                                            ) {
+                                                Text("Abbrechen")
+                                            }
+                                            Spacer(Modifier.width(8.dp))
+                                            Button(
+                                                onClick = onClaimClick
+                                            ) {
+                                                Text("Erneut versuchen")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Simulation buttons for easy testing (very premium!)
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = "Simulation für Emulator / Testen:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Button(
+                                onClick = { viewModel.claimCurrentCountry(context, 48.1351, 11.5820) }, // Munich, Germany
+                                modifier = Modifier.weight(1f),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
+                            ) {
+                                Text("DE simulieren", style = MaterialTheme.typography.labelSmall)
+                            }
+                            Button(
+                                onClick = { viewModel.claimCurrentCountry(context, 37.0902, -95.7129) }, // USA
+                                modifier = Modifier.weight(1f),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
+                            ) {
+                                Text("US simulieren", style = MaterialTheme.typography.labelSmall)
+                            }
+                            Button(
+                                onClick = { viewModel.claimCurrentCountry(context, 47.5162, 14.5501) }, // Austria
+                                modifier = Modifier.weight(1f),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
+                            ) {
+                                Text("AT simulieren", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+
+                        if (viewModel.claimedCountries.isNotEmpty()) {
+                            Spacer(Modifier.height(12.dp))
+                            val names = remember(viewModel.claimedCountries.toList(), viewModel.countries) {
+                                viewModel.claimedCountries.map { code ->
+                                    viewModel.countries.find { it.id.equals(code, ignoreCase = true) }?.name ?: code.uppercase()
+                                }.joinToString(", ")
+                            }
+                            Text(
+                                text = "Beanspruchte Länder: $names",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+
             itemsIndexed(viewModel.journeys) { index, journey ->
                 JourneyCard(
                     journey = journey,

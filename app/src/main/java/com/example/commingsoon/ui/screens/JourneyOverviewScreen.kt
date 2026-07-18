@@ -51,6 +51,11 @@ import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.viewmodels.Journey
 import com.example.commingsoon.viewmodels.JourneyViewModel
+import com.example.commingsoon.components.InteractiveWorldMap
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun JourneyOverviewScreen (
@@ -62,16 +67,110 @@ fun JourneyOverviewScreen (
     var expandedJourneyId by rememberSaveable { mutableStateOf<Int?>(null) }
     var journeyToDelete by remember { mutableStateOf<Journey?>(null) }
 
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.loadWorldMap(context)
+    }
+
     // Map
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Spacer(Modifier.height(10.dp))
-        // composable from HomeScreen.kt
-        ExpandableMap(
-            expanded = mapExpanded,
-            onExpandedChange = {
-                mapExpanded = it
+        AnimatedContent(
+            targetState = mapExpanded,
+            label = ""
+        ) { expanded ->
+            if (expanded) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp)
+                        .padding(16.dp)
+                        .clickable {
+                            mapExpanded = false
+                        }
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (viewModel.countries.isEmpty()) {
+                            Text("Loading Map...")
+                        } else {
+                            val visitedCountryColor = MaterialTheme.colorScheme.primary
+                            val customCountryColors = remember(viewModel.journeys, viewModel.countries, visitedCountryColor) {
+                                val countryLatestEndDate = mutableMapOf<String, LocalDate>()
+                                viewModel.journeys.forEach { journey ->
+                                    journey.visitedCountries.forEach { countryNameOrId ->
+                                        val svgId = viewModel.countries.find { country ->
+                                            country.id.equals(countryNameOrId, ignoreCase = true) ||
+                                            country.name?.equals(countryNameOrId, ignoreCase = true) == true
+                                        }?.id
+                                        if (svgId != null) {
+                                            val existing = countryLatestEndDate[svgId]
+                                            if (existing == null || journey.endDate.isAfter(existing)) {
+                                                countryLatestEndDate[svgId] = journey.endDate
+                                            }
+                                        }
+                                    }
+                                }
+
+                                val colors = mutableMapOf<String, Color>()
+                                val today = LocalDate.now()
+                                countryLatestEndDate.forEach { (svgId, endDate) ->
+                                    val days = ChronoUnit.DAYS.between(endDate, today)
+                                    val years = days / 365.25
+                                    val opacity = if (years <= 1.0) {
+                                        1.0f
+                                    } else {
+                                        kotlin.math.max(0.25f, 1.0f - 0.05f * (years.toFloat() - 1.0f))
+                                    }
+                                    colors[svgId] = visitedCountryColor.copy(alpha = opacity)
+                                }
+                                colors
+                            }
+
+                            val isLight = MaterialTheme.colorScheme.background == Color.White
+                            val oceanColor = if (isLight) Color(0xFFD4F0FC) else Color(0xFF1E293B)
+                            val defaultCountryColor = if (isLight) Color(0xFFECECEC) else Color(0xFF334155)
+                            val borderColor = if (isLight) Color(0xFFCCCCCC) else Color(0xFF475569)
+
+                            InteractiveWorldMap(
+                                countries = viewModel.countries,
+                                countryColors = customCountryColors,
+                                oceanColor = oceanColor,
+                                defaultCountryColor = defaultCountryColor,
+                                borderColor = borderColor,
+                                borderWidth = 0.4f,
+                                zoomable = false,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
+                }
+            } else {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .padding(16.dp)
+                        .clickable {
+                            mapExpanded = true
+                        }
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Tap to expand map",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
         )
 

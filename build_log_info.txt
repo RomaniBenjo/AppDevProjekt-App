@@ -1,0 +1,130 @@
+Initialized native services in: C:\Users\Roman\.gradle\native
+Initialized jansi services in: C:\Users\Roman\.gradle\native
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Path for java installation 'C:\Users\Roman\.jdks\openjdk-24.0.1' (IntelliJ) auto-detected does not contain a java executable
+Received JVM installation metadata from 'C:\Users\Roman\.jdks\openjdk-22.0.1': {JAVA_HOME=C:\Users\Roman\.jdks\openjdk-22.0.1, JAVA_VERSION=22.0.1, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=22.0.1+8-16, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=22.0.1+8-16, VM_VENDOR=Oracle Corporation, OS_ARCH=amd64}
+Starting process 'command 'C:\Program Files\Java\jdk-17\bin\java.exe''. Working directory: C:\Users\Roman\.gradle\.tmp\tmp-jvm16523114515035223178probe Command: C:\Program Files\Java\jdk-17\bin\java.exe -Xmx32m -Xms32m -cp . JavaProbe
+Starting process 'command 'C:\Users\Roman\.jdks\openjdk-24.0.1-1\bin\java.exe''. Working directory: C:\Users\Roman\.gradle\.tmp\tmp-jvm15598656562657158434probe Command: C:\Users\Roman\.jdks\openjdk-24.0.1-1\bin\java.exe -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command 'C:\Users\Roman\.jdks\openjdk-24.0.1-1\bin\java.exe''
+Successfully started process 'command 'C:\Program Files\Java\jdk-17\bin\java.exe''
+Received JVM installation metadata from 'C:\Users\Roman\.jdks\openjdk-24.0.1-1': {JAVA_HOME=C:\Users\Roman\.jdks\openjdk-24.0.1-1, JAVA_VERSION=24.0.1, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=24.0.1+9-30, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=24.0.1+9-30, VM_VENDOR=Oracle Corporation, OS_ARCH=amd64}
+Starting process 'command 'C:\Users\Roman\.jdks\openjdk-21.0.2\bin\java.exe''. Working directory: C:\Users\Roman\.gradle\.tmp\tmp-jvm13633793965866322346probe Command: C:\Users\Roman\.jdks\openjdk-21.0.2\bin\java.exe -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command 'C:\Users\Roman\.jdks\openjdk-21.0.2\bin\java.exe''
+Received JVM installation metadata from 'C:\Program Files\Java\jdk-17': {JAVA_HOME=C:\Program Files\Java\jdk-17, JAVA_VERSION=17.0.8, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=Java(TM) SE Runtime Environment, RUNTIME_VERSION=17.0.8+9-LTS-211, VM_NAME=Java HotSpot(TM) 64-Bit Server VM, VM_VERSION=17.0.8+9-LTS-211, VM_VENDOR=Oracle Corporation, OS_ARCH=amd64}
+Starting process 'command 'C:\Users\Roman\.jdks\corretto-20.0.2.1\bin\java.exe''. Working directory: C:\Users\Roman\.gradle\.tmp\tmp-jvm26776382645882025probe Command: C:\Users\Roman\.jdks\corretto-20.0.2.1\bin\java.exe -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command 'C:\Users\Roman\.jdks\corretto-20.0.2.1\bin\java.exe''
+Received JVM installation metadata from 'C:\Users\Roman\.jdks\openjdk-21.0.2': {JAVA_HOME=C:\Users\Roman\.jdks\openjdk-21.0.2, JAVA_VERSION=21.0.2, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.2+13-58, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.2+13-58, VM_VENDOR=Oracle Corporation, OS_ARCH=amd64}
+Starting process 'command 'C:\Program Files\Java\jdk-21\bin\java.exe''. Working directory: C:\Users\Roman\.gradle\.tmp\tmp-jvm4791370887557300090probe Command: C:\Program Files\Java\jdk-21\bin\java.exe -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command 'C:\Program Files\Java\jdk-21\bin\java.exe''
+Received JVM installation metadata from 'C:\Users\Roman\.jdks\corretto-20.0.2.1': {JAVA_HOME=C:\Users\Roman\.jdks\corretto-20.0.2.1, JAVA_VERSION=20.0.2.1, JAVA_VENDOR=Amazon.com Inc., RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=20.0.2.1+10-FR, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=20.0.2.1+10-FR, VM_VENDOR=Amazon.com Inc., OS_ARCH=amd64}
+Starting process 'command 'C:\Program Files (x86)\Java\jre-1.8\bin\java.exe''. Working directory: C:\Users\Roman\.gradle\.tmp\tmp-jvm10224448050189007709probe Command: C:\Program Files (x86)\Java\jre-1.8\bin\java.exe -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command 'C:\Program Files (x86)\Java\jre-1.8\bin\java.exe''
+Received JVM installation metadata from 'C:\Program Files\Java\jdk-21': {JAVA_HOME=C:\Program Files\Java\jdk-21, JAVA_VERSION=21.0.3, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=Java(TM) SE Runtime Environment, RUNTIME_VERSION=21.0.3+7-LTS-152, VM_NAME=Java HotSpot(TM) 64-Bit Server VM, VM_VERSION=21.0.3+7-LTS-152, VM_VENDOR=Oracle Corporation, OS_ARCH=amd64}
+Received JVM installation metadata from 'C:\Program Files (x86)\Java\jre-1.8': {JAVA_HOME=C:\Program Files (x86)\Java\jre-1.8, JAVA_VERSION=1.8.0_381, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=Java(TM) SE Runtime Environment, RUNTIME_VERSION=1.8.0_381-b09, VM_NAME=Java HotSpot(TM) Client VM, VM_VERSION=25.381-b09, VM_VENDOR=Oracle Corporation, OS_ARCH=x86}
+Starting process 'Gradle build daemon'. Working directory: C:\Users\Roman\.gradle\daemon\9.4.1 Command: C:\Program Files\Java\jdk-21\bin\java.exe --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED --add-opens=java.base/java.time=ALL-UNNAMED -Xmx2048m -Dfile.encoding=UTF-8 -Duser.country=AT -Duser.language=de -Duser.variant -cp C:\Users\Roman\.gradle\wrapper\dists\gradle-9.4.1-bin\arn2x92ynaizyzdaamcbpbhtj\gradle-9.4.1\lib\gradle-daemon-main-9.4.1.jar -javaagent:C:\Users\Roman\.gradle\wrapper\dists\gradle-9.4.1-bin\arn2x92ynaizyzdaamcbpbhtj\gradle-9.4.1\lib\agents\gradle-instrumentation-agent-9.4.1.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 9.4.1
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 1.125 secs.
+The client will now receive all logging from the daemon (pid: 27988). The daemon log file: C:\Users\Roman\.gradle\daemon\9.4.1\daemon-27988.out.log
+Daemon will be stopped at the end of the build 
+Using 16 worker leases.
+Operational build model parameters: {cachingModelBuilding=false, configurationCache=true, configurationCacheDisabledReason=null, configurationCacheParallelLoad=true, configurationCacheParallelStore=false, configureOnDemand=false, invalidateCoupledProjects=false, isolatedProjects=false, modelAsProjectDependency=false, modelBuilding=false, parallelModelBuilding=false, parallelProjectConfiguration=false, parallelProjectExecution=false, resilientModelBuilding=false}
+Received JVM installation metadata from 'C:\Program Files\Java\jdk-21': {JAVA_HOME=C:\Program Files\Java\jdk-21, JAVA_VERSION=21.0.3, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.3+7-LTS-152, VM_NAME=Java HotSpot(TM) 64-Bit Server VM, VM_VERSION=21.0.3+7-LTS-152, VM_VENDOR=Oracle Corporation, OS_ARCH=amd64}
+Encryption key source: default Gradle keystore (pkcs12)
+Reusing configuration cache.
+Watching the file system is configured to be enabled if available
+Now considering [C:\Users\Roman\Documents\Projekte\AppDevProjekt-App] as hierarchies to watch
+File system watching is active
+Tasks to be executed: [task ':app:preBuild', task ':app:preDebugBuild', task ':app:generateDebugResources', task ':app:packageDebugResources', task ':app:processDebugNavigationResources', task ':app:parseDebugLocalResources', task ':app:generateDebugRFile', task ':app:kaptGenerateStubsDebugKotlin', task ':app:kaptDebugKotlin', task ':app:compileDebugKotlin']
+Tasks that were excluded: []
+Resolve mutations for :app:preBuild (Thread[#73,Execution worker,5,main]) started.
+:app:preBuild (Thread[#73,Execution worker,5,main]) started.
+
+> Task :app:preBuild UP-TO-DATE
+Skipping task ':app:preBuild' as it has no actions.
+Resolve mutations for :app:preDebugBuild (Thread[#73,Execution worker,5,main]) started.
+:app:preDebugBuild (Thread[#73,Execution worker,5,main]) started.
+
+> Task :app:preDebugBuild UP-TO-DATE
+Skipping task ':app:preDebugBuild' as it has no actions.
+Resolve mutations for :app:generateDebugResources (Thread[#73,Execution worker,5,main]) started.
+Resolve mutations for :app:processDebugNavigationResources (Thread[#75,Execution worker Thread 3,5,main]) started.
+:app:generateDebugResources (Thread[#73,Execution worker,5,main]) started.
+:app:processDebugNavigationResources (Thread[#77,Execution worker Thread 5,5,main]) started.
+Build 36c1eb20-953e-4046-969b-4636b420a290 is started
+
+> Task :app:generateDebugResources UP-TO-DATE
+Caching disabled for task ':app:generateDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugResources' as it is up-to-date.
+Resolve mutations for :app:packageDebugResources (Thread[#75,Execution worker Thread 3,5,main]) started.
+:app:packageDebugResources (Thread[#75,Execution worker Thread 3,5,main]) started.
+
+> Task :app:packageDebugResources UP-TO-DATE
+Caching disabled for task ':app:packageDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:packageDebugResources' as it is up-to-date.
+
+> Task :app:processDebugNavigationResources UP-TO-DATE
+Caching disabled for task ':app:processDebugNavigationResources' because:
+  Build cache is disabled
+Skipping task ':app:processDebugNavigationResources' as it is up-to-date.
+Resolve mutations for :app:parseDebugLocalResources (Thread[#77,Execution worker Thread 5,5,main]) started.
+:app:parseDebugLocalResources (Thread[#74,Execution worker Thread 2,5,main]) started.
+
+> Task :app:parseDebugLocalResources UP-TO-DATE
+Caching disabled for task ':app:parseDebugLocalResources' because:
+  Build cache is disabled
+Skipping task ':app:parseDebugLocalResources' as it is up-to-date.
+Resolve mutations for :app:generateDebugRFile (Thread[#74,Execution worker Thread 2,5,main]) started.
+:app:generateDebugRFile (Thread[#74,Execution worker Thread 2,5,main]) started.
+
+> Task :app:generateDebugRFile UP-TO-DATE
+Caching disabled for task ':app:generateDebugRFile' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugRFile' as it is up-to-date.
+Resolve mutations for :app:kaptGenerateStubsDebugKotlin (Thread[#74,Execution worker Thread 2,5,main]) started.
+:app:kaptGenerateStubsDebugKotlin (Thread[#74,Execution worker Thread 2,5,main]) started.
+
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+file or directory 'C:\Users\Roman\Documents\Projekte\AppDevProjekt-App\app\src\main\kotlin', not found
+file or directory 'C:\Users\Roman\Documents\Projekte\AppDevProjekt-App\app\src\debug\java', not found
+file or directory 'C:\Users\Roman\Documents\Projekte\AppDevProjekt-App\app\src\debug\kotlin', not found
+file or directory 'C:\Users\Roman\Documents\Projekte\AppDevProjekt-App\app\src\debug\java', not found
+file or directory 'C:\Users\Roman\Documents\Projekte\AppDevProjekt-App\app\src\main\kotlin', not found
+file or directory 'C:\Users\Roman\Documents\Projekte\AppDevProjekt-App\app\src\debug\java', not found
+file or directory 'C:\Users\Roman\Documents\Projekte\AppDevProjekt-App\app\src\debug\kotlin', not found
+file or directory 'C:\Users\Roman\Documents\Projekte\AppDevProjekt-App\app\src\debug\java', not found
+Caching disabled for task ':app:kaptGenerateStubsDebugKotlin' because:
+  Build cache is disabled
+Skipping task ':app:kaptGenerateStubsDebugKotlin' as it is up-to-date.
+Resolve mutations for :app:kaptDebugKotlin (Thread[#74,Execution worker Thread 2,5,main]) started.
+:app:kaptDebugKotlin (Thread[#83,Execution worker Thread 11,5,main]) started.
+
+> Task :app:kaptDebugKotlin
+Caching disabled for task ':app:kaptDebugKotlin' because:
+  Build cache is disabled
+Task ':app:kaptDebugKotlin' is not up-to-date because:
+  Task has failed previously.
+The input changes require a full rebuild for incremental task ':app:kaptDebugKotlin'.
+Running kapt annotation processing using the Gradle Worker API
+Using workers NONE isolation mode to run kapt
+
+> Task :app:kaptDebugKotlin FAILED
+Build 36c1eb20-953e-4046-969b-4636b420a290 is closed
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:kaptDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 8s
+7 actionable tasks: 1 executed, 6 up-to-date
+Watched directory hierarchies: [C:\Users\Roman\Documents\Projekte\AppDevProjekt-App]
+Configuration cache entry reused.

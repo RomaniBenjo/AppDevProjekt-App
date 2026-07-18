@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
 }
 
 android {
@@ -61,4 +62,9 @@ dependencies {
     implementation("org.maplibre.gl:android-sdk:13.3.1")
     implementation("androidx.work:work-runtime-ktx:2.10.2")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    val roomVersion = "2.7.2"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("com.google.code.gson:gson:2.10.1")
 }
