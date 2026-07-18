@@ -49,7 +49,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -97,6 +96,41 @@ fun HomeScreen (
 
     var testSelectedCountryId by rememberSaveable { mutableStateOf<String?>(null) }
     var isFullscreen by rememberSaveable { mutableStateOf(false) }
+
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            val granted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                          permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            if (granted) {
+                viewModel.claimCurrentCountry(context)
+            } else {
+                viewModel.resetClaimStatus()
+            }
+        }
+    )
+
+    val onClaimClick = {
+        val fineGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val coarseGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        if (fineGranted || coarseGranted) {
+            viewModel.claimCurrentCountry(context)
+        } else {
+            permissionLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
 
     DisposableEffect(isFullscreen) {
         if (isFullscreen) {
@@ -221,92 +255,45 @@ fun HomeScreen (
                 }
             )
         } else {
+            // world map with countries visited marked
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(.33f)
                     .padding(16.dp)
             ) {
-                // TODO: world map with counrties visited marked
-                Card(modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        text = appString(R.string.map_placeholder),
-                        modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 20.dp)
-                    )
-                }
-        // world map with countries visited marked
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(.33f)
-                .padding(16.dp)
-        ) {
-            Card(
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                Box(
+                Card(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
                 ) {
-                    if (viewModel.countries.isEmpty()) {
-                        Text(
-                            text = "Loading Map...",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    } else {
-                        InteractiveWorldMap(
-                            countries = viewModel.countries,
-                            countryColors = customCountryColors,
-                            oceanColor = oceanColor,
-                            defaultCountryColor = defaultCountryColor,
-                            borderColor = borderColor,
-                            borderWidth = 0.4f,
-                            zoomable = false,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(8.dp)
-                                .clickable { isFullscreen = true },
-                            onCountrySelected = { _ ->
-                                isFullscreen = true
-                            }
-                        )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (viewModel.countries.isEmpty()) {
+                            Text(
+                                text = "Loading Map...",
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        } else {
+                            InteractiveWorldMap(
+                                countries = viewModel.countries,
+                                countryColors = customCountryColors,
+                                oceanColor = oceanColor,
+                                defaultCountryColor = defaultCountryColor,
+                                borderColor = borderColor,
+                                borderWidth = 0.4f,
+                                zoomable = false,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp)
+                                    .clickable { isFullscreen = true },
+                                onCountrySelected = { _ ->
+                                    isFullscreen = true
+                                }
+                            )
+                        }
                     }
                 }
-            }
-        }
-
-        val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-            contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
-            onResult = { permissions ->
-                val granted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                              permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
-                if (granted) {
-                    viewModel.claimCurrentCountry(context)
-                } else {
-                    viewModel.resetClaimStatus()
-                }
-            }
-        )
-
-        val onClaimClick = {
-            val fineGranted = androidx.core.content.ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            val coarseGranted = androidx.core.content.ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-            if (fineGranted || coarseGranted) {
-                viewModel.claimCurrentCountry(context)
-            } else {
-                permissionLauncher.launch(
-                    arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
             }
         }
 

@@ -160,6 +160,7 @@ fun JourneyDetailScreen (
                 }
             }
         }
+        }
 
         Spacer(Modifier.height(16.dp))
 
