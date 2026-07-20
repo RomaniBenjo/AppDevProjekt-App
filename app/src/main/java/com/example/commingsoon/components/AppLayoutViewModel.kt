@@ -93,6 +93,7 @@ fun AppLayoutViewModel (
                 navController = navController,
                 currentRoute = currentRoute,
                 assets = themeDefinition.assets,
+                profile = profileViewModel.profile,
                 closeMenu = {
                     scope.launch { drawerState.close() }
                 }

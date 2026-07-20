@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -36,12 +38,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalConfiguration
 import com.example.commingsoon.language.appString
+import com.example.commingsoon.viewmodels.Profile
 
 @Composable
 fun AppMenu (
     navController: NavController,
     currentRoute: String?,
     assets: AppThemeAssets,
+    profile: Profile,
     closeMenu: () -> Unit
 ) {
     val items = listOf(
@@ -80,6 +84,26 @@ fun AppMenu (
                     bottom = 24.dp
                 )
             ) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        ProfileAvatar(
+                            profile = profile,
+                            contentDescription = "Profilbild von ${profile.name}",
+                            modifier = Modifier.size(84.dp)
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = profile.name,
+                            color = MaterialTheme.colorScheme.background,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
                 items(items) { screens ->
                     NavigationDrawerItem(
                         icon = {

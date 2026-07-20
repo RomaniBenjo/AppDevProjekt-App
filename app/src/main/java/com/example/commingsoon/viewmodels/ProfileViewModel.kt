@@ -4,11 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.commingsoon.auth.AuthenticatedUser
 
 data class Profile(
-    val id: Int,
+    val id: Long,
     val name: String,
-    val image: Int? = null
+    val image: Int? = null,
+    val imageUrl: String? = null
 )
 
 class ProfileViewModel : ViewModel() {
@@ -23,7 +25,18 @@ class ProfileViewModel : ViewModel() {
 
     fun updateImage(image: Int?) {
         profile = profile.copy(
-            image = image
+            image = image,
+            imageUrl = null
+        )
+    }
+
+    fun updateFromAuthenticatedUser(user: AuthenticatedUser) {
+        profile = Profile(
+            id = user.id,
+            name = user.name?.takeIf { it.isNotBlank() }
+                ?: user.email.substringBefore('@'),
+            image = null,
+            imageUrl = user.pictureUrl
         )
     }
 }

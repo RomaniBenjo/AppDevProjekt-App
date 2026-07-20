@@ -1,6 +1,7 @@
 package com.example.commingsoon.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,6 +68,9 @@ fun AppNavHost (
             NavScreens.Login.route
         }
     }
+    LaunchedEffect(authRepository, profileViewModel) {
+        authRepository.currentSession()?.user?.let(profileViewModel::updateFromAuthenticatedUser)
+    }
 
     NavHost(
         navController = navController,
@@ -94,7 +98,10 @@ fun AppNavHost (
                             ) {
                                 is GoogleSignInResult.Success -> {
                                     try {
-                                        authRepository.authenticateGoogleUser(result.user.idToken)
+                                        val session = authRepository.authenticateGoogleUser(
+                                            result.user.idToken
+                                        )
+                                        profileViewModel.updateFromAuthenticatedUser(session.user)
                                         navController.navigate(NavScreens.Home.route) {
                                             popUpTo(NavScreens.Login.route) { inclusive = true }
                                             launchSingleTop = true
