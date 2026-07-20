@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.commingsoon"
+    namespace = "com.example.comingsoon"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -22,6 +22,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val apiBaseUrl = providers.gradleProperty("APPDEV_API_BASE_URL")
+        .orElse("http://10.0.2.2:8885")
+        .get()
+        .trimEnd('/')
+
+    buildTypes.configureEach {
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+    }
+
     buildTypes {
         release {
             optimization {
@@ -35,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -62,6 +72,13 @@ dependencies {
     implementation("org.maplibre.gl:android-sdk:13.3.1")
     implementation("androidx.work:work-runtime-ktx:2.10.2")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.credentials:credentials:1.7.0-alpha02")
+    implementation("androidx.credentials:credentials-play-services-auth:1.7.0-alpha02")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+    implementation("com.google.zxing:core:3.5.4")
     val roomVersion = "2.7.2"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")

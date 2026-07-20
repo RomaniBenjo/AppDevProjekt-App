@@ -1,6 +1,9 @@
 <resources>
     <!-- Titles -->
     <string name="app_name">CommingSoon</string>
+    <string name="login">Login</string>
+    <!-- Replace with the Web application OAuth client ID from Google Auth Platform. -->
+    <string name="google_web_client_id" translatable="false">651453947706-v9jub0sfr2ngts1557q7tjbcnum4muad.apps.googleusercontent.com</string>
     <string name="home">Home</string>
     <string name="journeys">Journeys</string>
     <string name="journey_editor">Journey Editor</string>
@@ -34,6 +37,13 @@
     <string name="never">Never</string>
     <string name="qr_code">QR Code</string>
     <string name="search">Search</string>
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
+    <string name="cancel_request">Cancel request</string>
+    <string name="incoming_requests">Incoming requests</string>
+    <string name="outgoing_requests">Outgoing requests</string>
+    <string name="your_friends">Your friends</string>
+    <string name="no_friends_yet">You have no friends yet.</string>
 
     <!-- Dialog-Confirmations -->
     <string name="remove_friend">Remove Friend</string>
@@ -83,6 +93,14 @@
     <string name="search_friend_or_qr">Search for a friend or scan a QR code</string>
     <string name="friend_name">Friend Name</string>
     <string name="scan_friend_qr_description">Scan a friend\'s QR code to add them.</string>
+    <string name="my_friend_qr">Your friend QR code</string>
+    <string name="my_friend_qr_description">Let another user scan this code to send you a friend request.</string>
+    <string name="scan_friend_qr">Scan friend QR code</string>
+    <string name="invalid_friend_qr">This is not a valid ComingSoon friend QR code.</string>
+    <string name="own_friend_qr">You cannot add yourself as a friend.</string>
+    <string name="friend_request_sent">Friend request sent.</string>
+    <string name="qr_scanner_failed">The QR scanner could not be opened.</string>
+    <string name="qr_user_missing">Sign in again to create your friend QR code.</string>
 
     <string name="notification_journey_title">Your Journey starts today!</string>
     <string name="notification_journey_text">Your Journey "%1$s" starts today. Click to see more information!</string>
