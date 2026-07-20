@@ -64,6 +64,9 @@ class FriendViewModel(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    val currentUserId: Int?
+        get() = repository.currentUserId()
+
     init {
         if (repository.hasSession()) refresh()
     }
@@ -110,10 +113,24 @@ class FriendViewModel(
         }
     }
 
-    fun sendFriendRequest(friend: Friend) = mutate {
-        repository.sendRequest(friend.id)
-        _searchResults.removeAll { it.id == friend.id }
-        refreshAfterMutation()
+    fun sendFriendRequest(friend: Friend) {
+        sendFriendRequest(friend.id) {
+            _searchResults.removeAll { it.id == friend.id }
+        }
+    }
+
+    fun sendFriendRequest(userId: Int, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            runCatching {
+                repository.sendRequest(userId)
+                refreshAfterMutation()
+            }.onSuccess {
+                onSuccess()
+            }.onFailure(::showError)
+            isLoading = false
+        }
     }
 
     fun acceptRequest(requestId: Int) = mutate {

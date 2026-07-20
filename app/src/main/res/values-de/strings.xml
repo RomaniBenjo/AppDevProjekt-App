@@ -92,6 +92,14 @@
     <string name="search_friend_or_qr">Suche nach einem Freund oder scanne einen QR-Code</string>
     <string name="friend_name">Name des Freundes</string>
     <string name="scan_friend_qr_description">Scanne den QR-Code eines Freundes, um ihn hinzuzufügen.</string>
+    <string name="my_friend_qr">Dein Freunde-QR-Code</string>
+    <string name="my_friend_qr_description">Lass diesen Code von einer anderen Person scannen, damit sie dir eine Freundschaftsanfrage senden kann.</string>
+    <string name="scan_friend_qr">Freunde-QR-Code scannen</string>
+    <string name="invalid_friend_qr">Das ist kein gültiger ComingSoon-Freunde-QR-Code.</string>
+    <string name="own_friend_qr">Du kannst dich nicht selbst als Freund hinzufügen.</string>
+    <string name="friend_request_sent">Freundschaftsanfrage gesendet.</string>
+    <string name="qr_scanner_failed">Der QR-Scanner konnte nicht geöffnet werden.</string>
+    <string name="qr_user_missing">Melde dich erneut an, um deinen Freunde-QR-Code zu erstellen.</string>
 
     <string name="notification_journey_title">Deine Reise startet heute!</string>
     <string name="notification_journey_text">Deine Reise "%1$s" startet heute. Klicke hier für mehr Informationen!</string>

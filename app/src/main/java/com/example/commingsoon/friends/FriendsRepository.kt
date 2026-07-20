@@ -6,6 +6,7 @@ class FriendsRepository(
     private val sessionStore: AuthSessionStore
 ) {
     fun hasSession(): Boolean = sessionStore.load() != null
+    fun currentUserId(): Int? = sessionStore.load()?.user?.id?.toInt()
 
     suspend fun loadFriends() = apiClient.getFriends(token())
     suspend fun loadRequests() = apiClient.getRequests(token())

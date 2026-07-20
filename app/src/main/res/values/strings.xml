@@ -93,6 +93,14 @@
     <string name="search_friend_or_qr">Search for a friend or scan a QR code</string>
     <string name="friend_name">Friend Name</string>
     <string name="scan_friend_qr_description">Scan a friend\'s QR code to add them.</string>
+    <string name="my_friend_qr">Your friend QR code</string>
+    <string name="my_friend_qr_description">Let another user scan this code to send you a friend request.</string>
+    <string name="scan_friend_qr">Scan friend QR code</string>
+    <string name="invalid_friend_qr">This is not a valid ComingSoon friend QR code.</string>
+    <string name="own_friend_qr">You cannot add yourself as a friend.</string>
+    <string name="friend_request_sent">Friend request sent.</string>
+    <string name="qr_scanner_failed">The QR scanner could not be opened.</string>
+    <string name="qr_user_missing">Sign in again to create your friend QR code.</string>
 
     <string name="notification_journey_title">Your Journey starts today!</string>
     <string name="notification_journey_text">Your Journey "%1$s" starts today. Click to see more information!</string>

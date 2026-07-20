@@ -33,18 +33,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.R
 import com.example.commingsoon.components.FriendAvatar
 import com.example.commingsoon.language.appString
+import com.example.commingsoon.friends.FriendQrPayload
+import com.example.commingsoon.friends.createFriendQrBitmap
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +117,7 @@ fun AddFriendOverlay(
                     )
 
                 ShareTab.QR_CODE ->
-                    ScanQrPlaceholder()
+                    FriendQrView(viewModel)
             }
         }
     }
@@ -224,7 +232,26 @@ fun FriendSearchItem(
 }
 
 @Composable
-fun ScanQrPlaceholder() {
+fun FriendQrView(viewModel: FriendViewModel) {
+    val context = LocalContext.current
+    val userId = viewModel.currentUserId
+    val sizePx = with(LocalDensity.current) { 220.dp.roundToPx() }
+    val qrBitmap = remember(userId, sizePx) {
+        userId?.let { createFriendQrBitmap(it, sizePx) }
+    }
+    val scanner = remember(context) {
+        val options = GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .enableAutoZoom()
+            .build()
+        GmsBarcodeScanning.getClient(context, options)
+    }
+    var isScanning by remember { mutableStateOf(false) }
+    var scanMessage by remember { mutableStateOf<String?>(null) }
+    val invalidMessage = appString(R.string.invalid_friend_qr)
+    val ownCodeMessage = appString(R.string.own_friend_qr)
+    val successMessage = appString(R.string.friend_request_sent)
+    val scannerFailedMessage = appString(R.string.qr_scanner_failed)
 
     Column(
         modifier = Modifier
@@ -232,24 +259,84 @@ fun ScanQrPlaceholder() {
             .padding(vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            text = appString(R.string.my_friend_qr),
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(Modifier.height(12.dp))
 
-        Card(
-            shape = RoundedCornerShape(24.dp)
-        ) {
-
-            Image(
-                painter = painterResource(R.drawable.qr_placeholder), // TODO: creating real QR codes
-                contentDescription = null,
-                modifier = Modifier.size(220.dp)
+        if (qrBitmap != null) {
+            Card(shape = RoundedCornerShape(24.dp)) {
+                Image(
+                    bitmap = qrBitmap.asImageBitmap(),
+                    contentDescription = appString(R.string.my_friend_qr),
+                    modifier = Modifier.size(220.dp)
+                )
+            }
+        } else {
+            Text(
+                text = appString(R.string.qr_user_missing),
+                color = MaterialTheme.colorScheme.error
             )
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
         Text(
-            text = appString(R.string.scan_friend_qr_description),
+            text = appString(R.string.my_friend_qr_description),
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
+        Spacer(Modifier.height(24.dp))
+
+        Button(
+            enabled = !isScanning && !viewModel.isLoading && userId != null,
+            onClick = {
+                isScanning = true
+                scanMessage = null
+                viewModel.clearError()
+                scanner.startScan()
+                    .addOnSuccessListener { barcode ->
+                        isScanning = false
+                        val scannedId = FriendQrPayload.parse(barcode.rawValue)
+                        when {
+                            scannedId == null -> scanMessage = invalidMessage
+                            scannedId == userId -> scanMessage = ownCodeMessage
+                            else -> viewModel.sendFriendRequest(scannedId) {
+                                scanMessage = successMessage
+                            }
+                        }
+                    }
+                    .addOnCanceledListener { isScanning = false }
+                    .addOnFailureListener {
+                        isScanning = false
+                        scanMessage = it.localizedMessage ?: scannerFailedMessage
+                    }
+            }
+        ) {
+            if (isScanning || viewModel.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(Icons.Outlined.Search, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(appString(R.string.scan_friend_qr))
+            }
+        }
+
+        scanMessage?.let {
+            Spacer(Modifier.height(12.dp))
+            Text(text = it, style = MaterialTheme.typography.bodyMedium)
+        }
+        viewModel.errorMessage?.let {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
