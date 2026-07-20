@@ -1,16 +1,11 @@
 package com.example.commingsoon.ui.screens.localopenguesser.connection
 
 import android.app.Application
-import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 
 internal class LocalConnectionViewModel(application: Application) : AndroidViewModel(application) {
     private val manager = NearbyConnectionManager(application)
     val state = manager.state
-
-    init {
-        manager.setLocalName(Build.MODEL.ifBlank { "Android player" })
-    }
 
     fun setLocalName(name: String) = manager.setLocalName(name)
     fun hasGooglePlayServices() = manager.hasGooglePlayServices()

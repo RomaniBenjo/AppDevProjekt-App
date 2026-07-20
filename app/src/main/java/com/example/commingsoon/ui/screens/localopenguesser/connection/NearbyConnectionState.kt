@@ -1,5 +1,12 @@
 package com.example.commingsoon.ui.screens.localopenguesser.connection
 
+import androidx.annotation.StringRes
+
+internal data class LocalGuesserMessage(
+    @param:StringRes val resourceId: Int,
+    val args: List<Any> = emptyList()
+)
+
 internal enum class NearbyPhase {
     IDLE,
     ADVERTISING,
@@ -23,9 +30,16 @@ internal enum class LocalGamePhase {
     FINISHED
 }
 
+internal enum class HomePhotoExclusionMode {
+    NONE,
+    MOST_PHOTOGRAPHED_COUNTRY,
+    LARGEST_HOME_CLUSTER
+}
+
 internal data class LocalGameSettings(
     val roundCount: Int = 5,
-    val roundSeconds: Int = 30
+    val roundSeconds: Int = 30,
+    val homePhotoExclusionMode: HomePhotoExclusionMode = HomePhotoExclusionMode.NONE
 )
 
 internal data class GuessLocation(
@@ -54,7 +68,7 @@ internal data class LocalGameState(
     val currentRoundResult: RoundResult? = null,
     val roundResults: List<RoundResult> = emptyList(),
     val canContinueAfterRound: Boolean = false,
-    val statusMessage: String? = null
+    val statusMessage: LocalGuesserMessage? = null
 )
 
 internal data class NearbyEndpoint(
@@ -76,5 +90,5 @@ internal data class NearbyConnectionState(
     val connectedEndpoint: NearbyEndpoint? = null,
     val receivedTestMessage: String? = null,
     val game: LocalGameState = LocalGameState(),
-    val errorMessage: String? = null
+    val errorMessage: LocalGuesserMessage? = null
 )

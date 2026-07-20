@@ -1,13 +1,18 @@
 package com.example.commingsoon.ui.screens
 
+import android.content.res.Configuration
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,45 +30,75 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.R
 import com.example.commingsoon.language.appString
-import com.example.commingsoon.navigation.NavScreens
 
 @Composable
 fun OpenGuesserScreen(navController: NavHostController) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = appString(R.string.how_to_play),
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = appString(R.string.online_or_local),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Spacer(Modifier.height(28.dp))
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-        OpenGuesserModeCard(
-            title = appString(R.string.online_guesser),
-            description = appString(R.string.online_guesser_text),
-            icon = Icons.Default.Cloud,
-            onClick = { navController.navigate(NavScreens.OpenGuesserOnline.route) }
-        )
-        Spacer(Modifier.height(16.dp))
-        OpenGuesserModeCard(
-            title = appString(R.string.local_guesser),
-            description = appString(R.string.local_guesser_text),
-            icon = Icons.Default.Map,
-            onClick = { navController.navigate(NavScreens.OpenGuesserLocal.route) }
-        )
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp)
+                .heightIn(min = maxHeight - 40.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = appString(R.string.how_to_play),
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = appString(R.string.online_or_local),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Spacer(Modifier.height(28.dp))
+
+            if (isLandscape) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    OpenGuesserModeCard(
+                        title = appString(R.string.online_guesser),
+                        description = appString(R.string.online_guesser_text),
+                        icon = Icons.Default.Cloud,
+                        onClick = { navController.navigate(NavScreens.OpenGuesserOnline.route) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OpenGuesserModeCard(
+                        title = appString(R.string.local_guesser),
+                        description = appString(R.string.local_guesser_text),
+                        icon = Icons.Default.Map,
+                        onClick = { navController.navigate(NavScreens.OpenGuesserLocal.route) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            } else {
+                OpenGuesserModeCard(
+                    title = appString(R.string.online_guesser),
+                    description = appString(R.string.online_guesser_text),
+                    icon = Icons.Default.Cloud,
+                    onClick = { navController.navigate(NavScreens.OpenGuesserOnline.route) }
+                )
+                Spacer(Modifier.height(16.dp))
+                OpenGuesserModeCard(
+                    title = appString(R.string.local_guesser),
+                    description = appString(R.string.local_guesser_text),
+                    icon = Icons.Default.Map,
+                    onClick = { navController.navigate(NavScreens.OpenGuesserLocal.route) }
+                )
+            }
+        }
     }
 }
 
@@ -72,10 +107,11 @@ private fun OpenGuesserModeCard(
     title: String,
     description: String,
     icon: ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(132.dp),
         shape = RoundedCornerShape(20.dp),

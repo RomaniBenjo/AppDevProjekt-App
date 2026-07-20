@@ -37,10 +37,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
+import com.example.commingsoon.R
+import com.example.commingsoon.language.appString
 import com.example.commingsoon.navigation.NavScreens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.example.commingsoon.R
 
 @Composable
 fun LocalOpenGuesserStartScreen(navController: NavHostController) {
@@ -50,12 +51,12 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
     var isScanning by remember { mutableStateOf(false) }
     var scanProgress by remember { mutableStateOf(PhotoScanProgress(0, 0)) }
     var stats by remember { mutableStateOf<PhotoLibraryStats?>(null) }
-    var scanError by remember { mutableStateOf<String?>(null) }
+    var scanFailed by remember { mutableStateOf(false) }
     var mapDownloaded by remember { mutableStateOf(isOfflineMapDownloaded(context)) }
     var mapDownloadRequest by remember { mutableIntStateOf(0) }
     var isDownloadingMap by remember { mutableStateOf(false) }
     var mapDownloadProgress by remember { mutableStateOf<OfflineMapDownloadProgress?>(null) }
-    var mapDownloadError by remember { mutableStateOf<String?>(null) }
+    var mapDownloadFailed by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -68,19 +69,19 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
         if (!access.hasFullLibrary || !access.hasLocationMetadata) return@LaunchedEffect
         isScanning = true
         scanProgress = PhotoScanProgress(0, 0)
-        scanError = null
+        scanFailed = false
         runCatching {
             scanPhotoLibrary(context) { progress -> scanProgress = progress }
         }
             .onSuccess { stats = it }
-            .onFailure { scanError = it.message ?: "The photo library could not be scanned." }
+            .onFailure { scanFailed = true }
         isScanning = false
     }
 
     LaunchedEffect(mapDownloadRequest) {
         if (mapDownloadRequest == 0 || mapDownloaded) return@LaunchedEffect
         isDownloadingMap = true
-        mapDownloadError = null
+        mapDownloadFailed = false
         mapDownloadProgress = OfflineMapDownloadProgress(0L, null)
         runCatching {
             downloadOfflineMap(context) { progress ->
@@ -90,9 +91,7 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
             }
         }
             .onSuccess { mapDownloaded = true }
-            .onFailure { error ->
-                mapDownloadError = error.message ?: "The offline map could not be downloaded."
-            }
+            .onFailure { mapDownloadFailed = true }
         isDownloadingMap = false
     }
 
@@ -103,10 +102,9 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Local OpenGuesser", style = MaterialTheme.typography.headlineSmall)
+        Text(appString(R.string.local_guesser), style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Allow access to your full photo library to find photos with GPS metadata. " +
-                "The scan, country lookup, and reusable photo index stay only on this phone.",
+            appString(R.string.local_guesser_start_description),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
@@ -116,7 +114,7 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
             isDownloaded = mapDownloaded,
             isDownloading = isDownloadingMap,
             progress = mapDownloadProgress,
-            error = mapDownloadError,
+            downloadFailed = mapDownloadFailed,
             onDownload = { mapDownloadRequest++ }
         )
 
@@ -124,7 +122,13 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
             onClick = { permissionLauncher.launch(requiredPhotoPermissions()) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (access.isReady) "Review photo permissions" else "Allow full library and scan")
+            Text(
+                if (access.isReady) {
+                    appString(R.string.local_guesser_review_photo_permissions)
+                } else {
+                    appString(R.string.local_guesser_allow_library_and_scan)
+                }
+            )
         }
 
         if (isScanning) {
@@ -141,7 +145,7 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
                         if (scanProgress.totalImages == 0) {
                             CircularProgressIndicator()
                         }
-                        Text("Scanning photos and reading GPS metadata…")
+                        Text(appString(R.string.local_guesser_scanning_photos))
                     }
                     LinearProgressIndicator(
                         progress = { scanProgress.fraction },
@@ -152,18 +156,28 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            "${scanProgress.processedImages} / ${scanProgress.totalImages} images",
+                            appString(
+                                R.string.local_guesser_scan_image_progress,
+                                scanProgress.processedImages,
+                                scanProgress.totalImages
+                            ),
                             style = MaterialTheme.typography.bodySmall
                         )
                         Text(
-                            "${(scanProgress.fraction * 100).toInt()}%",
+                            appString(
+                                R.string.local_guesser_percentage,
+                                (scanProgress.fraction * 100).toInt()
+                            ),
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
                     if (scanProgress.processedImages > 0) {
                         Text(
-                            "${scanProgress.reusedFromIndex} indexed · " +
-                                "${scanProgress.scannedNow} read from photos",
+                            appString(
+                                R.string.local_guesser_scan_index_progress,
+                                scanProgress.reusedFromIndex,
+                                scanProgress.scannedNow
+                            ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -172,8 +186,11 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
             }
         }
 
-        scanError?.let {
-            Text(it, color = MaterialTheme.colorScheme.error)
+        if (scanFailed) {
+            Text(
+                appString(R.string.local_guesser_scan_failed),
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         stats?.let { result ->
@@ -183,7 +200,7 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
                 enabled = !isScanning,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Scan again")
+                Text(appString(R.string.local_guesser_scan_again))
             }
         }
 
@@ -193,13 +210,13 @@ fun LocalOpenGuesserStartScreen(navController: NavHostController) {
             enabled = stats != null && !isScanning && mapDownloaded && !isDownloadingMap,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Connect to another phone")
+            Text(appString(R.string.local_guesser_connect_phone))
         }
         OutlinedButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Back")
+            Text(appString(R.string.back))
         }
     }
 }
@@ -209,7 +226,7 @@ private fun OfflineMapDownloadCard(
     isDownloaded: Boolean,
     isDownloading: Boolean,
     progress: OfflineMapDownloadProgress?,
-    error: String?,
+    downloadFailed: Boolean,
     onDownload: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -217,12 +234,15 @@ private fun OfflineMapDownloadCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Offline world map", style = MaterialTheme.typography.titleMedium)
+            Text(
+                appString(R.string.local_guesser_offline_world_map),
+                style = MaterialTheme.typography.titleMedium
+            )
             Text(
                 if (isDownloaded) {
-                    "Ready. The downloaded map stays on this phone and works without internet."
+                    appString(R.string.local_guesser_offline_map_ready)
                 } else {
-                    "Download the world map once before playing. It will be stored only on this phone for offline games."
+                    appString(R.string.local_guesser_offline_map_description)
                 },
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -241,15 +261,27 @@ private fun OfflineMapDownloadCard(
                 val total = progress?.totalBytes
                 Text(
                     if (total != null) {
-                        "Downloading ${formatFileSize(downloaded)} / ${formatFileSize(total)}"
+                        appString(
+                            R.string.local_guesser_downloading_progress,
+                            formatFileSize(downloaded),
+                            formatFileSize(total)
+                        )
                     } else {
-                        "Downloading ${formatFileSize(downloaded)}"
+                        appString(
+                            R.string.local_guesser_downloading_amount,
+                            formatFileSize(downloaded)
+                        )
                     },
                     style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            if (downloadFailed) {
+                Text(
+                    appString(R.string.local_guesser_map_download_failed),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
 
             if (!isDownloaded) {
                 Button(
@@ -257,7 +289,13 @@ private fun OfflineMapDownloadCard(
                     enabled = !isDownloading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (isDownloading) "Downloading map…" else "Download offline map")
+                    Text(
+                        if (isDownloading) {
+                            appString(R.string.local_guesser_downloading_map)
+                        } else {
+                            appString(R.string.local_guesser_download_offline_map)
+                        }
+                    )
                 }
             }
         }
@@ -277,13 +315,27 @@ private fun PermissionCard(access: PhotoAccess) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text("Photo access", style = MaterialTheme.typography.titleMedium)
-            Text(if (access.hasFullLibrary) "✓ Entire photo library" else "✗ Entire photo library")
-            Text(if (access.hasLocationMetadata) "✓ Original GPS metadata" else "✗ Original GPS metadata")
+            Text(
+                appString(R.string.local_guesser_photo_access),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                if (access.hasFullLibrary) {
+                    appString(R.string.local_guesser_entire_library_granted)
+                } else {
+                    appString(R.string.local_guesser_entire_library_missing)
+                }
+            )
+            Text(
+                if (access.hasLocationMetadata) {
+                    appString(R.string.local_guesser_gps_metadata_granted)
+                } else {
+                    appString(R.string.local_guesser_gps_metadata_missing)
+                }
+            )
             if (access.hasLimitedLibrary && !access.hasFullLibrary) {
                 Text(
-                    "Only selected photos are allowed. Choose “Allow all” in the Android dialog " +
-                        "so the statistics represent the complete library.",
+                    appString(R.string.local_guesser_limited_library_warning),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -299,19 +351,32 @@ private fun PhotoStats(stats: PhotoLibraryStats) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Library statistics", style = MaterialTheme.typography.titleMedium)
-            StatRow("Images found", stats.totalImages)
-            StatRow("With GPS location", stats.imagesWithLocation)
-            StatRow("Without GPS location", stats.imagesWithoutLocation)
-            if (stats.unresolvedLocations > 0) StatRow("GPS location outside country data", stats.unresolvedLocations)
-            if (stats.unreadableImages > 0) StatRow("Could not be read", stats.unreadableImages)
+            Text(
+                appString(R.string.local_guesser_library_statistics),
+                style = MaterialTheme.typography.titleMedium
+            )
+            StatRow(appString(R.string.local_guesser_images_found), stats.totalImages)
+            StatRow(appString(R.string.local_guesser_with_gps), stats.imagesWithLocation)
+            StatRow(appString(R.string.local_guesser_without_gps), stats.imagesWithoutLocation)
+            if (stats.unresolvedLocations > 0) {
+                StatRow(
+                    appString(R.string.local_guesser_location_outside_country_data),
+                    stats.unresolvedLocations
+                )
+            }
+            if (stats.unreadableImages > 0) {
+                StatRow(appString(R.string.local_guesser_unreadable_images), stats.unreadableImages)
+            }
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            StatRow("Reused from local index", stats.reusedFromIndex)
-            StatRow("Scanned or updated now", stats.scannedNow)
+            StatRow(appString(R.string.local_guesser_reused_from_index), stats.reusedFromIndex)
+            StatRow(appString(R.string.local_guesser_scanned_now), stats.scannedNow)
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            Text("Images by country", style = MaterialTheme.typography.titleSmall)
+            Text(
+                appString(R.string.local_guesser_images_by_country),
+                style = MaterialTheme.typography.titleSmall
+            )
             if (stats.imagesByCountry.isEmpty()) {
-                Text("No photos with a country location were found.")
+                Text(appString(R.string.local_guesser_no_country_photos))
             } else {
                 stats.imagesByCountry.forEach { (country, count) -> StatRow(country, count) }
             }

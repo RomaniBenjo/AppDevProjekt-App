@@ -17,11 +17,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.AddLocationAlt
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,11 +40,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,6 +90,24 @@ fun JourneyEditorScreen (
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddPinDialog by remember { mutableStateOf(false) }
     var pinToRemove by remember { mutableStateOf<JourneyLocation?>(null) }
+    var showAddCountryDialog by remember { mutableStateOf(false) }
+
+    val visitedCountries = remember {
+        mutableStateListOf<String>().apply {
+            if (journey != null) {
+                addAll(journey.visitedCountries)
+            }
+        }
+    }
+
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.loadWorldMap(context)
+    }
+
+    val allCountries = remember(viewModel.countries) {
+        viewModel.countries.map { it.name ?: it.id }.distinct().sorted()
+    }
 
     Box(modifier = Modifier.fillMaxSize().padding(20.dp)) {
         LazyColumn(
@@ -202,6 +229,86 @@ fun JourneyEditorScreen (
                 }
             }
 
+            // Visited Countries
+            item {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Visited Countries",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    
+                    Spacer(Modifier.height(8.dp))
+                    
+                    if (visitedCountries.isEmpty()) {
+                        Text(
+                            text = "No countries selected yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    } else {
+                        val scrollState = rememberScrollState()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(scrollState),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            visitedCountries.forEach { country ->
+                                Row(
+                                    modifier = Modifier
+                                        .background(
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = country,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove country",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clickable { visitedCountries.remove(country) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                OutlinedButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(58.dp),
+                    shape = RoundedCornerShape(50),
+                    onClick = {
+                        showAddCountryDialog = true
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        null
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Select Visited Countries")
+                }
+            }
+
             // add pin button
             item {
                 Button(
@@ -282,7 +389,8 @@ fun JourneyEditorScreen (
                             startDate = startDate,
                             endDate = endDate,
                             shared = shareJourney,
-                            locations = locations.toList()
+                            locations = locations.toList(),
+                            visitedCountries = visitedCountries.toList()
                         )
                         onSave(result)
                     },
@@ -332,7 +440,98 @@ fun JourneyEditorScreen (
                 }
             )
         }
+
+        if (showAddCountryDialog) {
+            AddCountryDialog(
+                allCountries = allCountries,
+                selectedCountries = visitedCountries,
+                onDismiss = { showAddCountryDialog = false },
+                onCountryToggle = { country ->
+                    if (visitedCountries.contains(country)) {
+                        visitedCountries.remove(country)
+                    } else {
+                        visitedCountries.add(country)
+                    }
+                }
+            )
+        }
     }
+}
+
+@Composable
+fun AddCountryDialog(
+    allCountries: List<String>,
+    selectedCountries: List<String>,
+    onDismiss: () -> Unit,
+    onCountryToggle: (String) -> Unit
+) {
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    
+    val filteredCountries = remember(searchQuery, allCountries) {
+        allCountries.filter {
+            it.contains(searchQuery, ignoreCase = true)
+        }
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Visited Countries") },
+        text = {
+            Column(modifier = Modifier.height(300.dp)) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Search Country") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                            }
+                        }
+                    }
+                )
+                
+                Spacer(Modifier.height(12.dp))
+                
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(filteredCountries) { country ->
+                        val isSelected = selectedCountries.contains(country)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onCountryToggle(country)
+                                }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = country,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done")
+            }
+        }
+    )
 }
 
 @Composable
