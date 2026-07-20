@@ -15,6 +15,8 @@ class FriendsRepository(
     suspend fun acceptRequest(requestId: Int) = apiClient.acceptRequest(token(), requestId)
     suspend fun deleteRequest(requestId: Int) = apiClient.deleteRequest(token(), requestId)
     suspend fun removeFriend(friendId: Int) = apiClient.removeFriend(token(), friendId)
+    suspend fun listenForUpdates(onUpdate: suspend () -> Unit) =
+        apiClient.listenForFriendUpdates(token(), onUpdate)
 
     private fun token(): String = sessionStore.load()?.accessToken
         ?: throw FriendsApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
