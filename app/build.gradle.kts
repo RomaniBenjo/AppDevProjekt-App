@@ -22,6 +22,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val apiBaseUrl = providers.gradleProperty("APPDEV_API_BASE_URL")
+        .orElse("http://10.0.2.2:8885")
+        .get()
+        .trimEnd('/')
+
+    buildTypes.configureEach {
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+    }
+
     buildTypes {
         release {
             optimization {
@@ -35,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -65,6 +75,7 @@ dependencies {
     implementation("androidx.credentials:credentials:1.7.0-alpha02")
     implementation("androidx.credentials:credentials-play-services-auth:1.7.0-alpha02")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
     val roomVersion = "2.7.2"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")

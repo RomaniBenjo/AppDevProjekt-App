@@ -12,6 +12,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.R
+import com.example.commingsoon.BuildConfig
+import com.example.commingsoon.auth.AuthApiClient
+import com.example.commingsoon.auth.AuthApiException
+import com.example.commingsoon.auth.AuthRepository
+import com.example.commingsoon.auth.AuthSessionStore
 import com.example.commingsoon.auth.GoogleAuthManager
 import com.example.commingsoon.auth.GoogleSignInResult
 import com.example.commingsoon.overlays.OverlayViewModel
@@ -48,9 +53,24 @@ fun AppNavHost (
     overlayViewModel: OverlayViewModel,
     profileViewModel: ProfileViewModel
 ) {
+    val context = LocalContext.current
+    val authRepository = remember(context) {
+        AuthRepository(
+            apiClient = AuthApiClient(BuildConfig.API_BASE_URL),
+            sessionStore = AuthSessionStore(context.applicationContext)
+        )
+    }
+    val startDestination = remember(authRepository) {
+        if (authRepository.currentSession() != null) {
+            NavScreens.Home.route
+        } else {
+            NavScreens.Login.route
+        }
+    }
+
     NavHost(
         navController = navController,
-        startDestination = NavScreens.Login.route
+        startDestination = startDestination
     ) {
         composable(NavScreens.Login.route) {
             val context = LocalContext.current
@@ -73,9 +93,17 @@ fun AppNavHost (
                                 )
                             ) {
                                 is GoogleSignInResult.Success -> {
-                                    navController.navigate(NavScreens.Home.route) {
-                                        popUpTo(NavScreens.Login.route) { inclusive = true }
-                                        launchSingleTop = true
+                                    try {
+                                        authRepository.authenticateGoogleUser(result.user.idToken)
+                                        navController.navigate(NavScreens.Home.route) {
+                                            popUpTo(NavScreens.Login.route) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    } catch (exception: AuthApiException) {
+                                        errorMessage = exception.message
+                                    } catch (exception: Exception) {
+                                        errorMessage = exception.localizedMessage
+                                            ?: "Die Anmeldung konnte nicht abgeschlossen werden."
                                     }
                                 }
                                 GoogleSignInResult.Cancelled -> Unit

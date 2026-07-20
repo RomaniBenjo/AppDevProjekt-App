@@ -9,6 +9,8 @@
     <!-- MediaStore IDs and photo GPS data are device-local and must not enter backups. -->
     <exclude domain="database" path="local_openguesser_photo_index.db" />
     <exclude domain="database" path="local_openguesser_photo_index.db-journal" />
+    <!-- Auth tokens are device-bound and encrypted with an Android Keystore key. -->
+    <exclude domain="sharedpref" path="auth_session.xml" />
     <!-- The large offline map is reproducible from the download URL. -->
     <exclude domain="file" path="maps/" />
     <!--
