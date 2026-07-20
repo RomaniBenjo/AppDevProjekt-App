@@ -76,10 +76,7 @@ fun AppLayoutViewModel (
         OverlayType.ADD_FRIEND -> {
             AddFriendOverlay(
                 viewModel = friendViewModel,
-                onDismiss = { overlayViewModel.dismiss() },
-                onAddFriend = { friend ->
-                    // TODO
-                }
+                onDismiss = { overlayViewModel.dismiss() }
             )
         }
         OverlayType.NONE -> {}

@@ -12,6 +12,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.commingsoon.components.AppLayoutViewModel
 import com.example.commingsoon.data.AppPreferenceRepository
+import com.example.commingsoon.auth.AuthSessionStore
+import com.example.commingsoon.friends.FriendsApiClient
+import com.example.commingsoon.friends.FriendsRepository
 import com.example.commingsoon.language.AppLanguageViewModel
 import com.example.commingsoon.language.LocalAppLanguage
 import com.example.commingsoon.language.LocalLocalizedContext
@@ -34,14 +37,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val repository = AppPreferenceRepository(applicationContext)
-            val factory = AppViewModelFactory(repository)
+            val friendsRepository = FriendsRepository(
+                apiClient = FriendsApiClient(BuildConfig.API_BASE_URL),
+                sessionStore = AuthSessionStore(applicationContext)
+            )
+            val factory = AppViewModelFactory(repository, friendsRepository)
 
             val navController = rememberNavController()
             val themeViewModel: AppThemeViewModel = viewModel(factory = factory)
             val languageViewModel: AppLanguageViewModel = viewModel(factory = factory)
             val settingsViewModel: SettingsViewModel = viewModel(factory = factory)
             val journeyViewModel: JourneyViewModel = viewModel()
-            val friendViewModel: FriendViewModel = viewModel()
+            val friendViewModel: FriendViewModel = viewModel(factory = factory)
             val overlayViewModel: OverlayViewModel = viewModel()
             val profileViewModel: ProfileViewModel = viewModel()
 

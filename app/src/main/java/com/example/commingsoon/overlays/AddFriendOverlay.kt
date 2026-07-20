@@ -13,13 +13,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -30,29 +30,27 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.R
-import com.example.commingsoon.R.drawable.profile_placeholder
+import com.example.commingsoon.components.FriendAvatar
 import com.example.commingsoon.language.appString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddFriendOverlay(
     viewModel: FriendViewModel,
-    onDismiss: () -> Unit,
-    onAddFriend: (Friend) -> Unit
+    onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -60,6 +58,7 @@ fun AddFriendOverlay(
     var currentTab by rememberSaveable {
         mutableStateOf(ShareTab.FRIENDS)
     }
+    LaunchedEffect(Unit) { viewModel.clearError() }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -106,8 +105,7 @@ fun AddFriendOverlay(
             when (currentTab) {
                 ShareTab.FRIENDS ->
                     FriendSearchView(
-                        viewModel = viewModel,
-                        onAddFriend = onAddFriend
+                        viewModel = viewModel
                     )
 
                 ShareTab.QR_CODE ->
@@ -119,17 +117,12 @@ fun AddFriendOverlay(
 
 @Composable
 fun FriendSearchView(
-    viewModel: FriendViewModel,
-    onAddFriend: (Friend) -> Unit
+    viewModel: FriendViewModel
 ) {
 
     var search by rememberSaveable {
         mutableStateOf("")
     }
-    var result by remember {
-        mutableStateOf<List<Friend>>(emptyList())
-    }
-
     Column {
         Row {
             TextField(
@@ -147,8 +140,9 @@ fun FriendSearchView(
             Spacer(Modifier.width(12.dp))
 
             Button(
+                enabled = !viewModel.isSearching,
                 onClick = {
-                    result = viewModel.searchFriends(search)
+                    viewModel.searchFriends(search)
                 }
             ) {
                 Icon(
@@ -160,12 +154,24 @@ fun FriendSearchView(
 
         Spacer(Modifier.height(20.dp))
 
+        if (viewModel.isSearching) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
+        viewModel.errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+
         LazyColumn {
-            items(result) { friend ->
+            items(viewModel.searchResults) { friend ->
                 FriendSearchItem(
                     friend = friend,
                     onAdd = {
-                        onAddFriend(friend)
+                        viewModel.sendFriendRequest(friend)
                     }
                 )
                 HorizontalDivider(
@@ -188,21 +194,18 @@ fun FriendSearchItem(
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(friend.image ?: profile_placeholder),
-            contentDescription = null,
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-        )
+        FriendAvatar(friend = friend, modifier = Modifier.size(44.dp))
 
         Spacer(Modifier.width(14.dp))
 
-        Text(
-            text = friend.name,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = friend.name, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = friend.email,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
         FilledTonalButton(
             onClick = onAdd
@@ -215,7 +218,7 @@ fun FriendSearchItem(
 
             Spacer(Modifier.width(6.dp))
 
-            Text("Add")
+            Text(appString(R.string.add))
         }
     }
 }

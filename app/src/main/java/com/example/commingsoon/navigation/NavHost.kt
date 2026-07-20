@@ -102,6 +102,7 @@ fun AppNavHost (
                                             result.user.idToken
                                         )
                                         profileViewModel.updateFromAuthenticatedUser(session.user)
+                                        friendViewModel.refresh()
                                         navController.navigate(NavScreens.Home.route) {
                                             popUpTo(NavScreens.Login.route) { inclusive = true }
                                             launchSingleTop = true

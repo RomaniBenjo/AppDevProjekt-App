@@ -36,6 +36,13 @@
     <string name="never">Nie</string>
     <string name="qr_code">QR Code</string>
     <string name="search">Suchen</string>
+    <string name="accept">Annehmen</string>
+    <string name="reject">Ablehnen</string>
+    <string name="cancel_request">Anfrage zurückziehen</string>
+    <string name="incoming_requests">Eingehende Anfragen</string>
+    <string name="outgoing_requests">Gesendete Anfragen</string>
+    <string name="your_friends">Deine Freunde</string>
+    <string name="no_friends_yet">Du hast noch keine Freunde.</string>
 
     <!-- Dialog-Confirmations -->
     <string name="remove_friend">Freund entfernen</string>

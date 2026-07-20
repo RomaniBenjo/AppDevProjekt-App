@@ -1,7 +1,6 @@
 package com.example.commingsoon.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
@@ -29,12 +27,14 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -54,6 +53,8 @@ import com.example.commingsoon.navigation.NavScreens
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.viewmodels.Friend
 import com.example.commingsoon.viewmodels.FriendViewModel
+import com.example.commingsoon.viewmodels.FriendRequest
+import com.example.commingsoon.components.FriendAvatar
 
 @Composable
 fun FriendOverviewScreen (
@@ -63,6 +64,7 @@ fun FriendOverviewScreen (
 ) {
     var expandedFriendId by rememberSaveable { mutableStateOf<Int?>(null) }
     var friendToRemove by remember { mutableStateOf<Friend?>(null) }
+    LaunchedEffect(Unit) { viewModel.refresh() }
 
     Box(
         modifier = Modifier
@@ -72,6 +74,59 @@ fun FriendOverviewScreen (
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
+            viewModel.errorMessage?.let { message ->
+                item {
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+            }
+
+            if (viewModel.isLoading && viewModel.friends.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) { CircularProgressIndicator() }
+                }
+            }
+
+            if (viewModel.incomingRequests.isNotEmpty()) {
+                item { FriendSectionTitle(appString(R.string.incoming_requests)) }
+                items(viewModel.incomingRequests, key = { "incoming-${it.id}" }) { request ->
+                    FriendRequestRow(
+                        request = request,
+                        incoming = true,
+                        onAccept = { viewModel.acceptRequest(request.id) },
+                        onDelete = { viewModel.deleteRequest(request.id) }
+                    )
+                }
+            }
+
+            if (viewModel.outgoingRequests.isNotEmpty()) {
+                item { FriendSectionTitle(appString(R.string.outgoing_requests)) }
+                items(viewModel.outgoingRequests, key = { "outgoing-${it.id}" }) { request ->
+                    FriendRequestRow(
+                        request = request,
+                        incoming = false,
+                        onAccept = {},
+                        onDelete = { viewModel.deleteRequest(request.id) }
+                    )
+                }
+            }
+
+            item { FriendSectionTitle(appString(R.string.your_friends)) }
+            if (!viewModel.isLoading && viewModel.friends.isEmpty()) {
+                item {
+                    Text(
+                        text = appString(R.string.no_friends_yet),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                }
+            }
             items(viewModel.friends) { friend ->
                 ExpandableFriendCard(
                     friend = friend,
@@ -311,15 +366,7 @@ fun FriendCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(
-                    friend.image ?: R.drawable.profile_placeholder
-                ),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-            )
+            FriendAvatar(friend = friend, modifier = Modifier.size(56.dp))
 
             Spacer(Modifier.width(16.dp))
 
@@ -334,6 +381,55 @@ fun FriendCard(
                 color = Color.LightGray.copy(alpha = .3f),
                 modifier = Modifier.padding(start = 50.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun FriendSectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 6.dp)
+    )
+}
+
+@Composable
+private fun FriendRequestRow(
+    request: FriendRequest,
+    incoming: Boolean,
+    onAccept: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            FriendAvatar(friend = request.user, modifier = Modifier.size(48.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(request.user.name, style = MaterialTheme.typography.titleSmall)
+                Text(
+                    request.user.email,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            if (incoming) {
+                Button(onClick = onAccept) { Text(appString(R.string.accept)) }
+                Spacer(Modifier.width(6.dp))
+            }
+            OutlinedButton(onClick = onDelete) {
+                Text(appString(if (incoming) R.string.reject else R.string.cancel_request))
+            }
         }
     }
 }
