@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -22,10 +24,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    val apiBaseUrl = providers.gradleProperty("APPDEV_API_BASE_URL")
-        .orElse("http://10.0.2.2:8885")
-        .get()
-        .trimEnd('/')
+    val localProperties = Properties().apply {
+        rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
+    }
+
+    val apiBaseUrl = (
+        localProperties.getProperty("APPDEV_API_BASE_URL")
+            ?.takeIf { it.isNotBlank() }
+            ?: providers.gradleProperty("APPDEV_API_BASE_URL")
+                .orElse("http://10.0.2.2:8885")
+                .get()
+        ).trimEnd('/')
 
     buildTypes.configureEach {
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
