@@ -1,10 +1,19 @@
 package com.example.commingsoon.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.commingsoon.language.AppLanguageViewModel
+import com.example.commingsoon.R
+import com.example.commingsoon.auth.GoogleAuthManager
+import com.example.commingsoon.auth.GoogleSignInResult
 import com.example.commingsoon.overlays.OverlayViewModel
 import com.example.commingsoon.ui.screens.FriendDetailScreen
 import com.example.commingsoon.ui.screens.FriendOverviewScreen
@@ -26,6 +35,7 @@ import com.example.commingsoon.viewmodels.FriendViewModel
 import com.example.commingsoon.viewmodels.JourneyViewModel
 import com.example.commingsoon.viewmodels.ProfileViewModel
 import com.example.commingsoon.viewmodels.SettingsViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavHost (
@@ -43,13 +53,42 @@ fun AppNavHost (
         startDestination = NavScreens.Login.route
     ) {
         composable(NavScreens.Login.route) {
+            val context = LocalContext.current
+            val authManager = remember(context) { GoogleAuthManager(context.applicationContext) }
+            val coroutineScope = rememberCoroutineScope()
+            var isLoading by remember { mutableStateOf(false) }
+            var errorMessage by remember { mutableStateOf<String?>(null) }
+            val serverClientId = context.getString(R.string.google_web_client_id)
+
             LoginScreen(
                 onGoogleSignInClick = {
-                    navController.navigate(NavScreens.Home.route) {
-                        popUpTo(NavScreens.Login.route) { inclusive = true }
-                        launchSingleTop = true
+                    if (!isLoading) {
+                        coroutineScope.launch {
+                            isLoading = true
+                            errorMessage = null
+                            when (
+                                val result = authManager.signIn(
+                                    activityContext = context,
+                                    serverClientId = serverClientId
+                                )
+                            ) {
+                                is GoogleSignInResult.Success -> {
+                                    navController.navigate(NavScreens.Home.route) {
+                                        popUpTo(NavScreens.Login.route) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }
+                                GoogleSignInResult.Cancelled -> Unit
+                                is GoogleSignInResult.Error -> {
+                                    errorMessage = result.message
+                                }
+                            }
+                            isLoading = false
+                        }
                     }
-                }
+                },
+                isLoading = isLoading,
+                errorMessage = errorMessage
             )
         }
 

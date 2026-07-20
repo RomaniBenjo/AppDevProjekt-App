@@ -62,6 +62,9 @@ dependencies {
     implementation("org.maplibre.gl:android-sdk:13.3.1")
     implementation("androidx.work:work-runtime-ktx:2.10.2")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.credentials:credentials:1.7.0-alpha02")
+    implementation("androidx.credentials:credentials-play-services-auth:1.7.0-alpha02")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     val roomVersion = "2.7.2"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")

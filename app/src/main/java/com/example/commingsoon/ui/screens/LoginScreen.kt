@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -40,6 +41,8 @@ import com.example.commingsoon.ui.theme.VioletTheme
 @Composable
 fun LoginScreen(
     onGoogleSignInClick: () -> Unit,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
     modifier: Modifier = Modifier
 ) {
     val background = Brush.verticalGradient(
@@ -116,6 +119,7 @@ fun LoginScreen(
 
             Button(
                 onClick = onGoogleSignInClick,
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -126,31 +130,50 @@ fun LoginScreen(
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFF1F3F4)),
-                        contentAlignment = Alignment.Center
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.5.dp,
+                        color = Color(0xFF4285F4)
+                    )
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFF1F3F4)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "G",
+                                color = Color(0xFF4285F4),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         Text(
-                            text = "G",
-                            color = Color(0xFF4285F4),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "Mit Google anmelden",
+                            modifier = Modifier.padding(start = 14.dp),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
-                    Text(
-                        text = "Mit Google anmelden",
-                        modifier = Modifier.padding(start = 14.dp),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                 }
+            }
+
+            if (errorMessage != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = errorMessage,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
