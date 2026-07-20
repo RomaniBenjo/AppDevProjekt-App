@@ -70,6 +70,33 @@ class FriendsApiClient(
         request("DELETE", "/friends/$friendId", token)
     }
 
+    /** Keeps one authenticated SSE connection open until it disconnects or is cancelled. */
+    suspend fun listenForFriendUpdates(token: String, onUpdate: suspend () -> Unit) =
+        withContext(Dispatchers.IO) {
+            val connection = (URL("$baseUrl/friends/events").openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 10_000
+                readTimeout = 0
+                setRequestProperty("Accept", "text/event-stream")
+                setRequestProperty("Authorization", "Bearer $token")
+            }
+            try {
+                val status = connection.responseCode
+                if (status !in 200..299) {
+                    val response = connection.errorStream?.bufferedReader(Charsets.UTF_8)
+                        ?.use { it.readText() }.orEmpty()
+                    throw FriendsApiException(errorMessage(status, response))
+                }
+                connection.inputStream.bufferedReader(Charsets.UTF_8).useLines { lines ->
+                    lines.forEach { line ->
+                        if (line == "event: friends_changed") onUpdate()
+                    }
+                }
+            } finally {
+                connection.disconnect()
+            }
+        }
+
     private suspend fun request(
         method: String,
         path: String,
