@@ -1,6 +1,7 @@
 <resources>
     <!-- Titles -->
     <string name="app_name">CommingSoon</string>
+    <string name="login">Login</string>
     <string name="home">Home</string>
     <string name="journeys">Journeys</string>
     <string name="journey_editor">Journey Editor</string>

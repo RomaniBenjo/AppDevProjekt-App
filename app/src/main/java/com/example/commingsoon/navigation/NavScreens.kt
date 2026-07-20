@@ -17,6 +17,7 @@ sealed class NavScreens (
     @StringRes val title: Int,
     val icon: ImageVector? = null
 ) {
+    object Login : NavScreens("login", R.string.login)
     object Home : NavScreens("home", R.string.home, icon = Icons.Default.Home)
     object Journey : NavScreens("journeys", R.string.journeys, icon = Icons.Default.Flight)
     object JourneyEditor : NavScreens("journeyeditor/{journeyId}", R.string.journey_editor) {

@@ -45,7 +45,8 @@ fun AppLayoutViewModel (
     val scope = rememberCoroutineScope()
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
-    val drawerGesturesEnabled = currentRoute != NavScreens.OpenGuesserLocalLobby.route
+    val isLoginScreen = currentRoute == NavScreens.Login.route
+    val drawerGesturesEnabled = currentRoute != NavScreens.OpenGuesserLocalLobby.route && !isLoginScreen
 
     when (overlayViewModel.overlayType) {
         OverlayType.SHARE_JOURNEY -> {
@@ -100,13 +101,15 @@ fun AppLayoutViewModel (
     )  {
         Scaffold(
             topBar = {
-                AppHeader(
-                    title = title,
-                    assets = themeDefinition.assets,
-                    onMenuClick = {
-                        scope.launch { drawerState.open() }
-                    }
-                )
+                if (!isLoginScreen) {
+                    AppHeader(
+                        title = title,
+                        assets = themeDefinition.assets,
+                        onMenuClick = {
+                            scope.launch { drawerState.open() }
+                        }
+                    )
+                }
             }
         ) { innerpadding ->
             Box(modifier = Modifier.padding(innerpadding)) {

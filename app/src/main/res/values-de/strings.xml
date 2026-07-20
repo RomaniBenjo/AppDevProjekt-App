@@ -2,6 +2,7 @@
 <resources>
     <!-- Titles -->
     <string name="app_name">CommingSoon</string>
+    <string name="login">Anmeldung</string>
     <string name="home">Start</string>
     <string name="journeys">Reisen</string>
     <string name="journey_editor">Reisen-Editor</string>
