@@ -36,8 +36,21 @@ android {
                 .get()
         ).trimEnd('/')
 
+    val googleMapsApiKey = (
+        localProperties.getProperty("GOOGLE_MAPS_API_KEY")
+            ?.takeIf { it.isNotBlank() }
+            ?: providers.gradleProperty("GOOGLE_MAPS_API_KEY")
+                .orElse("")
+                .get()
+        ).trim()
+
+    defaultConfig {
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = googleMapsApiKey
+    }
+
     buildTypes.configureEach {
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("boolean", "GOOGLE_MAPS_API_KEY_CONFIGURED", googleMapsApiKey.isNotBlank().toString())
     }
 
     buildTypes {
@@ -78,6 +91,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.exifinterface:exifinterface:1.3.2")
     implementation("com.google.android.gms:play-services-nearby:19.3.0")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
     implementation("org.maplibre.gl:android-sdk:13.3.1")
     implementation("androidx.work:work-runtime-ktx:2.10.2")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
@@ -93,4 +107,5 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

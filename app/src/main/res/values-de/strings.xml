@@ -110,7 +110,31 @@
 
     <string name="map_placeholder">Platzhalter für Karte</string>
     <string name="map_live_placeholder">Platzhalter für Live Standort-Karte</string>
-    <string name="online_guesser_placeholder">Der Online-Modus wird als Nächstes implementiert.</string>
+    <string name="online_guesser_starting">Ein neues Spiel wird gestartet…</string>
+    <string name="online_guesser_retry">Erneut versuchen</string>
+    <string name="online_guesser_new_location">Neuer Ort</string>
+    <string name="online_guesser_round">Runde %1$d von %2$d</string>
+    <string name="online_guesser_sign_in_again">Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.</string>
+    <string name="online_guesser_server_error">Der OpenGuesser-Server ist nicht erreichbar.</string>
+    <string name="online_guesser_maps_key_missing">Füge GOOGLE_MAPS_API_KEY zu local.properties hinzu, um Google Street View zu aktivieren.</string>
+    <string name="online_guesser_lobbies">Freundes-Lobbys</string>
+    <string name="online_guesser_lobbies_description">Erstelle eine Lobby oder tritt einem Spiel deiner Freunde bei.</string>
+    <string name="online_guesser_host_lobby">Lobby erstellen</string>
+    <string name="online_guesser_refresh_lobbies">Lobbys aktualisieren</string>
+    <string name="online_guesser_no_lobbies">Gerade hostet keiner deiner Freunde. Erstelle eine Lobby und lade sie zum Beitreten ein.</string>
+    <string name="online_guesser_player_count">%1$d Spieler</string>
+    <string name="online_guesser_open_lobby">Öffnen</string>
+    <string name="online_guesser_join_lobby">Beitreten</string>
+    <string name="online_guesser_lobby_title">Lobby von %1$s</string>
+    <string name="online_guesser_host_waiting">Deine Freunde können diese Lobby jetzt sehen. Starte, sobald alle bereit sind.</string>
+    <string name="online_guesser_guest_waiting">Warten, bis der Host das Spiel startet…</string>
+    <string name="online_guesser_players">Spieler</string>
+    <string name="online_guesser_host">Host</string>
+    <string name="online_guesser_start_game">Spiel starten</string>
+    <string name="online_guesser_browse_lobbies">Lobbys durchsuchen</string>
+    <string name="online_guesser_leave_lobby">Lobby verlassen</string>
+    <string name="online_guesser_close_lobby">Lobby schließen</string>
+    <string name="online_guesser_panorama_missing">Der Server hat für dieses Spiel keinen Street-View-Ort geliefert.</string>
 
     <!-- Local OpenGuesser -->
     <string name="local_guesser_start_description">Erlaube den Zugriff auf deine gesamte Fotobibliothek, um Fotos mit GPS-Metadaten zu finden. Der Scan, die Länderzuordnung und der Fotoindex bleiben nur auf diesem Smartphone.</string>
