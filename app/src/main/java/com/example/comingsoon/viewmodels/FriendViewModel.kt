@@ -9,8 +9,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.comingsoon.auth.AuthenticatedUser
 import com.example.comingsoon.friends.FriendsRepository
 import com.example.comingsoon.friends.ServerFriendRequest
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -45,6 +49,8 @@ enum class FriendJourneyTab {
 class FriendViewModel(
     private val repository: FriendsRepository
 ) : ViewModel() {
+    private var realtimeJob: Job? = null
+
     private val _friends = mutableStateListOf<Friend>()
     val friends: List<Friend> get() = _friends
 
@@ -68,15 +74,43 @@ class FriendViewModel(
         get() = repository.currentUserId()
 
     init {
-        if (repository.hasSession()) refresh()
+        if (repository.hasSession()) {
+            refresh()
+            startRealtimeUpdates()
+        }
     }
 
     fun getFriend(id: Int): Friend? = _friends.find { it.id == id }
 
     fun refresh() {
+        refresh(showLoading = true, showErrors = true)
+    }
+
+    fun startRealtimeUpdates() {
+        if (!repository.hasSession() || realtimeJob?.isActive == true) return
+        realtimeJob = viewModelScope.launch {
+            var retryDelayMillis = 1_000L
+            while (isActive && repository.hasSession()) {
+                try {
+                    repository.listenForUpdates {
+                        refresh(showLoading = false, showErrors = false)
+                    }
+                    retryDelayMillis = 1_000L
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (_: Exception) {
+                    // Reconnect quietly after temporary network interruptions.
+                }
+                delay(retryDelayMillis)
+                retryDelayMillis = (retryDelayMillis * 2).coerceAtMost(30_000L)
+            }
+        }
+    }
+
+    private fun refresh(showLoading: Boolean, showErrors: Boolean) {
         viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
+            if (showLoading) isLoading = true
+            if (showErrors) errorMessage = null
             runCatching {
                 coroutineScope {
                     val friends = async { repository.loadFriends() }
@@ -91,8 +125,10 @@ class FriendViewModel(
                 _outgoingRequests.replaceWith(
                     requests.outgoing.map { it.toRequest(incoming = false) }
                 )
-            }.onFailure(::showError)
-            isLoading = false
+            }.onFailure { throwable ->
+                if (showErrors) showError(throwable)
+            }
+            if (showLoading) isLoading = false
         }
     }
 
