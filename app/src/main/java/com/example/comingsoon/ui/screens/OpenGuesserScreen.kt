@@ -3,6 +3,7 @@ package com.example.comingsoon.ui.screens
 import android.content.res.Configuration
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,12 +28,17 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Streetview
+import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -47,11 +53,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import com.example.comingsoon.BuildConfig
 import com.example.comingsoon.navigation.NavScreens
@@ -60,9 +69,12 @@ import com.example.comingsoon.auth.AuthSessionStore
 import com.example.comingsoon.language.appString
 import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserApiClient
 import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserGame
+import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserRoundResult
 import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserSocketEvent
 import com.example.comingsoon.ui.screens.onlineopenguesser.StreetViewPanorama
+import com.example.comingsoon.ui.screens.openguesser.OpenGuesserMap
 import kotlinx.coroutines.launch
+import org.maplibre.android.geometry.LatLng
 
 @Composable
 fun OpenGuesserScreen(navController: NavHostController) {
@@ -285,12 +297,14 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                 }
                 is OpenGuesserSocketEvent.GameUpdated -> {
                     val current = state
-                    if (current is OnlineGuesserUiState.Lobby && current.game.id == event.game.id) {
-                        state = if (event.game.status == "lobby") {
-                            OnlineGuesserUiState.Lobby(event.game)
-                        } else {
-                            OnlineGuesserUiState.Game(event.game)
-                        }
+                    val currentGameId = when (current) {
+                        is OnlineGuesserUiState.Lobby -> current.game.id
+                        is OnlineGuesserUiState.Game -> current.game.id
+                        else -> null
+                    }
+                    if (currentGameId == event.game.id) {
+                        state = if (event.game.status == "lobby") OnlineGuesserUiState.Lobby(event.game)
+                        else OnlineGuesserUiState.Game(event.game)
                     }
                 }
             }
@@ -324,16 +338,29 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
             is OnlineGuesserUiState.Lobby -> OnlineGuesserLobbyView(
                 lobby = currentState.game,
                 currentUserId = sessionStore.load()?.user?.id,
-                onStart = {
+                onStart = { roundCount, locationFilter ->
                     runLobbyRequest { token ->
-                        apiClient.startLobby(currentState.game.id, token)
+                        apiClient.startLobby(
+                            currentState.game.id, roundCount, locationFilter, token
+                        )
                     }
                 },
                 onLeave = { leaveLobby(currentState.game.id) }
             )
             is OnlineGuesserUiState.Game -> OnlineGuesserGameView(
                 game = currentState.game,
-                onBrowseLobbies = { refreshLobbies() }
+                currentUserId = sessionStore.load()?.user?.id,
+                onSubmitGuess = { guess ->
+                    runLobbyRequest { token ->
+                        apiClient.submitGuess(
+                            currentState.game.id, guess.latitude, guess.longitude, token
+                        )
+                    }
+                },
+                onNextRound = {
+                    runLobbyRequest { token -> apiClient.nextRound(currentState.game.id, token) }
+                },
+                onExit = { refreshLobbies() }
             )
         }
 
@@ -479,10 +506,12 @@ private fun OnlineGuesserLobbyBrowser(
 private fun OnlineGuesserLobbyView(
     lobby: OpenGuesserGame,
     currentUserId: Long?,
-    onStart: () -> Unit,
+    onStart: (Int, String) -> Unit,
     onLeave: () -> Unit
 ) {
     val isHost = lobby.host.id == currentUserId
+    var roundCount by remember(lobby.id) { mutableStateOf(5) }
+    var locationFilter by remember(lobby.id) { mutableStateOf("world") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -554,8 +583,39 @@ private fun OnlineGuesserLobbyView(
         Spacer(Modifier.height(24.dp))
 
         if (isHost) {
+            Text(
+                appString(R.string.online_guesser_round_count),
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                listOf(3, 5, 10).forEach { count ->
+                    FilterChip(
+                        selected = roundCount == count,
+                        onClick = { roundCount = count },
+                        label = { Text(appString(R.string.online_guesser_round_count_option, count)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                appString(R.string.online_guesser_location_filter),
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(8.dp))
+            OnlineLocationFilters(
+                selected = locationFilter,
+                onSelected = { locationFilter = it }
+            )
+            Spacer(Modifier.height(12.dp))
             Button(
-                onClick = onStart,
+                onClick = { onStart(roundCount, locationFilter) },
                 modifier = Modifier.fillMaxWidth().height(54.dp)
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
@@ -583,36 +643,83 @@ private fun OnlineGuesserLobbyView(
 @Composable
 private fun OnlineGuesserGameView(
     game: OpenGuesserGame,
-    onBrowseLobbies: () -> Unit
+    currentUserId: Long?,
+    onSubmitGuess: (LatLng) -> Unit,
+    onNextRound: () -> Unit,
+    onExit: () -> Unit
 ) {
-    var viewerState by remember(game.id) {
+    if (game.status == "finished") {
+        OnlineGuesserEndScreen(game = game, currentUserId = currentUserId, onExit = onExit)
+        return
+    }
+    var viewerState by remember(game.id, game.roundNumber) {
         mutableStateOf(StreetViewState.Loading)
     }
+    var activeView by remember(game.id, game.roundNumber) {
+        mutableStateOf(OnlineRoundView.STREET_VIEW)
+    }
+    var selectedGuess by remember(game.id, game.roundNumber) {
+        mutableStateOf<LatLng?>(null)
+    }
+    val isHost = game.host.id == currentUserId
+    val ownScore = game.scores.firstOrNull { it.user.id == currentUserId }
+    val shownGuess = if (game.roundComplete) {
+        ownScore?.guess?.let { LatLng(it.latitude, it.longitude) } ?: selectedGuess
+    } else selectedGuess
+    val actualLocation = game.actualLocation?.let { LatLng(it.latitude, it.longitude) }
 
     Box(Modifier.fillMaxSize()) {
         val panorama = game.panorama
-        if (BuildConfig.GOOGLE_MAPS_API_KEY_CONFIGURED && panorama != null) {
-            StreetViewPanorama(
-                latitude = panorama.latitude,
-                longitude = panorama.longitude,
-                onPanoramaLoaded = { viewerState = StreetViewState.Ready }
-            )
-        } else if (panorama == null) {
-            OnlineGuesserMessage(
-                message = appString(R.string.online_guesser_panorama_missing)
-            )
-        } else {
-            OnlineGuesserMessage(
-                message = appString(R.string.online_guesser_maps_key_missing)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (activeView == OnlineRoundView.STREET_VIEW) 1f else 0f)
+                .zIndex(if (activeView == OnlineRoundView.STREET_VIEW) 1f else 0f)
+        ) {
+            if (BuildConfig.GOOGLE_MAPS_API_KEY_CONFIGURED && panorama != null) {
+                StreetViewPanorama(
+                    latitude = panorama.latitude,
+                    longitude = panorama.longitude,
+                    isVisible = activeView == OnlineRoundView.STREET_VIEW,
+                    onPanoramaLoaded = { viewerState = StreetViewState.Ready }
+                )
+            } else if (panorama == null) {
+                OnlineGuesserMessage(
+                    message = appString(R.string.online_guesser_panorama_missing)
+                )
+            } else {
+                OnlineGuesserMessage(
+                    message = appString(R.string.online_guesser_maps_key_missing)
+                )
+            }
+
+            if (BuildConfig.GOOGLE_MAPS_API_KEY_CONFIGURED &&
+                panorama != null &&
+                viewerState == StreetViewState.Loading
+            ) {
+                CircularProgressIndicator(Modifier.align(Alignment.Center))
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (activeView == OnlineRoundView.MAP) 1f else 0f)
+                .zIndex(if (activeView == OnlineRoundView.MAP) 1f else 0f)
+        ) {
+            OpenGuesserMap(
+                archiveUrl = { "pmtiles://${BuildConfig.ONLINE_MAP_URL}" },
+                selectedLocation = shownGuess,
+                onLocationSelected = { selectedGuess = it },
+                mapLoadError = appString(R.string.online_guesser_map_load_failed),
+                guessMarkerTitle = appString(R.string.local_guesser_your_guess),
+                actualMarkerTitle = appString(R.string.local_guesser_real_location),
+                actualLocation = actualLocation,
+                isGuessingEnabled = !game.currentUserSubmitted && !game.roundComplete,
+                modifier = Modifier.fillMaxSize()
             )
         }
 
-        if (BuildConfig.GOOGLE_MAPS_API_KEY_CONFIGURED &&
-            panorama != null &&
-            viewerState == StreetViewState.Loading
-        ) {
-            CircularProgressIndicator(Modifier.align(Alignment.Center))
-        }
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -643,16 +750,361 @@ private fun OnlineGuesserGameView(
             }
         }
 
-        Button(
-            onClick = onBrowseLobbies,
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(20.dp)
-                .height(54.dp)
+                .zIndex(3f),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(Icons.Default.Groups, contentDescription = null)
+        if (activeView == OnlineRoundView.MAP && !game.currentUserSubmitted && !game.roundComplete) {
+            Button(
+                onClick = { selectedGuess?.let(onSubmitGuess) },
+                enabled = selectedGuess != null,
+                modifier = Modifier.height(54.dp)
+            ) {
+                Text(appString(R.string.online_guesser_submit_guess))
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+        if (game.currentUserSubmitted && !game.roundComplete) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
+            ) {
+                Text(
+                    appString(R.string.online_guesser_waiting_for_guesses),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+        if (game.roundComplete) {
+            OnlineRoundResults(game = game)
+            if (isHost) {
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = onNextRound, modifier = Modifier.height(50.dp)) {
+                    Text(
+                        appString(
+                            if (game.roundNumber >= game.totalRounds) R.string.online_guesser_finish_game
+                            else R.string.online_guesser_next_round
+                        )
+                    )
+                }
+            } else if (game.status != "finished") {
+                Text(appString(R.string.online_guesser_waiting_for_host))
+            }
+        }
+        if (game.status != "finished") Button(
+            onClick = {
+                activeView = if (activeView == OnlineRoundView.STREET_VIEW) {
+                    OnlineRoundView.MAP
+                } else {
+                    OnlineRoundView.STREET_VIEW
+                }
+            },
+            modifier = Modifier.height(54.dp)
+        ) {
+            Icon(
+                imageVector = if (activeView == OnlineRoundView.STREET_VIEW) {
+                    Icons.Default.Map
+                } else {
+                    Icons.Default.Streetview
+                },
+                contentDescription = null
+            )
             Spacer(Modifier.width(8.dp))
-            Text(appString(R.string.online_guesser_browse_lobbies))
+            Text(
+                appString(
+                    if (activeView == OnlineRoundView.STREET_VIEW) {
+                        R.string.online_guesser_guess
+                    } else {
+                        R.string.online_guesser_street_view
+                    }
+                )
+            )
+        }
+        }
+    }
+}
+
+@Composable
+private fun OnlineLocationFilters(
+    selected: String,
+    onSelected: (String) -> Unit
+) {
+    val filters = listOf(
+        "world" to R.string.online_guesser_region_world,
+        "europe" to R.string.online_guesser_region_europe,
+        "north_america" to R.string.online_guesser_region_north_america,
+        "south_america" to R.string.online_guesser_region_south_america,
+        "asia" to R.string.online_guesser_region_asia,
+        "africa" to R.string.online_guesser_region_africa,
+        "oceania" to R.string.online_guesser_region_oceania,
+        "austria" to R.string.online_guesser_country_austria,
+        "germany" to R.string.online_guesser_country_germany,
+        "france" to R.string.online_guesser_country_france,
+        "italy" to R.string.online_guesser_country_italy,
+        "united_kingdom" to R.string.online_guesser_country_uk,
+        "spain" to R.string.online_guesser_country_spain,
+        "portugal" to R.string.online_guesser_country_portugal,
+        "norway" to R.string.online_guesser_country_norway,
+        "sweden" to R.string.online_guesser_country_sweden,
+        "poland" to R.string.online_guesser_country_poland,
+        "united_states" to R.string.online_guesser_country_usa,
+        "canada" to R.string.online_guesser_country_canada,
+        "mexico" to R.string.online_guesser_country_mexico,
+        "brazil" to R.string.online_guesser_country_brazil,
+        "argentina" to R.string.online_guesser_country_argentina,
+        "chile" to R.string.online_guesser_country_chile,
+        "colombia" to R.string.online_guesser_country_colombia,
+        "japan" to R.string.online_guesser_country_japan,
+        "south_korea" to R.string.online_guesser_country_south_korea,
+        "india" to R.string.online_guesser_country_india,
+        "thailand" to R.string.online_guesser_country_thailand,
+        "indonesia" to R.string.online_guesser_country_indonesia,
+        "south_africa" to R.string.online_guesser_country_south_africa,
+        "botswana" to R.string.online_guesser_country_botswana,
+        "ghana" to R.string.online_guesser_country_ghana,
+        "australia" to R.string.online_guesser_country_australia,
+        "new_zealand" to R.string.online_guesser_country_new_zealand
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        filters.chunked(2).forEach { rowFilters ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowFilters.forEach { (key, label) ->
+                    FilterChip(
+                        selected = selected == key,
+                        onClick = { onSelected(key) },
+                        label = { Text(appString(label)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (rowFilters.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun OnlineGuesserEndScreen(
+    game: OpenGuesserGame,
+    currentUserId: Long?,
+    onExit: () -> Unit
+) {
+    val leaders = game.scores.sortedByDescending { it.totalPoints }
+    val topPoints = leaders.firstOrNull()?.totalPoints
+    val winners = leaders.filter { it.totalPoints == topPoints }
+    val headline = when {
+        winners.isEmpty() -> appString(R.string.online_guesser_game_complete)
+        winners.size > 1 -> appString(R.string.online_guesser_tie_game)
+        winners.first().user.id == currentUserId -> appString(R.string.online_guesser_you_win)
+        else -> appString(R.string.online_guesser_player_wins, winners.first().user.displayName())
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            start = 20.dp, top = 82.dp, end = 20.dp, bottom = 28.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.EmojiEvents,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        appString(R.string.online_guesser_game_complete),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        headline,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        item {
+            Text(
+                appString(R.string.online_guesser_final_standings),
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+        items(leaders, key = { it.user.id }) { score ->
+            val isWinner = score.totalPoints == topPoints
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isWinner) MaterialTheme.colorScheme.secondaryContainer
+                    else MaterialTheme.colorScheme.surfaceContainer
+                ),
+                border = if (isWinner) BorderStroke(2.dp, MaterialTheme.colorScheme.secondary) else null
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "${leaders.indexOf(score) + 1}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (isWinner) Icon(
+                        Icons.Rounded.Star,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        if (score.user.id == currentUserId) appString(R.string.online_guesser_you)
+                        else score.user.displayName(),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        appString(R.string.online_guesser_points, score.totalPoints),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+        item {
+            Text(
+                appString(R.string.online_guesser_points_by_round),
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+        items(game.roundResults, key = OpenGuesserRoundResult::roundNumber) { result ->
+            OnlineFinishedRoundCard(game = game, result = result, currentUserId = currentUserId)
+        }
+        item {
+            OutlinedButton(onClick = onExit, modifier = Modifier.fillMaxWidth()) {
+                Text(appString(R.string.online_guesser_back_to_lobbies))
+            }
+        }
+    }
+}
+
+@Composable
+private fun OnlineFinishedRoundCard(
+    game: OpenGuesserGame,
+    result: OpenGuesserRoundResult,
+    currentUserId: Long?
+) {
+    val bestPoints = result.scores.maxOfOrNull { it.roundPoints ?: 0 }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                appString(R.string.online_guesser_round_title, result.roundNumber),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            HorizontalDivider()
+            result.scores.forEach { score ->
+                val runningTotal = game.roundResults
+                    .filter { it.roundNumber <= result.roundNumber }
+                    .sumOf { round ->
+                        round.scores.firstOrNull { it.user.id == score.user.id }?.roundPoints ?: 0
+                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                if (score.user.id == currentUserId) appString(R.string.online_guesser_you)
+                                else score.user.displayName(),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            if (score.roundPoints == bestPoints) Icon(
+                                Icons.Rounded.Star,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        score.distanceKm?.let {
+                            Text(
+                                appString(R.string.online_guesser_distance, it),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            "+${score.roundPoints ?: 0}",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            appString(R.string.online_guesser_running_total, runningTotal),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OnlineRoundResults(game: OpenGuesserGame) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+        )
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text(
+                appString(
+                    if (game.status == "finished") R.string.online_guesser_final_results
+                    else R.string.online_guesser_round_results
+                ),
+                style = MaterialTheme.typography.titleMedium
+            )
+            game.scores.forEachIndexed { index, score ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("${index + 1}. ${score.user.displayName()}", modifier = Modifier.weight(1f))
+                    score.distanceKm?.let {
+                        Text(appString(R.string.online_guesser_distance, it))
+                    }
+                    Text(appString(R.string.online_guesser_points, score.totalPoints))
+                }
+            }
         }
     }
 }
@@ -708,4 +1160,9 @@ private fun com.example.comingsoon.auth.AuthenticatedUser.displayName(): String 
 private enum class StreetViewState {
     Loading,
     Ready
+}
+
+private enum class OnlineRoundView {
+    STREET_VIEW,
+    MAP
 }

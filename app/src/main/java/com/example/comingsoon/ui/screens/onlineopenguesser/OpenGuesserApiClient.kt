@@ -19,14 +19,34 @@ data class OpenGuesserPanorama(
     val longitude: Double
 )
 
+data class OpenGuesserScore(
+    val user: AuthenticatedUser,
+    @SerializedName("total_points") val totalPoints: Int,
+    @SerializedName("round_points") val roundPoints: Int?,
+    @SerializedName("distance_km") val distanceKm: Double?,
+    val guess: OpenGuesserPanorama?
+)
+
+data class OpenGuesserRoundResult(
+    @SerializedName("round_number") val roundNumber: Int,
+    @SerializedName("actual_location") val actualLocation: OpenGuesserPanorama,
+    val scores: List<OpenGuesserScore>
+)
+
 data class OpenGuesserGame(
     val id: String,
     val status: String,
     @SerializedName("round_number") val roundNumber: Int,
     @SerializedName("total_rounds") val totalRounds: Int,
+    @SerializedName("location_filter") val locationFilter: String,
     val host: AuthenticatedUser,
     val participants: List<AuthenticatedUser>,
-    val panorama: OpenGuesserPanorama?
+    val panorama: OpenGuesserPanorama?,
+    @SerializedName("round_complete") val roundComplete: Boolean,
+    @SerializedName("current_user_submitted") val currentUserSubmitted: Boolean,
+    val scores: List<OpenGuesserScore>,
+    @SerializedName("actual_location") val actualLocation: OpenGuesserPanorama?,
+    @SerializedName("round_results") val roundResults: List<OpenGuesserRoundResult>
 )
 
 class OpenGuesserApiException(message: String) : Exception(message)
@@ -63,8 +83,22 @@ class OpenGuesserApiClient(
     suspend fun joinLobby(gameId: String, accessToken: String): OpenGuesserGame =
         gameRequest("join_lobby", gameId, accessToken)
 
-    suspend fun startLobby(gameId: String, accessToken: String): OpenGuesserGame =
-        gameRequest("start_lobby", gameId, accessToken)
+    suspend fun startLobby(
+        gameId: String,
+        totalRounds: Int,
+        locationFilter: String,
+        accessToken: String
+    ): OpenGuesserGame = gameRequest(
+        "start_lobby", gameId, accessToken,
+        mapOf("total_rounds" to totalRounds),
+        mapOf("location_filter" to locationFilter)
+    )
+
+    suspend fun submitGuess(gameId: String, latitude: Double, longitude: Double, accessToken: String): OpenGuesserGame =
+        gameRequest("submit_guess", gameId, accessToken, mapOf("latitude" to latitude, "longitude" to longitude))
+
+    suspend fun nextRound(gameId: String, accessToken: String): OpenGuesserGame =
+        gameRequest("next_round", gameId, accessToken)
 
     suspend fun leaveLobby(gameId: String, accessToken: String) {
         request("leave_lobby", gameId, accessToken)
@@ -79,10 +113,24 @@ class OpenGuesserApiClient(
         connectedToken = null
     }
 
-    private suspend fun gameRequest(action: String, gameId: String?, accessToken: String): OpenGuesserGame =
-        gson.fromJson(request(action, gameId, accessToken).getAsJsonObject("game"), OpenGuesserGame::class.java)
+    private suspend fun gameRequest(
+        action: String,
+        gameId: String?,
+        accessToken: String,
+        properties: Map<String, Number> = emptyMap(),
+        textProperties: Map<String, String> = emptyMap()
+    ): OpenGuesserGame = gson.fromJson(
+        request(action, gameId, accessToken, properties, textProperties).getAsJsonObject("game"),
+        OpenGuesserGame::class.java
+    )
 
-    private suspend fun request(action: String, gameId: String?, accessToken: String): JsonObject {
+    private suspend fun request(
+        action: String,
+        gameId: String?,
+        accessToken: String,
+        properties: Map<String, Number> = emptyMap(),
+        textProperties: Map<String, String> = emptyMap()
+    ): JsonObject {
         ensureConnected(accessToken)
         val requestId = UUID.randomUUID().toString()
         val response = CompletableDeferred<JsonObject>()
@@ -91,6 +139,8 @@ class OpenGuesserApiClient(
             addProperty("request_id", requestId)
             addProperty("action", action)
             gameId?.let { addProperty("game_id", it) }
+            properties.forEach { (key, value) -> addProperty(key, value) }
+            textProperties.forEach { (key, value) -> addProperty(key, value) }
         }
         if (socket?.send(gson.toJson(message)) != true) {
             pendingRequests.remove(requestId)

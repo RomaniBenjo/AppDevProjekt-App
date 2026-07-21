@@ -44,12 +44,21 @@ android {
                 .get()
         ).trim()
 
+    val onlineMapUrl = (
+        localProperties.getProperty("APPDEV_ONLINE_MAP_URL")
+            ?.takeIf { it.isNotBlank() }
+            ?: providers.gradleProperty("APPDEV_ONLINE_MAP_URL")
+                .orElse("https://build.protomaps.com/20260721.pmtiles")
+                .get()
+        ).trim()
+
     defaultConfig {
         manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = googleMapsApiKey
     }
 
     buildTypes.configureEach {
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "ONLINE_MAP_URL", "\"$onlineMapUrl\"")
         buildConfigField("boolean", "GOOGLE_MAPS_API_KEY_CONFIGURED", googleMapsApiKey.isNotBlank().toString())
     }
 

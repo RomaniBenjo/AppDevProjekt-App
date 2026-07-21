@@ -132,6 +132,9 @@
     <string name="online_guesser_host">Host</string>
     <string name="online_guesser_start_game">Spiel starten</string>
     <string name="online_guesser_browse_lobbies">Lobbys durchsuchen</string>
+    <string name="online_guesser_guess">Raten</string>
+    <string name="online_guesser_street_view">Street View</string>
+    <string name="online_guesser_map_load_failed">Die Online-Karte konnte nicht geladen werden</string>
     <string name="online_guesser_leave_lobby">Lobby verlassen</string>
     <string name="online_guesser_close_lobby">Lobby schließen</string>
     <string name="online_guesser_panorama_missing">Der Server hat für dieses Spiel keinen Street-View-Ort geliefert.</string>

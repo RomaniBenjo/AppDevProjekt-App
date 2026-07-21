@@ -1,5 +1,6 @@
 package com.example.comingsoon.ui.screens.onlineopenguesser
 
+import android.view.View
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -23,6 +24,7 @@ import com.google.android.gms.maps.model.StreetViewSource
 fun StreetViewPanorama(
     latitude: Double,
     longitude: Double,
+    isVisible: Boolean = true,
     modifier: Modifier = Modifier,
     onPanoramaLoaded: () -> Unit = {}
 ) {
@@ -65,7 +67,16 @@ fun StreetViewPanorama(
     }
 
     AndroidView(
-        factory = { panoramaView },
+        factory = {
+            panoramaView.apply {
+                visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
+            }
+        },
+        update = { view ->
+            // Street View renders through a native surface, which is not affected by Compose
+            // alpha or zIndex. Hide the Android view itself while retaining its loaded state.
+            view.visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
+        },
         modifier = modifier.fillMaxSize()
     )
 }
