@@ -263,4 +263,5 @@
     <string name="yellow_theme">Yellow Suns</string>
     <string name="orange_theme">Orange Fruit</string>
     <string name="pink_theme">Pink Flowers</string>
+    <string name="sign_out">Sign out</string>
 </resources>

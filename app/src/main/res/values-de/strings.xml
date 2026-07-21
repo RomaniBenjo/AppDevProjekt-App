@@ -262,4 +262,5 @@
     <string name="yellow_theme">Gelbe Sonnen</string>
     <string name="orange_theme">Orange Früchte</string>
     <string name="pink_theme">Pinke Blumen</string>
+    <string name="sign_out">Abmelden</string>
 </resources>
