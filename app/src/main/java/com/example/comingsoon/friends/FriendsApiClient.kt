@@ -6,10 +6,19 @@ import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 data class ServerFriendRequest(
     val id: Int,
@@ -29,7 +38,10 @@ class FriendsApiException(message: String) : Exception(message)
 
 class FriendsApiClient(
     baseUrl: String,
-    private val gson: Gson = Gson()
+    private val gson: Gson = Gson(),
+    private val webSocketClient: OkHttpClient = OkHttpClient.Builder()
+        .pingInterval(20, TimeUnit.SECONDS)
+        .build()
 ) {
     private val baseUrl = baseUrl.trim().trimEnd('/')
 
@@ -70,32 +82,56 @@ class FriendsApiClient(
         request("DELETE", "/friends/$friendId", token)
     }
 
-    /** Keeps one authenticated SSE connection open until it disconnects or is cancelled. */
-    suspend fun listenForFriendUpdates(token: String, onUpdate: suspend () -> Unit) =
-        withContext(Dispatchers.IO) {
-            val connection = (URL("$baseUrl/friends/events").openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 10_000
-                readTimeout = 0
-                setRequestProperty("Accept", "text/event-stream")
-                setRequestProperty("Authorization", "Bearer $token")
-            }
-            try {
-                val status = connection.responseCode
-                if (status !in 200..299) {
-                    val response = connection.errorStream?.bufferedReader(Charsets.UTF_8)
-                        ?.use { it.readText() }.orEmpty()
-                    throw FriendsApiException(errorMessage(status, response))
-                }
-                connection.inputStream.bufferedReader(Charsets.UTF_8).useLines { lines ->
-                    lines.forEach { line ->
-                        if (line == "event: friends_changed") onUpdate()
-                    }
-                }
-            } finally {
-                connection.disconnect()
-            }
+    /** Keeps one authenticated WebSocket open until it disconnects or is cancelled. */
+    suspend fun listenForFriendUpdates(token: String, onUpdate: () -> Unit) {
+        if (baseUrl.isBlank()) {
+            throw FriendsApiException("Die Server-URL wurde noch nicht konfiguriert.")
         }
+
+        suspendCancellableCoroutine { continuation ->
+            val request = Request.Builder()
+                .url("${webSocketBaseUrl()}/ws/friends")
+                .header("Authorization", "Bearer $token")
+                .build()
+
+            val listener = object : WebSocketListener() {
+                override fun onMessage(webSocket: WebSocket, text: String) {
+                    val eventType = runCatching {
+                        gson.fromJson(text, JsonObject::class.java)
+                            ?.get("type")?.takeUnless { it.isJsonNull }?.asString
+                    }.getOrNull()
+                    if (eventType != null && eventType != "ping") onUpdate()
+                }
+
+                override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                    webSocket.close(code, reason)
+                }
+
+                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                    if (continuation.isActive) continuation.resume(Unit)
+                }
+
+                override fun onFailure(webSocket: WebSocket, throwable: Throwable, response: Response?) {
+                    if (!continuation.isActive) return
+                    val message = if (response?.code == 401) {
+                        "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an."
+                    } else {
+                        throwable.localizedMessage ?: "Die Live-Verbindung wurde getrennt."
+                    }
+                    continuation.resumeWithException(FriendsApiException(message))
+                }
+            }
+
+            val webSocket = webSocketClient.newWebSocket(request, listener)
+            continuation.invokeOnCancellation { webSocket.cancel() }
+        }
+    }
+
+    private fun webSocketBaseUrl(): String = when {
+        baseUrl.startsWith("https://", ignoreCase = true) -> "wss://${baseUrl.substring(8)}"
+        baseUrl.startsWith("http://", ignoreCase = true) -> "ws://${baseUrl.substring(7)}"
+        else -> throw FriendsApiException("Die Server-URL muss mit http:// oder https:// beginnen.")
+    }
 
     private suspend fun request(
         method: String,
