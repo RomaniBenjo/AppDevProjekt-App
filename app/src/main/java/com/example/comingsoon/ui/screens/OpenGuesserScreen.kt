@@ -1,6 +1,7 @@
 package com.example.comingsoon.ui.screens
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
@@ -69,10 +70,12 @@ import com.example.comingsoon.auth.AuthSessionStore
 import com.example.comingsoon.language.appString
 import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserApiClient
 import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserGame
+import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserPanorama
 import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserRoundResult
 import com.example.comingsoon.ui.screens.onlineopenguesser.OpenGuesserSocketEvent
 import com.example.comingsoon.ui.screens.onlineopenguesser.StreetViewPanorama
 import com.example.comingsoon.ui.screens.openguesser.OpenGuesserMap
+import com.example.comingsoon.ui.screens.openguesser.OpenGuesserResultMarker
 import kotlinx.coroutines.launch
 import org.maplibre.android.geometry.LatLng
 
@@ -244,6 +247,23 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
         }
     }
 
+    fun runGameUpdate(request: suspend (String) -> OpenGuesserGame) {
+        coroutineScope.launch {
+            val accessToken = sessionStore.load()?.accessToken ?: return@launch
+            runCatching { request(accessToken) }
+                .onSuccess { state = OnlineGuesserUiState.Game(it) }
+        }
+    }
+
+    fun leaveGameAndExit(gameId: String) {
+        coroutineScope.launch {
+            sessionStore.load()?.accessToken?.let { token ->
+                runCatching { apiClient.leaveGame(gameId, token) }
+            }
+            navController.popBackStack()
+        }
+    }
+
     fun leaveLobby(gameId: String) {
         coroutineScope.launch {
             state = OnlineGuesserUiState.Loading
@@ -295,6 +315,12 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                         state = OnlineGuesserUiState.Browser(event.lobbies)
                     }
                 }
+                is OpenGuesserSocketEvent.GameClosed -> {
+                    val current = state
+                    if (current is OnlineGuesserUiState.Game && current.game.id == event.gameId) {
+                        refreshLobbies(showLoading = false)
+                    }
+                }
                 is OpenGuesserSocketEvent.GameUpdated -> {
                     val current = state
                     val currentGameId = when (current) {
@@ -309,6 +335,12 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                 }
             }
         }
+    }
+
+    val activeGame = (state as? OnlineGuesserUiState.Game)?.game
+        ?.takeIf { it.status != "finished" }
+    BackHandler(enabled = activeGame != null) {
+        activeGame?.let { leaveGameAndExit(it.id) }
     }
 
     Box(
@@ -360,6 +392,13 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                 onNextRound = {
                     runLobbyRequest { token -> apiClient.nextRound(currentState.game.id, token) }
                 },
+                onUnavailableLocation = { location ->
+                    runGameUpdate { token ->
+                        apiClient.replaceUnavailableLocation(
+                            currentState.game.id, location.latitude, location.longitude, token
+                        )
+                    }
+                },
                 onExit = { refreshLobbies() }
             )
         }
@@ -373,7 +412,14 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
             shadowElevation = 4.dp
         ) {
             IconButton(
-                onClick = { navController.popBackStack() },
+                onClick = {
+                    val current = state
+                    if (current is OnlineGuesserUiState.Game && current.game.status != "finished") {
+                        leaveGameAndExit(current.game.id)
+                    } else {
+                        navController.popBackStack()
+                    }
+                },
                 modifier = Modifier.size(48.dp)
             ) {
                 Icon(
@@ -646,14 +692,21 @@ private fun OnlineGuesserGameView(
     currentUserId: Long?,
     onSubmitGuess: (LatLng) -> Unit,
     onNextRound: () -> Unit,
+    onUnavailableLocation: (OpenGuesserPanorama) -> Unit,
     onExit: () -> Unit
 ) {
     if (game.status == "finished") {
         OnlineGuesserEndScreen(game = game, currentUserId = currentUserId, onExit = onExit)
         return
     }
-    var viewerState by remember(game.id, game.roundNumber) {
+    var viewerState by remember(
+        game.id, game.roundNumber, game.panorama?.latitude, game.panorama?.longitude
+    ) {
         mutableStateOf(StreetViewState.Loading)
+    }
+    var panoramaRetries by remember(game.id, game.roundNumber) { mutableStateOf(0) }
+    var reportedUnavailable by remember(game.id, game.roundNumber) {
+        mutableStateOf<String?>(null)
     }
     var activeView by remember(game.id, game.roundNumber) {
         mutableStateOf(OnlineRoundView.STREET_VIEW)
@@ -667,6 +720,14 @@ private fun OnlineGuesserGameView(
         ownScore?.guess?.let { LatLng(it.latitude, it.longitude) } ?: selectedGuess
     } else selectedGuess
     val actualLocation = game.actualLocation?.let { LatLng(it.latitude, it.longitude) }
+    val resultMarkers = if (game.roundComplete) game.scores.mapNotNull { score ->
+        score.guess?.let { guess ->
+            OpenGuesserResultMarker(
+                location = LatLng(guess.latitude, guess.longitude),
+                label = score.user.displayName()
+            )
+        }
+    } else emptyList()
 
     Box(Modifier.fillMaxSize()) {
         val panorama = game.panorama
@@ -680,8 +741,18 @@ private fun OnlineGuesserGameView(
                 StreetViewPanorama(
                     latitude = panorama.latitude,
                     longitude = panorama.longitude,
+                    panoId = panorama.panoId,
                     isVisible = activeView == OnlineRoundView.STREET_VIEW,
-                    onPanoramaLoaded = { viewerState = StreetViewState.Ready }
+                    onPanoramaLoaded = { viewerState = StreetViewState.Ready },
+                    onPanoramaUnavailable = {
+                        viewerState = StreetViewState.Unavailable
+                        val key = "${panorama.latitude},${panorama.longitude}"
+                        if (reportedUnavailable != key && panoramaRetries < 5) {
+                            reportedUnavailable = key
+                            panoramaRetries += 1
+                            onUnavailableLocation(panorama)
+                        }
+                    }
                 )
             } else if (panorama == null) {
                 OnlineGuesserMessage(
@@ -699,6 +770,28 @@ private fun OnlineGuesserGameView(
             ) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             }
+            if (viewerState == StreetViewState.Unavailable) {
+                Surface(
+                    modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        if (panoramaRetries < 5) CircularProgressIndicator()
+                        Text(
+                            appString(
+                                if (panoramaRetries < 5) R.string.online_guesser_finding_street_view
+                                else R.string.online_guesser_street_view_unavailable
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
         }
 
         Box(
@@ -709,12 +802,13 @@ private fun OnlineGuesserGameView(
         ) {
             OpenGuesserMap(
                 archiveUrl = { "pmtiles://${BuildConfig.ONLINE_MAP_URL}" },
-                selectedLocation = shownGuess,
+                selectedLocation = if (game.roundComplete) null else shownGuess,
                 onLocationSelected = { selectedGuess = it },
                 mapLoadError = appString(R.string.online_guesser_map_load_failed),
                 guessMarkerTitle = appString(R.string.local_guesser_your_guess),
                 actualMarkerTitle = appString(R.string.local_guesser_real_location),
                 actualLocation = actualLocation,
+                resultMarkers = resultMarkers,
                 isGuessingEnabled = !game.currentUserSubmitted && !game.roundComplete,
                 modifier = Modifier.fillMaxSize()
             )
@@ -1159,7 +1253,8 @@ private fun com.example.comingsoon.auth.AuthenticatedUser.displayName(): String 
 
 private enum class StreetViewState {
     Loading,
-    Ready
+    Ready,
+    Unavailable
 }
 
 private enum class OnlineRoundView {

@@ -26,7 +26,7 @@ import com.example.comingsoon.language.localized
 import com.example.comingsoon.notifications.NotificationsHelper
 import com.example.comingsoon.overlays.OverlayViewModel
 import com.example.comingsoon.ui.theme.AppThemeViewModel
-import com.example.comingsoon.ui.theme.CommingSoonTheme
+import com.example.comingsoon.ui.theme.ComingSoonTheme
 import com.example.comingsoon.viewmodels.AppViewModelFactory
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.JourneyViewModel
@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                 LocalAppLanguage provides languageViewModel.currentLanguage,
                 LocalLocalizedContext provides localizedContext
             ) {
-                CommingSoonTheme(
+                ComingSoonTheme(
                     theme = currentAppTheme,
                     darkTheme = themeViewModel.darkMode
                 ) {

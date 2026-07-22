@@ -35,7 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.comingsoon.ui.theme.CommingSoonTheme
+import com.example.comingsoon.ui.theme.ComingSoonTheme
 import com.example.comingsoon.ui.theme.VioletTheme
 
 @Composable
@@ -193,7 +193,7 @@ fun LoginScreen(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun LoginScreenPreview() {
-    CommingSoonTheme(
+    ComingSoonTheme(
         theme = VioletTheme,
         darkTheme = false
     ) {

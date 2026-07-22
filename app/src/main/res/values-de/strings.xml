@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Titles -->
-    <string name="app_name">CommingSoon</string>
+    <string name="app_name">ComingSoon</string>
     <string name="login">Anmeldung</string>
     <string name="home">Start</string>
     <string name="journeys">Reisen</string>

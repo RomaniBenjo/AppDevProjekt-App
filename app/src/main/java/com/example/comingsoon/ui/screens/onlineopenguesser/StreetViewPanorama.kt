@@ -19,14 +19,17 @@ import com.google.android.gms.maps.StreetViewPanorama
 import com.google.android.gms.maps.StreetViewPanoramaView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.StreetViewSource
+import kotlinx.coroutines.delay
 
 @Composable
 fun StreetViewPanorama(
     latitude: Double,
     longitude: Double,
+    panoId: String? = null,
     isVisible: Boolean = true,
     modifier: Modifier = Modifier,
-    onPanoramaLoaded: () -> Unit = {}
+    onPanoramaLoaded: () -> Unit = {},
+    onPanoramaUnavailable: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -55,14 +58,24 @@ fun StreetViewPanorama(
         }
     }
 
-    LaunchedEffect(panorama, latitude, longitude) {
+    LaunchedEffect(panorama, latitude, longitude, panoId) {
         panorama?.apply {
+            var panoramaResolved = false
             isStreetNamesEnabled = false
             isPanningGesturesEnabled = true
             isZoomGesturesEnabled = true
             isUserNavigationEnabled = true
-            setOnStreetViewPanoramaChangeListener { onPanoramaLoaded() }
-            setPosition(LatLng(latitude, longitude), 1_000, StreetViewSource.OUTDOOR)
+            setOnStreetViewPanoramaChangeListener {
+                panoramaResolved = true
+                onPanoramaLoaded()
+            }
+            if (panoId.isNullOrBlank()) {
+                setPosition(LatLng(latitude, longitude), 1_000, StreetViewSource.OUTDOOR)
+            } else {
+                setPosition(panoId)
+            }
+            delay(PANORAMA_LOAD_TIMEOUT_MS)
+            if (!panoramaResolved) onPanoramaUnavailable()
         }
     }
 
@@ -80,3 +93,5 @@ fun StreetViewPanorama(
         modifier = modifier.fillMaxSize()
     )
 }
+
+private const val PANORAMA_LOAD_TIMEOUT_MS = 8_000L
