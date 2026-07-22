@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.commingsoon"
+        applicationId = "com.example.comingsoon"
         minSdk = 30
         targetSdk = 36
         versionCode = 1

@@ -16,7 +16,8 @@ import java.util.UUID
 
 data class OpenGuesserPanorama(
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+    @SerializedName("pano_id") val panoId: String? = null
 )
 
 data class OpenGuesserScore(
@@ -54,6 +55,7 @@ class OpenGuesserApiException(message: String) : Exception(message)
 sealed interface OpenGuesserSocketEvent {
     data class LobbiesUpdated(val lobbies: List<OpenGuesserGame>) : OpenGuesserSocketEvent
     data class GameUpdated(val game: OpenGuesserGame) : OpenGuesserSocketEvent
+    data class GameClosed(val gameId: String) : OpenGuesserSocketEvent
 }
 
 class OpenGuesserApiClient(
@@ -99,6 +101,20 @@ class OpenGuesserApiClient(
 
     suspend fun nextRound(gameId: String, accessToken: String): OpenGuesserGame =
         gameRequest("next_round", gameId, accessToken)
+
+    suspend fun replaceUnavailableLocation(
+        gameId: String,
+        latitude: Double,
+        longitude: Double,
+        accessToken: String
+    ): OpenGuesserGame = gameRequest(
+        "replace_unavailable_location", gameId, accessToken,
+        mapOf("latitude" to latitude, "longitude" to longitude)
+    )
+
+    suspend fun leaveGame(gameId: String, accessToken: String) {
+        request("leave_game", gameId, accessToken)
+    }
 
     suspend fun leaveLobby(gameId: String, accessToken: String) {
         request("leave_lobby", gameId, accessToken)
@@ -180,6 +196,9 @@ class OpenGuesserApiClient(
                     }
                     "lobbies_updated" -> _events.tryEmit(OpenGuesserSocketEvent.LobbiesUpdated(message.getAsJsonArray("lobbies").map { gson.fromJson(it, OpenGuesserGame::class.java) }))
                     "game_updated" -> _events.tryEmit(OpenGuesserSocketEvent.GameUpdated(gson.fromJson(message.getAsJsonObject("game"), OpenGuesserGame::class.java)))
+                    "game_closed" -> _events.tryEmit(
+                        OpenGuesserSocketEvent.GameClosed(message.get("game_id")?.asString.orEmpty())
+                    )
                 }
             }
         }

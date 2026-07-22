@@ -1,5 +1,11 @@
 package com.example.comingsoon.ui.screens.openguesser
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import android.view.MotionEvent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +37,7 @@ import org.json.JSONObject
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.Marker
 import org.maplibre.android.annotations.MarkerOptions
+import org.maplibre.android.annotations.IconFactory
 import org.maplibre.android.annotations.Polyline
 import org.maplibre.android.annotations.PolylineOptions
 import org.maplibre.android.camera.CameraPosition
@@ -40,6 +47,11 @@ import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+
+internal data class OpenGuesserResultMarker(
+    val location: LatLng,
+    val label: String
+)
 
 /**
  * Shared OpenGuesser map renderer. The caller supplies either a local or remote PMTiles URL;
@@ -54,6 +66,7 @@ internal fun OpenGuesserMap(
     guessMarkerTitle: String,
     actualMarkerTitle: String,
     actualLocation: LatLng? = null,
+    resultMarkers: List<OpenGuesserResultMarker> = emptyList(),
     isGuessingEnabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
@@ -65,6 +78,8 @@ internal fun OpenGuesserMap(
     var guessMarker by remember { mutableStateOf<Marker?>(null) }
     var actualMarker by remember { mutableStateOf<Marker?>(null) }
     var resultLine by remember { mutableStateOf<Polyline?>(null) }
+    var playerMarkers by remember { mutableStateOf<List<Marker>>(emptyList()) }
+    var playerLines by remember { mutableStateOf<List<Polyline>>(emptyList()) }
     val currentOnLocationSelected by rememberUpdatedState(onLocationSelected)
     val currentIsGuessingEnabled by rememberUpdatedState(isGuessingEnabled)
     val currentArchiveUrl by rememberUpdatedState(archiveUrl)
@@ -113,18 +128,40 @@ internal fun OpenGuesserMap(
         }
     }
 
-    LaunchedEffect(mapController, isStyleReady, selectedLocation, actualLocation) {
+    LaunchedEffect(mapController, isStyleReady, selectedLocation, actualLocation, resultMarkers) {
         if (!isStyleReady) return@LaunchedEffect
         val map = mapController ?: return@LaunchedEffect
         guessMarker?.let(map::removeMarker)
         actualMarker?.let(map::removeMarker)
         resultLine?.let(map::removePolyline)
+        playerMarkers.forEach(map::removeMarker)
+        playerLines.forEach(map::removePolyline)
         guessMarker = selectedLocation?.let { location ->
             map.addMarker(MarkerOptions().position(location).title(guessMarkerTitle))
         }
         actualMarker = actualLocation?.let { location ->
             map.addMarker(MarkerOptions().position(location).title(actualMarkerTitle))
         }
+        playerMarkers = resultMarkers.map { result ->
+            map.addMarker(
+                MarkerOptions()
+                    .position(result.location)
+                    .title(result.label)
+                    .icon(IconFactory.getInstance(context).fromBitmap(
+                        labeledMarkerBitmap(result.label, context.resources.displayMetrics.density)
+                    ))
+            )
+        }
+        playerLines = if (actualLocation != null) {
+            resultMarkers.map { result ->
+                map.addPolyline(
+                    PolylineOptions()
+                        .add(result.location, actualLocation)
+                        .color(Color.rgb(255, 152, 0))
+                        .width(4f)
+                )
+            }
+        } else emptyList()
         resultLine = if (selectedLocation != null && actualLocation != null) {
             map.addPolyline(
                 PolylineOptions()
@@ -135,7 +172,11 @@ internal fun OpenGuesserMap(
         } else {
             null
         }
-        if (selectedLocation != null && actualLocation != null) {
+        if (resultMarkers.isNotEmpty() && actualLocation != null) {
+            val bounds = LatLngBounds.Builder().include(actualLocation)
+            resultMarkers.forEach { bounds.include(it.location) }
+            map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 96))
+        } else if (selectedLocation != null && actualLocation != null) {
             val bounds = LatLngBounds.Builder()
                 .include(selectedLocation)
                 .include(actualLocation)
@@ -202,6 +243,33 @@ private const val MAP_STYLE_ASSET = "maps/offline_map_style.json"
 private const val ARCHIVE_URL_PLACEHOLDER = "pmtiles://LOCAL_ARCHIVE"
 private const val MAP_FONT_NAME = "Roboto"
 private const val MAP_FONT_URL = "file:///system/fonts/Roboto-Regular.ttf"
+
+private fun labeledMarkerBitmap(label: String, density: Float): Bitmap {
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 14f * density
+        typeface = android.graphics.Typeface.DEFAULT_BOLD
+    }
+    val horizontalPadding = 10f * density
+    val bubbleHeight = 30f * density
+    val pointerHeight = 8f * density
+    val width = (textPaint.measureText(label) + horizontalPadding * 2)
+        .coerceAtLeast(54f * density).toInt()
+    val bitmap = Bitmap.createBitmap(width, (bubbleHeight + pointerHeight).toInt(), Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val background = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(40, 93, 165) }
+    canvas.drawRoundRect(RectF(0f, 0f, width.toFloat(), bubbleHeight), 10f * density, 10f * density, background)
+    val center = width / 2f
+    canvas.drawPath(Path().apply {
+        moveTo(center - 7f * density, bubbleHeight - 1f)
+        lineTo(center, bubbleHeight + pointerHeight)
+        lineTo(center + 7f * density, bubbleHeight - 1f)
+        close()
+    }, background)
+    val baseline = bubbleHeight / 2f - (textPaint.ascent() + textPaint.descent()) / 2f
+    canvas.drawText(label, (width - textPaint.measureText(label)) / 2f, baseline, textPaint)
+    return bitmap
+}
 
 private val CITY_LABEL_LAYER = """
     {

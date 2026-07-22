@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CommingSoon"
+rootProject.name = "ComingSoon"
 include(":app")
  

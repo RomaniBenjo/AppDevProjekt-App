@@ -4,7 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 
 @Composable
-fun CommingSoonTheme(
+fun ComingSoonTheme(
     theme: AppThemeDefinition,
     darkTheme: Boolean,
     // Dynamic color is available on Android 12+

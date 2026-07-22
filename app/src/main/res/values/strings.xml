@@ -1,6 +1,6 @@
 <resources>
     <!-- Titles -->
-    <string name="app_name">CommingSoon</string>
+    <string name="app_name">ComingSoon</string>
     <string name="login">Login</string>
     <!-- Replace with the Web application OAuth client ID from Google Auth Platform. -->
     <string name="google_web_client_id" translatable="false">651453947706-v9jub0sfr2ngts1557q7tjbcnum4muad.apps.googleusercontent.com</string>
@@ -195,6 +195,8 @@
     <string name="online_guesser_country_ghana">Ghana</string>
     <string name="online_guesser_country_australia">Australia</string>
     <string name="online_guesser_country_new_zealand">New Zealand</string>
+    <string name="online_guesser_street_view_unavailable">Street View is unavailable here. You can still use the map or return to the lobby.</string>
+    <string name="online_guesser_finding_street_view">Street View is unavailable here. Finding another location…</string>
 
     <!-- Local OpenGuesser -->
     <string name="local_guesser_start_description">Allow access to your full photo library to find photos with GPS metadata. The scan, country lookup, and reusable photo index stay only on this phone.</string>
