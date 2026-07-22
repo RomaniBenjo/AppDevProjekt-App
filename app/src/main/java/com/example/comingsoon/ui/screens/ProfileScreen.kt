@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +34,8 @@ import com.example.comingsoon.viewmodels.ProfileViewModel
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
-    navController: NavController
+    navController: NavController,
+    onSignOut: () -> Unit
 ) {
 
     val profile = viewModel.profile
@@ -66,6 +68,12 @@ fun ProfileScreen(
             text = profile.name,
             style = MaterialTheme.typography.headlineMedium
         )
+
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedButton(onClick = onSignOut) {
+            Text(appString(R.string.sign_out))
+        }
     }
 
     Box(

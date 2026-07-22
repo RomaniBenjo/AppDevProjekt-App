@@ -107,6 +107,18 @@ class FriendViewModel(
         }
     }
 
+    fun onSignedOut() {
+        realtimeJob?.cancel()
+        realtimeJob = null
+        _friends.clear()
+        _incomingRequests.clear()
+        _outgoingRequests.clear()
+        _searchResults.clear()
+        errorMessage = null
+        isLoading = false
+        isSearching = false
+    }
+
     private fun refresh(showLoading: Boolean, showErrors: Boolean) {
         viewModelScope.launch {
             if (showLoading) isLoading = true

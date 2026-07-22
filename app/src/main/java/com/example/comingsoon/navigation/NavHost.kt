@@ -231,7 +231,15 @@ fun AppNavHost (
         composable(NavScreens.Profile.route) {
             ProfileScreen(
                 viewModel = profileViewModel,
-                navController = navController
+                navController = navController,
+                onSignOut = {
+                    authRepository.signOut()
+                    friendViewModel.onSignedOut()
+                    navController.navigate(NavScreens.Login.route) {
+                        popUpTo(NavScreens.Home.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
         composable(NavScreens.ProfileEditor.route) {
