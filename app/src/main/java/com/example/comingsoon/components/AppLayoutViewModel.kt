@@ -46,7 +46,9 @@ fun AppLayoutViewModel (
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     val isLoginScreen = currentRoute == NavScreens.Login.route
-    val drawerGesturesEnabled = currentRoute != NavScreens.OpenGuesserLocalLobby.route && !isLoginScreen
+    val drawerGesturesEnabled = currentRoute != NavScreens.OpenGuesserLocalLobby.route &&
+        currentRoute != NavScreens.OpenGuesserOnline.route &&
+        !isLoginScreen
 
     when (overlayViewModel.overlayType) {
         OverlayType.SHARE_JOURNEY -> {
