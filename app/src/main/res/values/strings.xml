@@ -9,7 +9,7 @@
     <string name="journey_editor">Journey Editor</string>
     <string name="journey_detail">Journey</string>
     <string name="play_guesser">Play OpenGuesser</string>
-    <string name="guesser_online">Online OpenGuesser"</string>
+    <string name="guesser_online">Online OpenGuesser</string>
     <string name="guesser_local">Local OpenGuesser</string>
     <string name="guesser_connect">Connect Players</string>
     <string name="friends">Friends</string>
