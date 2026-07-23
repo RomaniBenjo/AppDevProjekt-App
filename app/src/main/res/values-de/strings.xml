@@ -114,6 +114,9 @@
     <string name="online_guesser_retry">Erneut versuchen</string>
     <string name="online_guesser_new_location">Neuer Ort</string>
     <string name="online_guesser_round">Runde %1$d von %2$d</string>
+    <string name="online_guesser_time_limit">Zeitlimit pro Runde</string>
+    <string name="online_guesser_time_option">%1$ds</string>
+    <string name="online_guesser_time_remaining">Noch %1$ds</string>
     <string name="online_guesser_sign_in_again">Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.</string>
     <string name="online_guesser_server_error">Der OpenGuesser-Server ist nicht erreichbar.</string>
     <string name="online_guesser_maps_key_missing">Füge GOOGLE_MAPS_API_KEY zu local.properties hinzu, um Google Street View zu aktivieren.</string>

@@ -39,6 +39,8 @@ data class OpenGuesserGame(
     val status: String,
     @SerializedName("round_number") val roundNumber: Int,
     @SerializedName("total_rounds") val totalRounds: Int,
+    @SerializedName("round_seconds") val roundSeconds: Int,
+    @SerializedName("round_started_at") val roundStartedAt: String?,
     @SerializedName("location_filter") val locationFilter: String,
     val host: AuthenticatedUser,
     val participants: List<AuthenticatedUser>,
@@ -88,11 +90,12 @@ class OpenGuesserApiClient(
     suspend fun startLobby(
         gameId: String,
         totalRounds: Int,
+        roundSeconds: Int,
         locationFilter: String,
         accessToken: String
     ): OpenGuesserGame = gameRequest(
         "start_lobby", gameId, accessToken,
-        mapOf("total_rounds" to totalRounds),
+        mapOf("total_rounds" to totalRounds, "round_seconds" to roundSeconds),
         mapOf("location_filter" to locationFilter)
     )
 

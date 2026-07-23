@@ -77,7 +77,9 @@ import com.example.comingsoon.ui.screens.onlineopenguesser.StreetViewPanorama
 import com.example.comingsoon.ui.screens.openguesser.OpenGuesserMap
 import com.example.comingsoon.ui.screens.openguesser.OpenGuesserResultMarker
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import org.maplibre.android.geometry.LatLng
+import java.time.OffsetDateTime
 
 @Composable
 fun OpenGuesserScreen(navController: NavHostController) {
@@ -370,10 +372,10 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
             is OnlineGuesserUiState.Lobby -> OnlineGuesserLobbyView(
                 lobby = currentState.game,
                 currentUserId = sessionStore.load()?.user?.id,
-                onStart = { roundCount, locationFilter ->
+                onStart = { roundCount, roundSeconds, locationFilter ->
                     runLobbyRequest { token ->
                         apiClient.startLobby(
-                            currentState.game.id, roundCount, locationFilter, token
+                            currentState.game.id, roundCount, roundSeconds, locationFilter, token
                         )
                     }
                 },
@@ -397,6 +399,11 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                         apiClient.replaceUnavailableLocation(
                             currentState.game.id, location.latitude, location.longitude, token
                         )
+                    }
+                },
+                onTimerExpired = {
+                    runGameUpdate { token ->
+                        apiClient.getGame(currentState.game.id, token)
                     }
                 },
                 onExit = { refreshLobbies() }
@@ -552,11 +559,12 @@ private fun OnlineGuesserLobbyBrowser(
 private fun OnlineGuesserLobbyView(
     lobby: OpenGuesserGame,
     currentUserId: Long?,
-    onStart: (Int, String) -> Unit,
+    onStart: (Int, Int, String) -> Unit,
     onLeave: () -> Unit
 ) {
     val isHost = lobby.host.id == currentUserId
     var roundCount by remember(lobby.id) { mutableStateOf(5) }
+    var roundSeconds by remember(lobby.id) { mutableStateOf(60) }
     var locationFilter by remember(lobby.id) { mutableStateOf("world") }
     Column(
         modifier = Modifier
@@ -650,6 +658,26 @@ private fun OnlineGuesserLobbyView(
             }
             Spacer(Modifier.height(12.dp))
             Text(
+                appString(R.string.online_guesser_time_limit),
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                listOf(30, 60, 120).forEach { seconds ->
+                    FilterChip(
+                        selected = roundSeconds == seconds,
+                        onClick = { roundSeconds = seconds },
+                        label = { Text(appString(R.string.online_guesser_time_option, seconds)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(
                 appString(R.string.online_guesser_location_filter),
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.titleMedium
@@ -661,7 +689,7 @@ private fun OnlineGuesserLobbyView(
             )
             Spacer(Modifier.height(12.dp))
             Button(
-                onClick = { onStart(roundCount, locationFilter) },
+                onClick = { onStart(roundCount, roundSeconds, locationFilter) },
                 modifier = Modifier.fillMaxWidth().height(54.dp)
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
@@ -693,6 +721,7 @@ private fun OnlineGuesserGameView(
     onSubmitGuess: (LatLng) -> Unit,
     onNextRound: () -> Unit,
     onUnavailableLocation: (OpenGuesserPanorama) -> Unit,
+    onTimerExpired: () -> Unit,
     onExit: () -> Unit
 ) {
     if (game.status == "finished") {
@@ -717,7 +746,7 @@ private fun OnlineGuesserGameView(
     val isHost = game.host.id == currentUserId
     val ownScore = game.scores.firstOrNull { it.user.id == currentUserId }
     val shownGuess = if (game.roundComplete) {
-        ownScore?.guess?.let { LatLng(it.latitude, it.longitude) } ?: selectedGuess
+        ownScore?.guess?.let { LatLng(it.latitude, it.longitude) }
     } else selectedGuess
     val actualLocation = game.actualLocation?.let { LatLng(it.latitude, it.longitude) }
     val resultMarkers = if (game.roundComplete) game.scores.mapNotNull { score ->
@@ -728,6 +757,25 @@ private fun OnlineGuesserGameView(
             )
         }
     } else emptyList()
+    var secondsRemaining by remember(game.id, game.roundNumber) {
+        mutableStateOf(game.roundSeconds)
+    }
+    LaunchedEffect(game.id, game.roundNumber, game.roundStartedAt, game.roundComplete) {
+        if (game.roundComplete || game.roundStartedAt == null) return@LaunchedEffect
+        val deadline = runCatching {
+            OffsetDateTime.parse(game.roundStartedAt).toInstant().toEpochMilli() +
+                game.roundSeconds * 1_000L
+        }.getOrNull() ?: return@LaunchedEffect
+        while (true) {
+            secondsRemaining = ((deadline - System.currentTimeMillis() + 999L) / 1_000L)
+                .coerceAtLeast(0L).toInt()
+            if (secondsRemaining == 0) {
+                onTimerExpired()
+                break
+            }
+            delay(250)
+        }
+    }
 
     Box(Modifier.fillMaxSize()) {
         val panorama = game.panorama
@@ -809,7 +857,7 @@ private fun OnlineGuesserGameView(
                 actualMarkerTitle = appString(R.string.local_guesser_real_location),
                 actualLocation = actualLocation,
                 resultMarkers = resultMarkers,
-                isGuessingEnabled = !game.currentUserSubmitted && !game.roundComplete,
+                isGuessingEnabled = secondsRemaining > 0 && !game.currentUserSubmitted && !game.roundComplete,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -841,6 +889,14 @@ private fun OnlineGuesserGameView(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelMedium
                 )
+                if (!game.roundComplete) {
+                    Text(
+                        appString(R.string.online_guesser_time_remaining, secondsRemaining),
+                        color = if (secondsRemaining <= 10) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
         }
 
@@ -851,7 +907,7 @@ private fun OnlineGuesserGameView(
                 .zIndex(3f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-        if (activeView == OnlineRoundView.MAP && !game.currentUserSubmitted && !game.roundComplete) {
+        if (activeView == OnlineRoundView.MAP && secondsRemaining > 0 && !game.currentUserSubmitted && !game.roundComplete) {
             Button(
                 onClick = { selectedGuess?.let(onSubmitGuess) },
                 enabled = selectedGuess != null,
@@ -888,6 +944,7 @@ private fun OnlineGuesserGameView(
             } else if (game.status != "finished") {
                 Text(appString(R.string.online_guesser_waiting_for_host))
             }
+            Spacer(Modifier.height(8.dp))
         }
         if (game.status != "finished") Button(
             onClick = {

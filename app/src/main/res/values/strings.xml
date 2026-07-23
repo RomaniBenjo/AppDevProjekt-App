@@ -141,6 +141,9 @@
     <string name="online_guesser_panorama_missing">The server did not provide a Street View location for this game.</string>
     <string name="online_guesser_round_count">Number of rounds</string>
     <string name="online_guesser_round_count_option">%1$d rounds</string>
+    <string name="online_guesser_time_limit">Time limit per round</string>
+    <string name="online_guesser_time_option">%1$ds</string>
+    <string name="online_guesser_time_remaining">%1$ds left</string>
     <string name="online_guesser_submit_guess">Submit guess</string>
     <string name="online_guesser_waiting_for_guesses">Guess submitted — waiting for the other players…</string>
     <string name="online_guesser_waiting_for_host">Waiting for the host to continue…</string>
