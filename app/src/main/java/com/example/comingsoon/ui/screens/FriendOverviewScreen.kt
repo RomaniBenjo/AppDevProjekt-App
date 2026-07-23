@@ -238,7 +238,7 @@ fun FriendOverviewScreen (
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.removeFriend(friend.id)
+                        viewModel.removeFriend(friend)
                         if (expandedFriendId == friend.id) {
                             expandedFriendId = null
                         }

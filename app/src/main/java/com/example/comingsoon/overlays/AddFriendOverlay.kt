@@ -1,5 +1,7 @@
 package com.example.comingsoon.overlays
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.BluetoothSearching
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -26,11 +30,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +57,9 @@ import com.example.comingsoon.components.FriendAvatar
 import com.example.comingsoon.language.appString
 import com.example.comingsoon.friends.FriendQrPayload
 import com.example.comingsoon.friends.createFriendQrBitmap
+import com.example.comingsoon.friends.OfflinePairingPhase
+import com.example.comingsoon.ui.screens.localopenguesser.connection.hasNearbyPermissions
+import com.example.comingsoon.ui.screens.localopenguesser.connection.requiredNearbyPermissions
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -66,6 +76,7 @@ fun AddFriendOverlay(
     var currentTab by rememberSaveable {
         mutableStateOf(ShareTab.FRIENDS)
     }
+    var showOfflinePairing by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) { viewModel.clearError() }
 
     ModalBottomSheet(
@@ -91,34 +102,248 @@ fun AddFriendOverlay(
                     )
             )
 
-            Text(
-                text = appString(R.string.new_friend),
-                style = MaterialTheme.typography.titleLarge
-            )
+            if (showOfflinePairing) {
+                OfflineFriendPairingView(
+                    viewModel = viewModel,
+                    onBack = { showOfflinePairing = false }
+                )
+            } else {
+                Text(
+                    text = appString(R.string.new_friend),
+                    style = MaterialTheme.typography.titleLarge
+                )
 
-            Text(
-                text = appString(R.string.search_friend_or_qr),
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
+                Text(
+                    text = appString(R.string.search_friend_or_qr),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
 
-            // composable in ShareJourneyOverlay.kt
-            ShareModeSwitch(
-                selected = currentTab,
-                onSelected = { currentTab = it },
-                leftTitle = appString(R.string.search),
-                rightTitle = appString(R.string.qr_code)
-            )
+                Spacer(Modifier.height(12.dp))
+                FilledTonalButton(
+                    onClick = { showOfflinePairing = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Outlined.BluetoothSearching, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(appString(R.string.offline_friend_nearby))
+                }
 
-            when (currentTab) {
-                ShareTab.FRIENDS ->
-                    FriendSearchView(
-                        viewModel = viewModel
-                    )
+                // composable in ShareJourneyOverlay.kt
+                ShareModeSwitch(
+                    selected = currentTab,
+                    onSelected = { currentTab = it },
+                    leftTitle = appString(R.string.search),
+                    rightTitle = appString(R.string.qr_code)
+                )
 
-                ShareTab.QR_CODE ->
-                    FriendQrView(viewModel)
+                when (currentTab) {
+                    ShareTab.FRIENDS ->
+                        FriendSearchView(
+                            viewModel = viewModel
+                        )
+
+                    ShareTab.QR_CODE ->
+                        FriendQrView(viewModel)
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun OfflineFriendPairingView(
+    viewModel: FriendViewModel,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val state by viewModel.offlinePairingState.collectAsState()
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        if (result.values.all { it }) pendingAction?.invoke()
+        pendingAction = null
+    }
+    val runWithPermissions: (() -> Unit) -> Unit = { action ->
+        if (hasNearbyPermissions(context)) {
+            action()
+        } else {
+            pendingAction = action
+            permissionLauncher.launch(requiredNearbyPermissions())
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { viewModel.stopOfflinePairing() }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        OutlinedButton(onClick = onBack) {
+            Icon(Icons.Outlined.ArrowBack, contentDescription = null)
+            Spacer(Modifier.width(6.dp))
+            Text(appString(R.string.back))
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = appString(R.string.offline_friend_title),
+            style = MaterialTheme.typography.titleLarge
+        )
+    }
+      Spacer(Modifier.height(12.dp))
+      Text(
+        text = appString(R.string.offline_friend_description),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+      Spacer(Modifier.height(20.dp))
+
+      if (!viewModel.hasGooglePlayServices()) {
+        Text(
+            text = appString(R.string.offline_friend_play_services_missing),
+            color = MaterialTheme.colorScheme.error
+        )
+        return@Column
+      }
+
+      when (state.phase) {
+        OfflinePairingPhase.IDLE -> {
+            Button(
+                onClick = { runWithPermissions(viewModel::hostOfflinePairing) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(appString(R.string.offline_friend_be_visible))
+            }
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = { runWithPermissions(viewModel::searchOfflineFriends) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(appString(R.string.offline_friend_search))
+            }
+        }
+
+        OfflinePairingPhase.ADVERTISING -> PairingProgress(
+            text = appString(R.string.offline_friend_waiting),
+            onCancel = viewModel::stopOfflinePairing
+        )
+
+        OfflinePairingPhase.DISCOVERING -> {
+            Text(appString(R.string.offline_friend_searching))
+            Spacer(Modifier.height(12.dp))
+            if (state.discoveredEndpoints.isEmpty()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            }
+            state.discoveredEndpoints.forEach { endpoint ->
+                Button(
+                    onClick = { viewModel.connectOfflineFriend(endpoint) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(appString(R.string.offline_friend_connect_to, endpoint.name))
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+            OutlinedButton(
+                onClick = viewModel::stopOfflinePairing,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(appString(R.string.cancel))
+            }
+        }
+
+        OfflinePairingPhase.REQUESTING -> PairingProgress(
+            text = appString(R.string.offline_friend_requesting),
+            onCancel = viewModel::stopOfflinePairing
+        )
+
+        OfflinePairingPhase.AWAITING_CONFIRMATION -> {
+            val pending = state.pendingConnection
+            Text(
+                text = appString(
+                    R.string.offline_friend_confirm_person,
+                    pending?.endpoint?.name.orEmpty()
+                ),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(appString(R.string.offline_friend_compare_code))
+            Text(
+                text = pending?.authenticationDigits.orEmpty(),
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = viewModel::acceptOfflineFriend,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(appString(R.string.offline_friend_code_matches))
+            }
+            OutlinedButton(
+                onClick = viewModel::rejectOfflineFriend,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(appString(R.string.reject))
+            }
+        }
+
+        OfflinePairingPhase.CONNECTING,
+        OfflinePairingPhase.EXCHANGING_PROFILE -> PairingProgress(
+            text = appString(R.string.offline_friend_exchanging),
+            onCancel = viewModel::stopOfflinePairing
+        )
+
+        OfflinePairingPhase.PAIRED -> {
+            Text(
+                text = appString(
+                    R.string.offline_friend_added,
+                    state.pairedFriendName.orEmpty()
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                Text(appString(R.string.done))
+            }
+        }
+
+        OfflinePairingPhase.ERROR -> {
+            Text(
+                text = state.errorMessage.orEmpty(),
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = viewModel::stopOfflinePairing,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(appString(R.string.try_again))
+            }
+        }
+      }
+
+      Spacer(Modifier.height(28.dp))
+    }
+}
+
+@Composable
+private fun PairingProgress(
+    text: String,
+    onCancel: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator()
+        Spacer(Modifier.height(12.dp))
+        Text(text)
+        Spacer(Modifier.height(12.dp))
+        OutlinedButton(onClick = onCancel) {
+            Text(appString(R.string.cancel))
         }
     }
 }

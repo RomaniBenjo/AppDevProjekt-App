@@ -1,5 +1,6 @@
 package com.example.comingsoon.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.comingsoon.data.AppPreferenceRepository
@@ -10,7 +11,8 @@ import kotlin.jvm.java
 
 class AppViewModelFactory (
     private val repository: AppPreferenceRepository,
-    private val friendsRepository: FriendsRepository
+    private val friendsRepository: FriendsRepository,
+    private val context: Context
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -23,7 +25,7 @@ class AppViewModelFactory (
             modelClass.isAssignableFrom(SettingsViewModel::class.java) ->
                 SettingsViewModel(repository) as T
             modelClass.isAssignableFrom(FriendViewModel::class.java) ->
-                FriendViewModel(friendsRepository) as T
+                FriendViewModel(friendsRepository, context.applicationContext) as T
             else ->
                 throw IllegalArgumentException("Unknown ViewModel")
         }

@@ -290,4 +290,21 @@
     <string name="orange_theme">Orange Früchte</string>
     <string name="pink_theme">Pinke Blumen</string>
     <string name="sign_out">Abmelden</string>
+    <string name="done">Fertig</string>
+    <string name="try_again">Erneut versuchen</string>
+    <string name="offline_friend_nearby">Offline-Freund in der Nähe</string>
+    <string name="offline_friend_title">Offline-Freund</string>
+    <string name="offline_friend_description">Beide Smartphones verbinden sich direkt über Bluetooth und WLAN. Internet ist nicht erforderlich. Vergleicht vor dem Bestätigen den Sicherheitscode.</string>
+    <string name="offline_friend_play_services_missing">Google Play-Dienste sind nicht verfügbar oder müssen aktualisiert werden. Die Nearby-Verbindung kann auf diesem Smartphone nicht verwendet werden.</string>
+    <string name="offline_friend_be_visible">Dieses Smartphone sichtbar machen</string>
+    <string name="offline_friend_search">Freund in der Nähe suchen</string>
+    <string name="offline_friend_waiting">Warten auf das andere Smartphone…</string>
+    <string name="offline_friend_searching">ComingSoon-Nutzer in der Nähe werden gesucht…</string>
+    <string name="offline_friend_connect_to">Mit %1$s verbinden</string>
+    <string name="offline_friend_requesting">Sichere Verbindung wird angefordert…</string>
+    <string name="offline_friend_confirm_person">%1$s bestätigen</string>
+    <string name="offline_friend_compare_code">Prüft, ob dieser Code auf beiden Smartphones identisch ist:</string>
+    <string name="offline_friend_code_matches">Codes stimmen überein – Freund hinzufügen</string>
+    <string name="offline_friend_exchanging">Profile werden sicher ausgetauscht…</string>
+    <string name="offline_friend_added">%1$s wurde als Offline-Freund hinzugefügt.</string>
 </resources>

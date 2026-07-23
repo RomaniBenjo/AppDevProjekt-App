@@ -19,6 +19,7 @@ import com.example.comingsoon.auth.AuthSessionStore
 import com.example.comingsoon.friends.FriendsApiClient
 import com.example.comingsoon.friends.FriendsRepository
 import com.example.comingsoon.friends.FriendQrPayload
+import com.example.comingsoon.db.AppDatabase
 import com.example.comingsoon.language.AppLanguageViewModel
 import com.example.comingsoon.language.LocalAppLanguage
 import com.example.comingsoon.language.LocalLocalizedContext
@@ -47,9 +48,15 @@ class MainActivity : ComponentActivity() {
             val repository = AppPreferenceRepository(applicationContext)
             val friendsRepository = FriendsRepository(
                 apiClient = FriendsApiClient(BuildConfig.API_BASE_URL),
-                sessionStore = AuthSessionStore(applicationContext)
+                sessionStore = AuthSessionStore(applicationContext),
+                friendDao = AppDatabase.getDatabase(applicationContext).friendDao(),
+                context = applicationContext
             )
-            val factory = AppViewModelFactory(repository, friendsRepository)
+            val factory = AppViewModelFactory(
+                repository,
+                friendsRepository,
+                applicationContext
+            )
 
             val navController = rememberNavController()
             val themeViewModel: AppThemeViewModel = viewModel(factory = factory)
