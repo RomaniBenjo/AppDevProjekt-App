@@ -79,11 +79,11 @@
     <string name="journey_notification_description">Receive a reminder on the morning your journey begins.</string>
 
     <string name="how_to_play">How do you want to play?</string>
-    <string name="online_or_local">Choose an online game or explore a local map.</string>
+    <string name="online_or_local">Play online with friends or connect two nearby phones.</string>
     <string name="online_guesser">Online OpenGuesser</string>
-    <string name="online_guesser_text">Play a shared game with other players.</string>
+    <string name="online_guesser_text">Create or join a friend lobby and guess Street View locations together.</string>
     <string name="local_guesser">Local OpenGuesser</string>
-    <string name="local_guesser_text">Try the local mode and PMTiles map viewer.</string>
+    <string name="local_guesser_text">Connect two nearby phones and guess locations from each other’s photos—no game server or internet required.</string>
 
     <string name="save_qr_code">Save QR Code</string>
     <string name="share_journey_with_friend">Share a journey with this friend</string>
@@ -141,6 +141,9 @@
     <string name="online_guesser_panorama_missing">The server did not provide a Street View location for this game.</string>
     <string name="online_guesser_round_count">Number of rounds</string>
     <string name="online_guesser_round_count_option">%1$d rounds</string>
+    <string name="online_guesser_time_limit">Time limit per round</string>
+    <string name="online_guesser_time_option">%1$ds</string>
+    <string name="online_guesser_time_remaining">%1$ds left</string>
     <string name="online_guesser_submit_guess">Submit guess</string>
     <string name="online_guesser_waiting_for_guesses">Guess submitted — waiting for the other players…</string>
     <string name="online_guesser_waiting_for_host">Waiting for the host to continue…</string>
