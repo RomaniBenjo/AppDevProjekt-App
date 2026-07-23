@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.security.MessageDigest
+import java.util.UUID
 
 enum class OfflinePairingPhase {
     IDLE,
@@ -60,7 +62,7 @@ data class OfflineFriendPairingState(
 class OfflineFriendPairingManager(
     context: Context,
     private val ownIdentity: () -> OfflineFriendIdentity,
-    private val onFriendReceived: suspend (OfflineFriendIdentity) -> Unit
+    private val onFriendReceived: suspend (OfflineFriendIdentity, String) -> Unit
 ) {
     private val appContext = context.applicationContext
     private val client: ConnectionsClient = Nearby.getConnectionsClient(appContext)
@@ -71,12 +73,14 @@ class OfflineFriendPairingManager(
     private val endpointNames = mutableMapOf<String, String>()
     private val mutableState = MutableStateFlow(OfflineFriendPairingState())
     val state: StateFlow<OfflineFriendPairingState> = mutableState.asStateFlow()
+    private var pairingNonce = UUID.randomUUID().toString()
 
     fun hasGooglePlayServices(): Boolean = GoogleApiAvailability.getInstance()
         .isGooglePlayServicesAvailable(appContext) == ConnectionResult.SUCCESS
 
     fun startAdvertising() {
         resetConnections()
+        pairingNonce = UUID.randomUUID().toString()
         mutableState.value = OfflineFriendPairingState(
             phase = OfflinePairingPhase.ADVERTISING
         )
@@ -88,6 +92,7 @@ class OfflineFriendPairingManager(
 
     fun startDiscovery() {
         resetConnections()
+        pairingNonce = UUID.randomUUID().toString()
         mutableState.value = OfflineFriendPairingState(
             phase = OfflinePairingPhase.DISCOVERING
         )
@@ -139,6 +144,7 @@ class OfflineFriendPairingManager(
         val envelope = OfflineProfileEnvelope(
             version = PROTOCOL_VERSION,
             type = PROFILE_TYPE,
+            pairingNonce = pairingNonce,
             identity = ownIdentity()
         )
         val bytes = gson.toJson(envelope).toByteArray(Charsets.UTF_8)
@@ -155,15 +161,20 @@ class OfflineFriendPairingManager(
             envelope?.version != PROTOCOL_VERSION ||
             envelope.type != PROFILE_TYPE ||
             identity == null ||
+            envelope.pairingNonce.isNullOrBlank() ||
             identity.deviceId.isBlank() ||
             identity.name.isBlank()
         ) {
             fail("Das andere Gerät hat kein gültiges Offline-Profil gesendet.")
             return
         }
+        val pairingId = offlinePairingId(
+            pairingNonce,
+            requireNotNull(envelope.pairingNonce)
+        )
 
         scope.launch {
-            runCatching { onFriendReceived(identity) }
+            runCatching { onFriendReceived(identity, pairingId) }
                 .onSuccess {
                     stopSearchOperations()
                     mutableState.value = mutableState.value.copy(
@@ -272,6 +283,7 @@ class OfflineFriendPairingManager(
     private data class OfflineProfileEnvelope(
         val version: Int,
         val type: String,
+        val pairingNonce: String?,
         val identity: OfflineFriendIdentity
     )
 
@@ -279,4 +291,11 @@ class OfflineFriendPairingManager(
         const val PROTOCOL_VERSION = 1
         const val PROFILE_TYPE = "friend_profile"
     }
+}
+
+internal fun offlinePairingId(firstNonce: String, secondNonce: String): String {
+    val canonical = listOf(firstNonce, secondNonce).sorted().joinToString("|")
+    return MessageDigest.getInstance("SHA-256")
+        .digest(canonical.toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it) }
 }

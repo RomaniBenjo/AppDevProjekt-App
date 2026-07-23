@@ -15,8 +15,6 @@ import com.example.comingsoon.friends.ServerFriendRequest
 import com.example.comingsoon.friends.StoredFriend
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -61,8 +59,8 @@ class FriendViewModel(
     private val offlinePairingManager = OfflineFriendPairingManager(
         context = context.applicationContext,
         ownIdentity = repository::currentOfflineIdentity,
-        onFriendReceived = { identity ->
-            repository.saveNearbyFriend(identity)
+        onFriendReceived = { identity, pairingId ->
+            repository.saveNearbyFriend(identity, pairingId)
             replaceFriendsFromCache()
         }
     )
@@ -119,6 +117,7 @@ class FriendViewModel(
             var retryDelayMillis = 1_000L
             while (isActive && repository.hasSession()) {
                 try {
+                    refresh(showLoading = false, showErrors = false)
                     repository.listenForUpdates {
                         refresh(showLoading = false, showErrors = false)
                     }
@@ -155,23 +154,18 @@ class FriendViewModel(
                 if (showLoading) isLoading = false
                 return@launch
             }
-            runCatching {
-                coroutineScope {
-                    val friends = async { repository.loadFriends() }
-                    val requests = async { repository.loadRequests() }
-                    friends.await() to requests.await()
+            runCatching { repository.synchronizeFriends() }
+                .onSuccess { snapshot ->
+                    _friends.replaceWith(snapshot.friends.map(::toFriend))
+                    _incomingRequests.replaceWith(
+                        snapshot.requests.incoming.map { it.toRequest(incoming = true) }
+                    )
+                    _outgoingRequests.replaceWith(
+                        snapshot.requests.outgoing.map { it.toRequest(incoming = false) }
+                    )
+                }.onFailure { throwable ->
+                    if (showErrors && _friends.isEmpty()) showError(throwable)
                 }
-            }.onSuccess { (serverFriends, requests) ->
-                _friends.replaceWith(serverFriends.map(::toFriend))
-                _incomingRequests.replaceWith(
-                    requests.incoming.map { it.toRequest(incoming = true) }
-                )
-                _outgoingRequests.replaceWith(
-                    requests.outgoing.map { it.toRequest(incoming = false) }
-                )
-            }.onFailure { throwable ->
-                if (showErrors && _friends.isEmpty()) showError(throwable)
-            }
             if (showLoading) isLoading = false
         }
     }
@@ -224,8 +218,9 @@ class FriendViewModel(
     }
 
     fun removeFriend(friend: Friend) = mutate {
-        repository.removeFriend(friend.toStoredFriend())
-        _friends.removeAll { it.identityKey == friend.identityKey }
+        repository.markFriendDeleted(friend.toStoredFriend())
+        replaceFriendsFromCache()
+        if (repository.hasSession()) refreshAfterMutation()
     }
 
     fun clearError() {
@@ -242,11 +237,10 @@ class FriendViewModel(
     }
 
     private suspend fun refreshAfterMutation() {
-        val friends = repository.loadFriends()
-        val requests = repository.loadRequests()
-        _friends.replaceWith(friends.map(::toFriend))
-        _incomingRequests.replaceWith(requests.incoming.map { it.toRequest(true) })
-        _outgoingRequests.replaceWith(requests.outgoing.map { it.toRequest(false) })
+        val snapshot = repository.synchronizeFriends()
+        _friends.replaceWith(snapshot.friends.map(::toFriend))
+        _incomingRequests.replaceWith(snapshot.requests.incoming.map { it.toRequest(true) })
+        _outgoingRequests.replaceWith(snapshot.requests.outgoing.map { it.toRequest(false) })
     }
 
     private fun ServerFriendRequest.toRequest(incoming: Boolean) = FriendRequest(

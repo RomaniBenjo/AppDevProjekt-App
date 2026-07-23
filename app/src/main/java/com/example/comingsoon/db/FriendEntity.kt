@@ -12,11 +12,13 @@ data class FriendEntity(
     @PrimaryKey val identityKey: String,
     val serverUserId: Long?,
     val deviceId: String?,
+    val pairingId: String?,
     val displayName: String,
     val email: String,
     val pictureUrl: String?,
     val addedNearby: Boolean,
     val isServerFriend: Boolean,
+    val deletedLocally: Boolean,
     val createdAtEpochMillis: Long
 )
 
@@ -25,10 +27,14 @@ interface FriendDao {
     @Query(
         """
         SELECT * FROM friends
+        WHERE deletedLocally = 0
         ORDER BY displayName COLLATE NOCASE ASC
         """
     )
     suspend fun getAll(): List<FriendEntity>
+
+    @Query("SELECT * FROM friends")
+    suspend fun getAllForSync(): List<FriendEntity>
 
     @Query("SELECT * FROM friends WHERE identityKey = :identityKey LIMIT 1")
     suspend fun getByIdentityKey(identityKey: String): FriendEntity?
