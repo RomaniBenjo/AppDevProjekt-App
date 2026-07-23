@@ -78,11 +78,11 @@
     <string name="journey_notification_description">Erhalte am Morgen des Starttags deiner Reise eine Erinnerung.</string>
 
     <string name="how_to_play">Wie möchtest du spielen?</string>
-    <string name="online_or_local">Wähle ein Online-Spiel oder erkunde eine lokale Karte.</string>
+    <string name="online_or_local">Spiele online mit Freunden oder verbinde zwei Smartphones in der Nähe.</string>
     <string name="online_guesser">Online OpenGuesser</string>
-    <string name="online_guesser_text">Spiele eine geteilte Runde mit anderen Spielern.</string>
+    <string name="online_guesser_text">Erstelle eine Freundes-Lobby oder tritt einer bei und erratet gemeinsam Street-View-Orte.</string>
     <string name="local_guesser">Lokaler OpenGuesser</string>
-    <string name="local_guesser_text">Probiere den lokalen Modus und den PMTiles-Kartenbetrachter aus.</string>
+    <string name="local_guesser_text">Verbindet zwei Smartphones in der Nähe und erratet die Orte auf euren Fotos – ohne Spielserver oder Internet.</string>
 
     <string name="save_qr_code">QR Code speichern</string>
     <string name="share_journey_with_friend">Teile eine Reise mit diesem Freund</string>
