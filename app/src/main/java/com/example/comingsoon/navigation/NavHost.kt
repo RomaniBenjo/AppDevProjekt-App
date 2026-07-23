@@ -231,7 +231,6 @@ fun AppNavHost (
         composable(NavScreens.Profile.route) {
             ProfileScreen(
                 viewModel = profileViewModel,
-                navController = navController,
                 onSignOut = {
                     authRepository.signOut()
                     friendViewModel.onSignedOut()
