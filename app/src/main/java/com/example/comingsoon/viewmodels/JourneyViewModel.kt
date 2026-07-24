@@ -27,8 +27,11 @@ import com.example.comingsoon.db.JourneyDao
 import com.example.comingsoon.db.JourneyEntity
 import com.example.comingsoon.db.ClaimedCountryDao
 import com.example.comingsoon.db.ClaimedCountryEntity
+import com.example.comingsoon.sync.ClaimedCountriesRepository
+import com.example.comingsoon.sync.JourneysRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.xmlpull.v1.XmlPullParser
 import java.time.LocalDate
@@ -60,7 +63,10 @@ sealed interface ClaimStatus {
     data class Error(val message: String) : ClaimStatus
 }
 
-class JourneyViewModel : ViewModel() {
+class JourneyViewModel(
+    private val journeysRepository: JourneysRepository,
+    private val claimedCountriesRepository: ClaimedCountriesRepository
+) : ViewModel() {
     private val _journeys = mutableStateListOf<Journey>()
 
     val journeys: List<Journey>
@@ -127,6 +133,8 @@ class JourneyViewModel : ViewModel() {
     var isSyncing by mutableStateOf(false)
         private set
 
+    private val syncMutex = Mutex()
+
     private var isLoaded = false
 
     fun loadJourneys(context: Context) {
@@ -142,13 +150,7 @@ class JourneyViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val currentDao = dao ?: return@launch
-                var list = currentDao.getAllJourneys()
-                if (list.isEmpty()) {
-                    JourneyPlaceholder.journeys.forEach { journey ->
-                        currentDao.insert(JourneyEntity.fromDomain(journey, pendingSync = false, isSynced = true))
-                    }
-                    list = currentDao.getAllJourneys()
-                }
+                val list = currentDao.getAllJourneys()
                 val dbClaimedDao = claimedDao
                 val claims = dbClaimedDao?.getAllClaims() ?: emptyList()
                 withContext(Dispatchers.Main) {
@@ -306,7 +308,8 @@ class JourneyViewModel : ViewModel() {
                         ClaimedCountryEntity(
                             id = svgId,
                             name = matchedCountry.name ?: countryName,
-                            claimedAt = System.currentTimeMillis()
+                            claimedAt = System.currentTimeMillis(),
+                            pendingSync = true
                         )
                     )
                 }
@@ -317,6 +320,7 @@ class JourneyViewModel : ViewModel() {
                     }
                     claimStatus = ClaimStatus.Success(matchedCountry.name ?: countryName, !alreadyClaimed)
                 }
+                if (!alreadyClaimed) triggerSync()
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
@@ -330,10 +334,12 @@ class JourneyViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 claimedDao?.deleteAllClaims()
+                claimedCountriesRepository.markClearAllPending()
                 withContext(Dispatchers.Main) {
                     _claimedCountries.clear()
                     claimStatus = ClaimStatus.Idle
                 }
+                triggerSync()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -373,28 +379,45 @@ class JourneyViewModel : ViewModel() {
     }
 
     fun triggerSync() {
-        if (!isNetworkAvailable || isSyncing) return
+        if (!isNetworkAvailable) return
+        if (!journeysRepository.hasSession()) return
         val currentDao = dao ?: return
-        isSyncing = true
         viewModelScope.launch(Dispatchers.IO) {
+            // tryLock (not a plain isSyncing check-then-set) so two near-simultaneous
+            // callers can't both slip past the guard and push the same unsynced
+            // journey twice, creating a duplicate on the server.
+            if (!syncMutex.tryLock()) return@launch
             try {
-                val unsynced = currentDao.getUnsyncedJourneys()
-                if (unsynced.isNotEmpty()) {
-                    // Simulate network sync delay
-                    kotlinx.coroutines.delay(2000)
-                    unsynced.forEach { entity ->
-                        val syncedEntity = entity.copy(isSynced = true, pendingSync = false)
-                        currentDao.update(syncedEntity)
-                    }
+                withContext(Dispatchers.Main) { isSyncing = true }
+                journeysRepository.synchronize()
+                claimedCountriesRepository.synchronize()
+                val refreshedJourneys = currentDao.getAllJourneys().map { it.toDomain() }
+                val refreshedClaims = claimedDao?.getAllClaims()?.map { it.id } ?: emptyList()
+                withContext(Dispatchers.Main) {
+                    _journeys.clear()
+                    _journeys.addAll(refreshedJourneys)
+                    _claimedCountries.clear()
+                    _claimedCountries.addAll(refreshedClaims)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
+                syncMutex.unlock()
                 withContext(Dispatchers.Main) {
                     isSyncing = false
                 }
             }
         }
+    }
+
+    /** Pushes any pre-login local data and pulls the account's server state. */
+    fun onSignedIn() {
+        triggerSync()
+    }
+
+    /** Local journeys/claims stay visible; syncing simply stops until the next sign-in. */
+    fun onSignedOut() {
+        isSyncing = false
     }
 
     fun getNextJourneyId(): Int {
@@ -417,7 +440,13 @@ class JourneyViewModel : ViewModel() {
     fun removeJourney(id: Int) {
         _journeys.removeIf { it.id == id }
         viewModelScope.launch(Dispatchers.IO) {
-            dao?.deleteById(id)
+            val entity = dao?.getJourneyById(id)
+            if (entity?.serverId == null) {
+                dao?.deleteById(id)
+            } else {
+                dao?.update(entity.copy(deletedLocally = true, pendingSync = true))
+            }
+            triggerSync()
         }
     }
 
@@ -430,7 +459,12 @@ class JourneyViewModel : ViewModel() {
             val updated = _journeys[index].update()
             _journeys[index] = updated
             viewModelScope.launch(Dispatchers.IO) {
-                dao?.insert(JourneyEntity.fromDomain(updated, pendingSync = true, isSynced = false))
+                val existing = dao?.getJourneyById(id)
+                dao?.insert(
+                    JourneyEntity.fromDomain(
+                        updated, pendingSync = true, isSynced = false, serverId = existing?.serverId
+                    )
+                )
                 triggerSync()
             }
         }
@@ -441,7 +475,12 @@ class JourneyViewModel : ViewModel() {
         if (index != -1) {
             _journeys[index] = updatedJourney
             viewModelScope.launch(Dispatchers.IO) {
-                dao?.insert(JourneyEntity.fromDomain(updatedJourney, pendingSync = true, isSynced = false))
+                val existing = dao?.getJourneyById(updatedJourney.id)
+                dao?.insert(
+                    JourneyEntity.fromDomain(
+                        updatedJourney, pendingSync = true, isSynced = false, serverId = existing?.serverId
+                    )
+                )
                 triggerSync()
             }
         }

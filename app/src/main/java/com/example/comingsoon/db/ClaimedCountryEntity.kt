@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class ClaimedCountryEntity(
     @PrimaryKey val id: String, // Country ID / code (e.g. "us", "de" in lowercase to match SVG ids)
     val name: String,
-    val claimedAt: Long
+    val claimedAt: Long,
+    val pendingSync: Boolean = false
 )

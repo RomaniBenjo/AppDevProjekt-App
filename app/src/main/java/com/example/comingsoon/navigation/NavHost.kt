@@ -104,6 +104,7 @@ fun AppNavHost (
                                         profileViewModel.updateFromAuthenticatedUser(session.user)
                                         friendViewModel.refresh()
                                         friendViewModel.startRealtimeUpdates()
+                                        journeyViewModel.onSignedIn()
                                         navController.navigate(NavScreens.Home.route) {
                                             popUpTo(NavScreens.Login.route) { inclusive = true }
                                             launchSingleTop = true
@@ -234,6 +235,7 @@ fun AppNavHost (
                 onSignOut = {
                     authRepository.signOut()
                     friendViewModel.onSignedOut()
+                    journeyViewModel.onSignedOut()
                     navController.navigate(NavScreens.Login.route) {
                         popUpTo(NavScreens.Home.route) { inclusive = true }
                         launchSingleTop = true

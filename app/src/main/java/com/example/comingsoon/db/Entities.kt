@@ -16,7 +16,9 @@ data class JourneyEntity(
     val locations: List<JourneyLocation>,
     val visitedCountries: List<String>,
     val pendingSync: Boolean = false,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val serverId: Int? = null,
+    val deletedLocally: Boolean = false
 ) {
     fun toDomain(): Journey {
         return Journey(
@@ -31,7 +33,13 @@ data class JourneyEntity(
     }
 
     companion object {
-        fun fromDomain(journey: Journey, pendingSync: Boolean = false, isSynced: Boolean = false): JourneyEntity {
+        fun fromDomain(
+            journey: Journey,
+            pendingSync: Boolean = false,
+            isSynced: Boolean = false,
+            serverId: Int? = null,
+            deletedLocally: Boolean = false
+        ): JourneyEntity {
             return JourneyEntity(
                 id = journey.id,
                 title = journey.title,
@@ -41,7 +49,9 @@ data class JourneyEntity(
                 locations = journey.locations,
                 visitedCountries = journey.visitedCountries,
                 pendingSync = pendingSync,
-                isSynced = isSynced
+                isSynced = isSynced,
+                serverId = serverId,
+                deletedLocally = deletedLocally
             )
         }
     }

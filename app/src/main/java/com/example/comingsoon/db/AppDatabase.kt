@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [JourneyEntity::class, ClaimedCountryEntity::class, FriendEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -30,7 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "journey_database"
                 )
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .fallbackToDestructiveMigration(true)
                 .build()
                 INSTANCE = instance
@@ -64,6 +64,14 @@ abstract class AppDatabase : RoomDatabase() {
                     "ALTER TABLE friends ADD COLUMN deletedLocally INTEGER NOT NULL DEFAULT 0"
                 )
                 db.execSQL("ALTER TABLE friends ADD COLUMN pairingId TEXT")
+            }
+        }
+
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE journeys ADD COLUMN serverId INTEGER")
+                db.execSQL("ALTER TABLE journeys ADD COLUMN deletedLocally INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE claimed_countries ADD COLUMN pendingSync INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

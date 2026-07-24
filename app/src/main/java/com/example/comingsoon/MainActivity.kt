@@ -19,6 +19,10 @@ import com.example.comingsoon.auth.AuthSessionStore
 import com.example.comingsoon.friends.FriendsApiClient
 import com.example.comingsoon.friends.FriendsRepository
 import com.example.comingsoon.friends.FriendQrPayload
+import com.example.comingsoon.sync.ClaimedCountriesApiClient
+import com.example.comingsoon.sync.ClaimedCountriesRepository
+import com.example.comingsoon.sync.JourneysApiClient
+import com.example.comingsoon.sync.JourneysRepository
 import com.example.comingsoon.db.AppDatabase
 import com.example.comingsoon.language.AppLanguageViewModel
 import com.example.comingsoon.language.LocalAppLanguage
@@ -52,9 +56,22 @@ class MainActivity : ComponentActivity() {
                 friendDao = AppDatabase.getDatabase(applicationContext).friendDao(),
                 context = applicationContext
             )
+            val journeysRepository = JourneysRepository(
+                apiClient = JourneysApiClient(BuildConfig.API_BASE_URL),
+                sessionStore = AuthSessionStore(applicationContext),
+                journeyDao = AppDatabase.getDatabase(applicationContext).journeyDao()
+            )
+            val claimedCountriesRepository = ClaimedCountriesRepository(
+                apiClient = ClaimedCountriesApiClient(BuildConfig.API_BASE_URL),
+                sessionStore = AuthSessionStore(applicationContext),
+                claimedCountryDao = AppDatabase.getDatabase(applicationContext).claimedCountryDao(),
+                context = applicationContext
+            )
             val factory = AppViewModelFactory(
                 repository,
                 friendsRepository,
+                journeysRepository,
+                claimedCountriesRepository,
                 applicationContext
             )
 
@@ -62,7 +79,7 @@ class MainActivity : ComponentActivity() {
             val themeViewModel: AppThemeViewModel = viewModel(factory = factory)
             val languageViewModel: AppLanguageViewModel = viewModel(factory = factory)
             val settingsViewModel: SettingsViewModel = viewModel(factory = factory)
-            val journeyViewModel: JourneyViewModel = viewModel()
+            val journeyViewModel: JourneyViewModel = viewModel(factory = factory)
             val friendViewModel: FriendViewModel = viewModel(factory = factory)
             val overlayViewModel: OverlayViewModel = viewModel()
             val profileViewModel: ProfileViewModel = viewModel()
