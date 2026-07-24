@@ -38,21 +38,34 @@ class AuthSessionStore(context: Context) {
 
     fun load(): AuthSession? {
         val token = preferences.getString(ACCESS_TOKEN, null) ?: return null
-        val email = preferences.getString(USER_EMAIL, null) ?: return null
+        val user = cachedUser() ?: return null
         val session = AuthSession(
             accessToken = token,
             expiresAtEpochSeconds = preferences.getLong(EXPIRES_AT, 0),
-            user = AuthenticatedUser(
-                id = preferences.getLong(USER_ID, 0),
-                email = email,
-                name = preferences.getString(USER_NAME, null),
-                pictureUrl = preferences.getString(USER_PICTURE_URL, null)
-            )
+            user = user
         )
         return session.takeIf { it.isValid() } ?: run {
-            clear()
+            preferences.edit()
+                .remove(ACCESS_TOKEN)
+                .remove(EXPIRES_AT)
+                .apply()
             null
         }
+    }
+
+    /**
+     * The profile is intentionally retained when an access token expires so nearby/offline
+     * features can keep identifying this installation. Explicit sign-out still clears it.
+     */
+    fun cachedUser(): AuthenticatedUser? {
+        val email = preferences.getString(USER_EMAIL, null) ?: return null
+        val id = preferences.getLong(USER_ID, 0).takeIf { it > 0 } ?: return null
+        return AuthenticatedUser(
+            id = id,
+            email = email,
+            name = preferences.getString(USER_NAME, null),
+            pictureUrl = preferences.getString(USER_PICTURE_URL, null)
+        )
     }
 
     fun clear() {

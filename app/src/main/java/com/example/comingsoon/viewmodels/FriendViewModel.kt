@@ -1,5 +1,6 @@
 package com.example.comingsoon.viewmodels
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -8,11 +9,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.comingsoon.auth.AuthenticatedUser
 import com.example.comingsoon.friends.FriendsRepository
+import com.example.comingsoon.friends.OfflineFriendEndpoint
+import com.example.comingsoon.friends.OfflineFriendPairingManager
 import com.example.comingsoon.friends.ServerFriendRequest
+import com.example.comingsoon.friends.StoredFriend
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -26,7 +28,10 @@ data class Friend(
     val imageUrl: String? = null,
     val sharedWithMe: List<Journey> = emptyList(),
     val sharedByMe: List<Journey> = emptyList(),
-    val liveLocation: FriendLocation? = null
+    val liveLocation: FriendLocation? = null,
+    val identityKey: String? = null,
+    val addedNearby: Boolean = false,
+    val isServerFriend: Boolean = true
 )
 
 data class FriendRequest(
@@ -47,9 +52,19 @@ enum class FriendJourneyTab {
 }
 
 class FriendViewModel(
-    private val repository: FriendsRepository
+    private val repository: FriendsRepository,
+    context: Context
 ) : ViewModel() {
     private var realtimeJob: Job? = null
+    private val offlinePairingManager = OfflineFriendPairingManager(
+        context = context.applicationContext,
+        ownIdentity = repository::currentOfflineIdentity,
+        onFriendReceived = { identity, pairingId ->
+            repository.saveNearbyFriend(identity, pairingId)
+            replaceFriendsFromCache()
+        }
+    )
+    val offlinePairingState = offlinePairingManager.state
 
     private val _friends = mutableStateListOf<Friend>()
     val friends: List<Friend> get() = _friends
@@ -74,6 +89,7 @@ class FriendViewModel(
         get() = repository.currentUserId()
 
     init {
+        loadCachedFriends()
         if (repository.hasSession()) {
             refresh()
             startRealtimeUpdates()
@@ -86,12 +102,22 @@ class FriendViewModel(
         refresh(showLoading = true, showErrors = true)
     }
 
+    fun hasGooglePlayServices(): Boolean = offlinePairingManager.hasGooglePlayServices()
+    fun hostOfflinePairing() = offlinePairingManager.startAdvertising()
+    fun searchOfflineFriends() = offlinePairingManager.startDiscovery()
+    fun connectOfflineFriend(endpoint: OfflineFriendEndpoint) =
+        offlinePairingManager.requestConnection(endpoint)
+    fun acceptOfflineFriend() = offlinePairingManager.acceptPendingConnection()
+    fun rejectOfflineFriend() = offlinePairingManager.rejectPendingConnection()
+    fun stopOfflinePairing() = offlinePairingManager.stop()
+
     fun startRealtimeUpdates() {
         if (!repository.hasSession() || realtimeJob?.isActive == true) return
         realtimeJob = viewModelScope.launch {
             var retryDelayMillis = 1_000L
             while (isActive && repository.hasSession()) {
                 try {
+                    refresh(showLoading = false, showErrors = false)
                     repository.listenForUpdates {
                         refresh(showLoading = false, showErrors = false)
                     }
@@ -123,23 +149,23 @@ class FriendViewModel(
         viewModelScope.launch {
             if (showLoading) isLoading = true
             if (showErrors) errorMessage = null
-            runCatching {
-                coroutineScope {
-                    val friends = async { repository.loadFriends() }
-                    val requests = async { repository.loadRequests() }
-                    friends.await() to requests.await()
-                }
-            }.onSuccess { (serverFriends, requests) ->
-                _friends.replaceWith(serverFriends.map(::toFriend))
-                _incomingRequests.replaceWith(
-                    requests.incoming.map { it.toRequest(incoming = true) }
-                )
-                _outgoingRequests.replaceWith(
-                    requests.outgoing.map { it.toRequest(incoming = false) }
-                )
-            }.onFailure { throwable ->
-                if (showErrors) showError(throwable)
+            replaceFriendsFromCache()
+            if (!repository.hasSession()) {
+                if (showLoading) isLoading = false
+                return@launch
             }
+            runCatching { repository.synchronizeFriends() }
+                .onSuccess { snapshot ->
+                    _friends.replaceWith(snapshot.friends.map(::toFriend))
+                    _incomingRequests.replaceWith(
+                        snapshot.requests.incoming.map { it.toRequest(incoming = true) }
+                    )
+                    _outgoingRequests.replaceWith(
+                        snapshot.requests.outgoing.map { it.toRequest(incoming = false) }
+                    )
+                }.onFailure { throwable ->
+                    if (showErrors && _friends.isEmpty()) showError(throwable)
+                }
             if (showLoading) isLoading = false
         }
     }
@@ -191,9 +217,10 @@ class FriendViewModel(
         refreshAfterMutation()
     }
 
-    fun removeFriend(id: Int) = mutate {
-        repository.removeFriend(id)
-        _friends.removeAll { it.id == id }
+    fun removeFriend(friend: Friend) = mutate {
+        repository.markFriendDeleted(friend.toStoredFriend())
+        replaceFriendsFromCache()
+        if (repository.hasSession()) refreshAfterMutation()
     }
 
     fun clearError() {
@@ -210,11 +237,10 @@ class FriendViewModel(
     }
 
     private suspend fun refreshAfterMutation() {
-        val friends = repository.loadFriends()
-        val requests = repository.loadRequests()
-        _friends.replaceWith(friends.map(::toFriend))
-        _incomingRequests.replaceWith(requests.incoming.map { it.toRequest(true) })
-        _outgoingRequests.replaceWith(requests.outgoing.map { it.toRequest(false) })
+        val snapshot = repository.synchronizeFriends()
+        _friends.replaceWith(snapshot.friends.map(::toFriend))
+        _incomingRequests.replaceWith(snapshot.requests.incoming.map { it.toRequest(true) })
+        _outgoingRequests.replaceWith(snapshot.requests.outgoing.map { it.toRequest(false) })
     }
 
     private fun ServerFriendRequest.toRequest(incoming: Boolean) = FriendRequest(
@@ -230,6 +256,49 @@ class FriendViewModel(
         imageUrl = user.pictureUrl
     )
 
+    private fun toFriend(friend: StoredFriend): Friend {
+        val id = friend.serverUserId
+            ?.takeIf { it in 1..Int.MAX_VALUE.toLong() }
+            ?.toInt()
+            ?: stableOfflineId(friend.identityKey)
+        return Friend(
+            id = id,
+            name = friend.name,
+            email = friend.email,
+            imageUrl = friend.pictureUrl,
+            identityKey = friend.identityKey,
+            addedNearby = friend.addedNearby,
+            isServerFriend = friend.isServerFriend
+        )
+    }
+
+    private fun Friend.toStoredFriend() = StoredFriend(
+        identityKey = requireNotNull(identityKey),
+        serverUserId = id.takeIf { it > 0 }?.toLong(),
+        name = name,
+        email = email,
+        pictureUrl = imageUrl,
+        addedNearby = addedNearby,
+        isServerFriend = isServerFriend
+    )
+
+    private fun loadCachedFriends() {
+        viewModelScope.launch { replaceFriendsFromCache() }
+    }
+
+    private suspend fun replaceFriendsFromCache() {
+        _friends.replaceWith(repository.loadCachedFriends().map(::toFriend))
+    }
+
+    private fun stableOfflineId(identityKey: String): Int {
+        val hash = identityKey.hashCode()
+        return when (hash) {
+            0 -> -1
+            Int.MIN_VALUE -> Int.MIN_VALUE + 1
+            else -> -kotlin.math.abs(hash)
+        }
+    }
+
     private fun showError(throwable: Throwable) {
         errorMessage = throwable.message ?: "Die Friends-Daten konnten nicht geladen werden."
     }
@@ -237,5 +306,10 @@ class FriendViewModel(
     private fun <T> MutableList<T>.replaceWith(items: List<T>) {
         clear()
         addAll(items)
+    }
+
+    override fun onCleared() {
+        offlinePairingManager.close()
+        super.onCleared()
     }
 }

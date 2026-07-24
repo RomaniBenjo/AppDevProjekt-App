@@ -34,6 +34,8 @@ data class ServerFriendRequests(
 
 private data class ServerFriends(val friends: List<AuthenticatedUser>)
 
+data class OfflinePairingSyncResponse(val status: String)
+
 class FriendsApiException(message: String) : Exception(message)
 
 class FriendsApiClient(
@@ -80,6 +82,27 @@ class FriendsApiClient(
 
     suspend fun removeFriend(token: String, friendId: Int) {
         request("DELETE", "/friends/$friendId", token)
+    }
+
+    suspend fun syncOfflinePairing(
+        token: String,
+        pairingId: String,
+        peerUserId: Int,
+        deleted: Boolean
+    ): OfflinePairingSyncResponse {
+        val body = JsonObject().apply {
+            addProperty("peer_user_id", peerUserId)
+            addProperty("deleted", deleted)
+        }
+        return gson.fromJson(
+            request(
+                "PUT",
+                "/friends/offline-pairings/$pairingId",
+                token,
+                gson.toJson(body)
+            ),
+            OfflinePairingSyncResponse::class.java
+        )
     }
 
     /** Keeps one authenticated WebSocket open until it disconnects or is cancelled. */

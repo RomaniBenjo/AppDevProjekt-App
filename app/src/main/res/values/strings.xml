@@ -9,7 +9,7 @@
     <string name="journey_editor">Journey Editor</string>
     <string name="journey_detail">Journey</string>
     <string name="play_guesser">Play OpenGuesser</string>
-    <string name="guesser_online">Online OpenGuesser"</string>
+    <string name="guesser_online">Online OpenGuesser</string>
     <string name="guesser_local">Local OpenGuesser</string>
     <string name="guesser_connect">Connect Players</string>
     <string name="friends">Friends</string>
@@ -352,4 +352,21 @@
     <string name="orange_theme">Orange Fruit</string>
     <string name="pink_theme">Pink Flowers</string>
     <string name="sign_out">Sign out</string>
+    <string name="done">Done</string>
+    <string name="try_again">Try again</string>
+    <string name="offline_friend_nearby">Add offline friend nearby</string>
+    <string name="offline_friend_title">Offline friend</string>
+    <string name="offline_friend_description">Both phones connect directly over Bluetooth and Wi-Fi. No internet is required. Compare the security code before accepting.</string>
+    <string name="offline_friend_play_services_missing">Google Play services are unavailable or need to be updated. Nearby pairing cannot run on this phone.</string>
+    <string name="offline_friend_be_visible">Make this phone visible</string>
+    <string name="offline_friend_search">Search for a friend nearby</string>
+    <string name="offline_friend_waiting">Waiting for the other phone…</string>
+    <string name="offline_friend_searching">Searching for ComingSoon users nearby…</string>
+    <string name="offline_friend_connect_to">Connect to %1$s</string>
+    <string name="offline_friend_requesting">Requesting a secure connection…</string>
+    <string name="offline_friend_confirm_person">Confirm %1$s</string>
+    <string name="offline_friend_compare_code">Check that this code is identical on both phones:</string>
+    <string name="offline_friend_code_matches">Codes match – add friend</string>
+    <string name="offline_friend_exchanging">Securely exchanging profiles…</string>
+    <string name="offline_friend_added">%1$s was added as an offline friend.</string>
 </resources>

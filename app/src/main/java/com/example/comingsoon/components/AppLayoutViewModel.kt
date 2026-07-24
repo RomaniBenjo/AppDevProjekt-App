@@ -86,7 +86,7 @@ fun AppLayoutViewModel (
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = drawerGesturesEnabled,
+        gesturesEnabled = drawerGesturesEnabled || drawerState.isOpen,
         drawerContent = {
             AppMenu(
                 navController = navController,

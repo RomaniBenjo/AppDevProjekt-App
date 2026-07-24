@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Groups
@@ -30,6 +29,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Streetview
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
@@ -40,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -319,7 +320,12 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                 }
                 is OpenGuesserSocketEvent.GameClosed -> {
                     val current = state
-                    if (current is OnlineGuesserUiState.Game && current.game.id == event.gameId) {
+                    val currentGameId = when (current) {
+                        is OnlineGuesserUiState.Lobby -> current.game.id
+                        is OnlineGuesserUiState.Game -> current.game.id
+                        else -> null
+                    }
+                    if (currentGameId == event.gameId) {
                         refreshLobbies(showLoading = false)
                     }
                 }
@@ -410,31 +416,6 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
             )
         }
 
-        Surface(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp),
-            shape = RoundedCornerShape(50),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-            shadowElevation = 4.dp
-        ) {
-            IconButton(
-                onClick = {
-                    val current = state
-                    if (current is OnlineGuesserUiState.Game && current.game.status != "finished") {
-                        leaveGameAndExit(current.game.id)
-                    } else {
-                        navController.popBackStack()
-                    }
-                },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = appString(R.string.back)
-                )
-            }
-        }
     }
 }
 
@@ -865,7 +846,8 @@ private fun OnlineGuesserGameView(
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(16.dp),
+                .padding(16.dp)
+                .zIndex(3f),
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
             shadowElevation = 4.dp
@@ -890,11 +872,43 @@ private fun OnlineGuesserGameView(
                     style = MaterialTheme.typography.labelMedium
                 )
                 if (!game.roundComplete) {
-                    Text(
-                        appString(R.string.online_guesser_time_remaining, secondsRemaining),
-                        color = if (secondsRemaining <= 10) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.titleMedium
+                    val timerColor = if (secondsRemaining <= 10) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Timer,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = timerColor
+                        )
+                        Text(
+                            appString(
+                                R.string.online_guesser_time_remaining,
+                                secondsRemaining
+                            ),
+                            color = timerColor,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    LinearProgressIndicator(
+                        progress = {
+                            secondsRemaining.toFloat() /
+                                game.roundSeconds.coerceAtLeast(1).toFloat()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(5.dp),
+                        color = timerColor,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 }
             }
