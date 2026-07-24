@@ -17,10 +17,8 @@ import androidx.lifecycle.viewModelScope
 import android.location.Geocoder
 import android.location.Address
 import android.location.Location
-import android.location.LocationManager
-import android.location.LocationListener
-import android.os.Looper
 import android.os.Build
+import android.os.Looper
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
 import java.util.Locale
@@ -92,6 +90,7 @@ class JourneyViewModel : ViewModel() {
                             val id = parser.getAttributeValue(null, "id")
                                 ?: parser.getAttributeValue(null, "class")
                             val name = parser.getAttributeValue(null, "name")
+                                ?: parser.getAttributeValue(null, "class")
                             val d = parser.getAttributeValue(null, "d")
                             if (id != null && d != null) {
                                 try {
@@ -180,7 +179,6 @@ class JourneyViewModel : ViewModel() {
                     lat = latitudeOverride
                     lng = longitudeOverride
                 } else {
-                    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
                     if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         withContext(Dispatchers.Main) {
@@ -189,55 +187,64 @@ class JourneyViewModel : ViewModel() {
                         return@launch
                     }
 
-                    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                    val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+                    val fusedClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
+                    val tag = "JourneyViewModel"
 
-                    val location = when {
-                        isGpsEnabled -> locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                        isNetworkEnabled -> locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                        else -> null
+                    // Fast path: a recent cached fix, same source Google Maps relies on.
+                    val cachedLocation = kotlinx.coroutines.suspendCancellableCoroutine<Location?> { continuation ->
+                        try {
+                            fusedClient.lastLocation
+                                .addOnSuccessListener { loc ->
+                                    if (continuation.isActive) continuation.resume(loc, onCancellation = null)
+                                }
+                                .addOnFailureListener { e ->
+                                    android.util.Log.e(tag, "lastLocation failed", e)
+                                    if (continuation.isActive) continuation.resume(null, onCancellation = null)
+                                }
+                        } catch (e: SecurityException) {
+                            if (continuation.isActive) continuation.resume(null, onCancellation = null)
+                        }
+                    }
+
+                    val location = cachedLocation ?: kotlinx.coroutines.withTimeoutOrNull(20_000L) {
+                        kotlinx.coroutines.suspendCancellableCoroutine<Location?> { continuation ->
+                            val request = com.google.android.gms.location.LocationRequest.Builder(
+                                com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, 1000L
+                            ).setMaxUpdates(1).build()
+
+                            val callback = object : com.google.android.gms.location.LocationCallback() {
+                                override fun onLocationResult(result: com.google.android.gms.location.LocationResult) {
+                                    fusedClient.removeLocationUpdates(this)
+                                    if (continuation.isActive) continuation.resume(result.lastLocation, onCancellation = null)
+                                }
+                            }
+
+                            try {
+                                fusedClient.requestLocationUpdates(request, callback, Looper.getMainLooper())
+                                continuation.invokeOnCancellation {
+                                    fusedClient.removeLocationUpdates(callback)
+                                }
+                            } catch (e: SecurityException) {
+                                if (continuation.isActive) continuation.resume(null, onCancellation = null)
+                            }
+                        }
                     }
 
                     if (location != null) {
                         lat = location.latitude
                         lng = location.longitude
                     } else {
-                        val provider = if (isGpsEnabled) LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER
-                        val locResult = kotlinx.coroutines.suspendCancellableCoroutine<Location?> { continuation ->
-                            val listener = object : LocationListener {
-                                override fun onLocationChanged(loc: Location) {
-                                    locationManager.removeUpdates(this)
-                                    if (continuation.isActive) continuation.resume(loc, onCancellation = null)
-                                }
-                                @Deprecated("Deprecated in Java")
-                                override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
-                                override fun onProviderEnabled(provider: String) {}
-                                override fun onProviderDisabled(provider: String) {}
-                            }
-                            
-                            try {
-                                locationManager.requestSingleUpdate(provider, listener, Looper.getMainLooper())
-                                continuation.invokeOnCancellation {
-                                    locationManager.removeUpdates(listener)
-                                }
-                            } catch (e: Exception) {
-                                if (continuation.isActive) continuation.resume(null, onCancellation = null)
-                            }
+                        withContext(Dispatchers.Main) {
+                            claimStatus = ClaimStatus.Error("Standort konnte nicht ermittelt werden. Bitte stelle sicher, dass Standortdienste aktiviert sind und versuche es im Freien erneut.")
                         }
-
-                        if (locResult != null) {
-                            lat = locResult.latitude
-                            lng = locResult.longitude
-                        } else {
-                            withContext(Dispatchers.Main) {
-                                claimStatus = ClaimStatus.Error("Standort konnte nicht ermittelt werden.")
-                            }
-                            return@launch
-                        }
+                        return@launch
                     }
                 }
 
-                val geocoder = Geocoder(context, Locale.getDefault())
+                // English locale keeps countryName consistent with the English country
+                // names used as fallback ids/classes in world.svg for countries without
+                // an ISO id (e.g. "United States", "Russian Federation").
+                val geocoder = Geocoder(context, Locale.ENGLISH)
                 val addresses = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     var list: List<Address>? = null
                     val latch = java.util.concurrent.CountDownLatch(1)
@@ -267,9 +274,19 @@ class JourneyViewModel : ViewModel() {
                     return@launch
                 }
 
+                fun normalize(s: String) = s.lowercase(Locale.ENGLISH)
+                    .replace("the ", "")
+                    .replace(Regex("[^a-z]"), "")
+
+                val normalizedCountryName = normalize(countryName)
                 val matchedCountry = countries.find { country ->
                     country.id.equals(countryCode, ignoreCase = true) ||
-                    country.name?.equals(countryName, ignoreCase = true) == true
+                    country.name?.equals(countryName, ignoreCase = true) == true ||
+                    country.name?.let { normalize(it) }?.let { normalizedName ->
+                        normalizedName == normalizedCountryName ||
+                        normalizedName.contains(normalizedCountryName) ||
+                        normalizedCountryName.contains(normalizedName)
+                    } == true
                 }
 
                 if (matchedCountry == null) {

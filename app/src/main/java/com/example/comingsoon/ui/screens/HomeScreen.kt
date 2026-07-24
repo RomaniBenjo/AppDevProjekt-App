@@ -283,9 +283,8 @@ fun HomeScreen (
                                 zoomable = false,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(8.dp)
-                                    .clickable { isFullscreen = true },
-                                onCountrySelected = { _ ->
+                                    .padding(8.dp),
+                                onMapTapped = {
                                     isFullscreen = true
                                 }
                             )
@@ -426,41 +425,6 @@ fun HomeScreen (
                                         }
                                     }
                                 }
-                            }
-                        }
-
-                        // Simulation buttons for easy testing (very premium!)
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            text = "Simulation für Emulator / Testen:",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Button(
-                                onClick = { viewModel.claimCurrentCountry(context, 48.1351, 11.5820) }, // Munich, Germany
-                                modifier = Modifier.weight(1f),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
-                            ) {
-                                Text("DE simulieren", style = MaterialTheme.typography.labelSmall)
-                            }
-                            Button(
-                                onClick = { viewModel.claimCurrentCountry(context, 37.0902, -95.7129) }, // USA
-                                modifier = Modifier.weight(1f),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
-                            ) {
-                                Text("US simulieren", style = MaterialTheme.typography.labelSmall)
-                            }
-                            Button(
-                                onClick = { viewModel.claimCurrentCountry(context, 47.5162, 14.5501) }, // Austria
-                                modifier = Modifier.weight(1f),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
-                            ) {
-                                Text("AT simulieren", style = MaterialTheme.typography.labelSmall)
                             }
                         }
 

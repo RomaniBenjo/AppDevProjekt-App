@@ -33,7 +33,8 @@ fun InteractiveWorldMap(
     borderColor: Color = Color(0xFF555555), // Dark gray borders
     borderWidth: Float = 0.3f,             // Border line thickness
     zoomable: Boolean = false,             // Allows zoom and pan when in fullscreen
-    onCountrySelected: ((String) -> Unit)? = null
+    onCountrySelected: ((String) -> Unit)? = null,
+    onMapTapped: (() -> Unit)? = null       // Fires on any tap, whether or not a country was hit
 ) {
     var scale by remember { mutableStateOf(1f) }
     var panOffset by remember { mutableStateOf(Offset.Zero) }
@@ -138,6 +139,7 @@ fun InteractiveWorldMap(
                             if (clickedCountry != null) {
                                 onCountrySelected?.invoke(clickedCountry.id)
                             }
+                            onMapTapped?.invoke()
                         }
                     }
                 )
