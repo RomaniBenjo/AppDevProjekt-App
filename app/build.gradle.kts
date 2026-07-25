@@ -102,7 +102,10 @@ dependencies {
     implementation("com.google.android.gms:play-services-nearby:19.3.0")
     implementation("com.google.android.gms:play-services-maps:19.0.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
-    implementation("org.maplibre.gl:android-sdk:13.3.1")
+    // OpenGL ES variant, not the default (Vulkan since 13.0.0) android-sdk artifact:
+    // Vulkan crashes on many emulators/virtual GPUs (vk::createInstanceUnique:
+    // ErrorInitializationFailed). Same API surface, just a different rendering backend.
+    implementation("org.maplibre.gl:android-sdk-opengl:13.3.1")
     implementation("androidx.work:work-runtime-ktx:2.10.2")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.credentials:credentials:1.7.0-alpha02")

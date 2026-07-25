@@ -8,6 +8,7 @@ import com.example.comingsoon.language.AppLanguageViewModel
 import com.example.comingsoon.friends.FriendsRepository
 import com.example.comingsoon.sync.ClaimedCountriesRepository
 import com.example.comingsoon.sync.JourneysRepository
+import com.example.comingsoon.sync.LiveLocationRepository
 import com.example.comingsoon.ui.theme.AppThemeViewModel
 import kotlin.jvm.java
 
@@ -16,6 +17,7 @@ class AppViewModelFactory (
     private val friendsRepository: FriendsRepository,
     private val journeysRepository: JourneysRepository,
     private val claimedCountriesRepository: ClaimedCountriesRepository,
+    private val liveLocationRepository: LiveLocationRepository,
     private val context: Context
 ) : ViewModelProvider.Factory {
 
@@ -32,6 +34,8 @@ class AppViewModelFactory (
                 FriendViewModel(friendsRepository, context.applicationContext) as T
             modelClass.isAssignableFrom(JourneyViewModel::class.java) ->
                 JourneyViewModel(journeysRepository, claimedCountriesRepository) as T
+            modelClass.isAssignableFrom(LiveLocationViewModel::class.java) ->
+                LiveLocationViewModel(liveLocationRepository, context.applicationContext) as T
             else ->
                 throw IllegalArgumentException("Unknown ViewModel")
         }

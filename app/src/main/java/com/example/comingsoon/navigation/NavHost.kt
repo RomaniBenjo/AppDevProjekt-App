@@ -37,8 +37,11 @@ import com.example.comingsoon.ui.screens.SettingsScreen
 import com.example.comingsoon.ui.screens.localopenguesser.LocalOpenGuesserStartScreen
 import com.example.comingsoon.ui.screens.localopenguesser.lobby.LocalGameLobbyScreen
 import com.example.comingsoon.ui.theme.AppThemeViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.comingsoon.viewmodels.AppViewModelFactory
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.LiveLocationViewModel
 import com.example.comingsoon.viewmodels.ProfileViewModel
 import com.example.comingsoon.viewmodels.SettingsViewModel
 import kotlinx.coroutines.launch
@@ -52,7 +55,8 @@ fun AppNavHost (
     journeyViewModel: JourneyViewModel,
     friendViewModel: FriendViewModel,
     overlayViewModel: OverlayViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    viewModelFactory: AppViewModelFactory
 ) {
     val context = LocalContext.current
     val authRepository = remember(context) {
@@ -216,8 +220,10 @@ fun AppNavHost (
             )
         }
         composable (NavScreens.LiveLocations.route) {
+            val liveLocationViewModel: LiveLocationViewModel = viewModel(factory = viewModelFactory)
             LiveLocationScreen(
-                navController = navController
+                navController = navController,
+                viewModel = liveLocationViewModel
             )
         }
 

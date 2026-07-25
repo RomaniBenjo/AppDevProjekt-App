@@ -22,6 +22,7 @@ import com.example.comingsoon.overlays.ShareJourneyOverlay
 import com.example.comingsoon.overlays.ShareWithFriendOverlay
 import com.example.comingsoon.ui.theme.AppThemeDefinition
 import com.example.comingsoon.ui.theme.AppThemeViewModel
+import com.example.comingsoon.viewmodels.AppViewModelFactory
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.JourneyViewModel
 import com.example.comingsoon.viewmodels.ProfileViewModel
@@ -39,7 +40,8 @@ fun AppLayoutViewModel (
     journeyViewModel: JourneyViewModel,
     friendViewModel: FriendViewModel,
     overlayViewModel: OverlayViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    viewModelFactory: AppViewModelFactory
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -48,6 +50,7 @@ fun AppLayoutViewModel (
     val isLoginScreen = currentRoute == NavScreens.Login.route
     val drawerGesturesEnabled = currentRoute != NavScreens.OpenGuesserLocalLobby.route &&
         currentRoute != NavScreens.OpenGuesserOnline.route &&
+        currentRoute != NavScreens.LiveLocations.route &&
         !isLoginScreen
 
     when (overlayViewModel.overlayType) {
@@ -121,7 +124,8 @@ fun AppLayoutViewModel (
                     journeyViewModel = journeyViewModel,
                     friendViewModel = friendViewModel,
                     overlayViewModel = overlayViewModel,
-                    profileViewModel = profileViewModel
+                    profileViewModel = profileViewModel,
+                    viewModelFactory = viewModelFactory
                 )
             }
         }

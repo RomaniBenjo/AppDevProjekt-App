@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 import java.time.LocalTime
@@ -21,6 +22,7 @@ class AppPreferenceRepository (context: Context) {
         private val LANGUAGE = stringPreferencesKey("language")
         private val NOTIFICATION_TIME = stringPreferencesKey("notification_time")
         private val JOURNEY_REMINDER_ENABLED = booleanPreferencesKey("journey_reminder_enabled")
+        private val LIVE_LOCATION_SHARING_ENABLED = booleanPreferencesKey("live_location_sharing_enabled")
     }
 
     val settingsFlow: Flow<AppSettings> =
@@ -39,7 +41,8 @@ class AppPreferenceRepository (context: Context) {
                     theme = AppThemeType.valueOf(preferences[THEME] ?: AppThemeType.PINK.name),
                     language = AppLanguage.valueOf(preferences[LANGUAGE] ?: AppLanguage.ENGLISH.name),
                     notificationTime = LocalTime.parse(preferences[NOTIFICATION_TIME] ?: "09:00"),
-                    journeyReminderEnabled = preferences[JOURNEY_REMINDER_ENABLED] ?: false
+                    journeyReminderEnabled = preferences[JOURNEY_REMINDER_ENABLED] ?: false,
+                    liveLocationSharingEnabled = preferences[LIVE_LOCATION_SHARING_ENABLED] ?: false
                 )
             }
 
@@ -62,5 +65,12 @@ class AppPreferenceRepository (context: Context) {
     suspend fun saveJourneyReminderEnabled(enabled: Boolean) {
         dataStore.edit { it[JOURNEY_REMINDER_ENABLED] = enabled }
     }
+
+    suspend fun saveLiveLocationSharingEnabled(enabled: Boolean) {
+        dataStore.edit { it[LIVE_LOCATION_SHARING_ENABLED] = enabled }
+    }
+
+    suspend fun isLiveLocationSharingEnabled(): Boolean =
+        settingsFlow.first().liveLocationSharingEnabled
 
 }

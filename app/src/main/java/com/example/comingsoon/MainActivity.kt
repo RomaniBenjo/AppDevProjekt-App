@@ -23,6 +23,8 @@ import com.example.comingsoon.sync.ClaimedCountriesApiClient
 import com.example.comingsoon.sync.ClaimedCountriesRepository
 import com.example.comingsoon.sync.JourneysApiClient
 import com.example.comingsoon.sync.JourneysRepository
+import com.example.comingsoon.sync.LiveLocationApiClient
+import com.example.comingsoon.sync.LiveLocationRepository
 import com.example.comingsoon.db.AppDatabase
 import com.example.comingsoon.language.AppLanguageViewModel
 import com.example.comingsoon.language.LocalAppLanguage
@@ -45,7 +47,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pendingFriendId = FriendQrPayload.parse(intent?.dataString)
-        NotificationsHelper(this).createNotificationChannel()
+        NotificationsHelper(this).apply {
+            createNotificationChannel()
+            createLiveLocationNotificationChannel()
+        }
         enableEdgeToEdge()
 
         setContent {
@@ -67,11 +72,16 @@ class MainActivity : ComponentActivity() {
                 claimedCountryDao = AppDatabase.getDatabase(applicationContext).claimedCountryDao(),
                 context = applicationContext
             )
+            val liveLocationRepository = LiveLocationRepository(
+                apiClient = LiveLocationApiClient(BuildConfig.API_BASE_URL),
+                sessionStore = AuthSessionStore(applicationContext)
+            )
             val factory = AppViewModelFactory(
                 repository,
                 friendsRepository,
                 journeysRepository,
                 claimedCountriesRepository,
+                liveLocationRepository,
                 applicationContext
             )
 
@@ -125,7 +135,8 @@ class MainActivity : ComponentActivity() {
                         journeyViewModel = journeyViewModel,
                         friendViewModel = friendViewModel,
                         overlayViewModel = overlayViewModel,
-                        profileViewModel = profileViewModel
+                        profileViewModel = profileViewModel,
+                        viewModelFactory = factory
                     )
                 }
             }

@@ -9,5 +9,6 @@ data class AppSettings(
     val theme: AppThemeType = AppThemeType.PINK,
     val language: AppLanguage = AppLanguage.ENGLISH,
     val notificationTime: LocalTime = LocalTime.of(9,0),
-    val journeyReminderEnabled: Boolean = false
+    val journeyReminderEnabled: Boolean = false,
+    val liveLocationSharingEnabled: Boolean = false
 )
