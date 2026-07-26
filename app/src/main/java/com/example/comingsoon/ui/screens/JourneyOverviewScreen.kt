@@ -198,6 +198,17 @@ fun JourneyOverviewScreen (
                 }
             }
         }
+        val syncError = viewModel.journeySyncError
+            ?: viewModel.shareSyncError
+            ?: viewModel.claimedCountrySyncError
+        syncError?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         // journey list
         LazyColumn(

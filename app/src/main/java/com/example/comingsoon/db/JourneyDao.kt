@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Transaction
 
 @Dao
 interface JourneyDao {
@@ -38,6 +39,30 @@ interface JourneyDao {
 }
 
 @Dao
+interface SharedJourneyDao {
+    @Query(
+        """
+        SELECT * FROM shared_journeys
+        WHERE viewerId = :viewerId
+        ORDER BY startDate DESC, serverJourneyId DESC
+        """
+    )
+    suspend fun getForViewer(viewerId: Int): List<SharedJourneyEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(shares: List<SharedJourneyEntity>)
+
+    @Query("DELETE FROM shared_journeys WHERE viewerId = :viewerId")
+    suspend fun deleteForViewer(viewerId: Int)
+
+    @Transaction
+    suspend fun replaceForViewer(viewerId: Int, shares: List<SharedJourneyEntity>) {
+        deleteForViewer(viewerId)
+        if (shares.isNotEmpty()) insertAll(shares)
+    }
+}
+
+@Dao
 interface ClaimedCountryDao {
     @Query("SELECT * FROM claimed_countries")
     suspend fun getAllClaims(): List<ClaimedCountryEntity>
@@ -57,4 +82,3 @@ interface ClaimedCountryDao {
     @Query("DELETE FROM claimed_countries")
     suspend fun deleteAllClaims()
 }
-

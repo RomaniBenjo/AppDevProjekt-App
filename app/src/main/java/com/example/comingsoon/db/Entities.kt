@@ -1,6 +1,7 @@
 package com.example.comingsoon.db
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.viewmodels.JourneyLocation
@@ -57,3 +58,29 @@ data class JourneyEntity(
         }
     }
 }
+
+@Entity(
+    tableName = "shared_journeys",
+    primaryKeys = ["viewerId", "ownerId", "recipientId", "serverJourneyId"],
+    indices = [
+        Index(value = ["viewerId"]),
+        Index(value = ["ownerId", "serverJourneyId"])
+    ]
+)
+data class SharedJourneyEntity(
+    val viewerId: Int,
+    val ownerId: Int,
+    val recipientId: Int,
+    val serverJourneyId: Int,
+    val ownerName: String,
+    val ownerEmail: String,
+    val ownerPictureUrl: String?,
+    val shareType: String,
+    val sharedAt: String,
+    val title: String,
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val shared: Boolean?,
+    val locations: List<JourneyLocation>,
+    val visitedCountries: List<String>
+)

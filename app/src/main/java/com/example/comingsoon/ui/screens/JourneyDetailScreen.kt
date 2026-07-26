@@ -55,11 +55,16 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun JourneyDetailScreen (
     journeyId: Int,
+    ownerId: Int? = null,
     viewModel: JourneyViewModel,
     navController: NavController,
     overlayViewModel: OverlayViewModel
 ) {
-    val journey = viewModel.getJourney(journeyId) ?: return
+    val journey = if (ownerId == null) {
+        viewModel.getJourney(journeyId)
+    } else {
+        viewModel.getSharedJourney(ownerId, journeyId)
+    } ?: return
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var mapExpanded by rememberSaveable { mutableStateOf(isLandscape) }
 

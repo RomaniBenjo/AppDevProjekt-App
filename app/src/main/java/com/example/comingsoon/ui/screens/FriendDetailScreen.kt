@@ -38,6 +38,7 @@ import com.example.comingsoon.viewmodels.FriendJourneyTab
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.sync.JourneyShareSnapshot
 
 @Composable
 fun FriendDetailScreen(
@@ -99,20 +100,34 @@ fun FriendDetailScreen(
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            val journeys =
+            val shares =
                 if (selectedTab == FriendJourneyTab.SHARED_BY_ME) {
-                    journeyViewModel.sharedByMeWith(friend.id)
+                    journeyViewModel.sharesByMeWith(friend.id)
                 } else {
-                    journeyViewModel.sharedWithMeBy(friend.id)
+                    journeyViewModel.sharesWithMeBy(friend.id)
                 }
-            itemsIndexed(journeys) { index, journey ->
+            itemsIndexed(shares) { index, share ->
                 FriendJourneyCard(
-                    journey = journey,
-                    isLast = index == journeys.lastIndex,
+                    share = share,
+                    isLast = index == shares.lastIndex,
                     onClick = {
-                        navController.navigate(
-                            NavScreens.JourneyDetail.createRoute(journey.id)
-                        )
+                        if (selectedTab == FriendJourneyTab.SHARED_BY_ME) {
+                            val ownJourney = journeyViewModel.journeys.firstOrNull {
+                                it.serverId == share.journey.serverId
+                            }
+                            if (ownJourney != null) {
+                                navController.navigate(
+                                    NavScreens.JourneyDetail.createRoute(ownJourney.id)
+                                )
+                            }
+                        } else {
+                            navController.navigate(
+                                NavScreens.SharedJourneyDetail.createRoute(
+                                    share.ownerId,
+                                    requireNotNull(share.journey.serverId)
+                                )
+                            )
+                        }
                     }
                 )
             }
@@ -188,10 +203,11 @@ fun JourneyTabSwitch(
 
 @Composable
 fun FriendJourneyCard(
-    journey: Journey,
+    share: JourneyShareSnapshot,
     isLast: Boolean,
     onClick: () -> Unit
 ) {
+    val journey = share.journey
     Column {
         Row(
             modifier = Modifier
@@ -239,6 +255,20 @@ fun FriendJourneyCard(
                 style = MaterialTheme.typography.bodySmall
             )
         }
+        Text(
+            text = if (share.shareType == "automatic") {
+                appString(R.string.automatic_share_metadata, share.ownerName)
+            } else {
+                appString(
+                    R.string.manual_share_metadata,
+                    share.ownerName,
+                    share.sharedAt.take(10)
+                )
+            },
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
+            color = Color.Gray,
+            style = MaterialTheme.typography.bodySmall
+        )
 
         if (!isLast) {
             HorizontalDivider(

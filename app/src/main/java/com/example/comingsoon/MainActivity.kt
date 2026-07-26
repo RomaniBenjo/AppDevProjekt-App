@@ -23,6 +23,7 @@ import com.example.comingsoon.sync.ClaimedCountriesApiClient
 import com.example.comingsoon.sync.ClaimedCountriesRepository
 import com.example.comingsoon.sync.JourneysApiClient
 import com.example.comingsoon.sync.JourneysRepository
+import com.example.comingsoon.sync.JourneyShareLink
 import com.example.comingsoon.sync.LiveLocationApiClient
 import com.example.comingsoon.sync.LiveLocationRepository
 import com.example.comingsoon.db.AppDatabase
@@ -43,10 +44,12 @@ import com.example.comingsoon.navigation.NavScreens
 
 class MainActivity : ComponentActivity() {
     private var pendingFriendId by mutableStateOf<Int?>(null)
+    private var pendingJourneyShareToken by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pendingFriendId = FriendQrPayload.parse(intent?.dataString)
+        pendingJourneyShareToken = JourneyShareLink.parse(intent?.dataString)
         NotificationsHelper(this).apply {
             createNotificationChannel()
             createLiveLocationNotificationChannel()
@@ -64,7 +67,8 @@ class MainActivity : ComponentActivity() {
             val journeysRepository = JourneysRepository(
                 apiClient = JourneysApiClient(BuildConfig.API_BASE_URL),
                 sessionStore = AuthSessionStore(applicationContext),
-                journeyDao = AppDatabase.getDatabase(applicationContext).journeyDao()
+                journeyDao = AppDatabase.getDatabase(applicationContext).journeyDao(),
+                sharedJourneyDao = AppDatabase.getDatabase(applicationContext).sharedJourneyDao()
             )
             val claimedCountriesRepository = ClaimedCountriesRepository(
                 apiClient = ClaimedCountriesApiClient(BuildConfig.API_BASE_URL),
@@ -104,6 +108,21 @@ class MainActivity : ComponentActivity() {
                         launchSingleTop = true
                     }
                     friendViewModel.sendFriendRequest(friendId)
+                }
+            }
+            LaunchedEffect(pendingJourneyShareToken, friendViewModel.currentUserId) {
+                val token = pendingJourneyShareToken ?: return@LaunchedEffect
+                if (friendViewModel.currentUserId == null) return@LaunchedEffect
+                pendingJourneyShareToken = null
+                journeyViewModel.acceptShareLink(token) { share ->
+                    if (share != null) {
+                        navController.navigate(
+                            NavScreens.SharedJourneyDetail.createRoute(
+                                share.ownerId,
+                                requireNotNull(share.journey.serverId)
+                            )
+                        )
+                    }
                 }
             }
 
@@ -152,5 +171,8 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         FriendQrPayload.parse(intent?.dataString)?.let { pendingFriendId = it }
+        JourneyShareLink.parse(intent?.dataString)?.let {
+            pendingJourneyShareToken = it
+        }
     }
 }

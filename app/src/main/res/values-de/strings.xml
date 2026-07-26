@@ -23,6 +23,12 @@
     <string name="cancel">Abbrechen</string>
     <string name="show">Anzeigen</string>
     <string name="share">Teilen</string>
+    <string name="unshare">Freigabe aufheben</string>
+    <string name="shared_automatically">Automatisch</string>
+    <string name="qr_unavailable">QR-Code nicht verfügbar</string>
+    <string name="qr_expires">Einmal-Link, gültig bis %1$s</string>
+    <string name="automatic_share_metadata">Automatisch geteilt von %1$s</string>
+    <string name="manual_share_metadata">Von %1$s geteilt · %2$s</string>
     <string name="edit">Bearbeiten</string>
     <string name="new_pin">Pin hinzufügen</string>
     <string name="new_journey">Neue Reise</string>

@@ -83,6 +83,22 @@ class JourneyViewModel(
 
     var isSharing by mutableStateOf(false)
         private set
+    var shareOperationKey by mutableStateOf<String?>(null)
+        private set
+    var shareFeedback by mutableStateOf<String?>(null)
+        private set
+    var qrDeepLink by mutableStateOf<String?>(null)
+        private set
+    var qrExpiresAt by mutableStateOf<String?>(null)
+        private set
+    var isCreatingQrLink by mutableStateOf(false)
+        private set
+    var journeySyncError by mutableStateOf<String?>(null)
+        private set
+    var shareSyncError by mutableStateOf<String?>(null)
+        private set
+    var claimedCountrySyncError by mutableStateOf<String?>(null)
+        private set
 
     private val _claimedCountries = mutableStateListOf<String>()
     val claimedCountries: List<String>
@@ -165,11 +181,14 @@ class JourneyViewModel(
                 val list = currentDao.getAllJourneys()
                 val dbClaimedDao = claimedDao
                 val claims = dbClaimedDao?.getAllClaims() ?: emptyList()
+                val cachedShares = journeysRepository.loadCachedJourneyShares()
                 withContext(Dispatchers.Main) {
                     _journeys.clear()
                     _journeys.addAll(list.map { it.toDomain() })
                     _claimedCountries.clear()
                     _claimedCountries.addAll(claims.map { it.id })
+                    _journeyShares.clear()
+                    _journeyShares.addAll(cachedShares)
                     triggerSync()
                 }
             } catch (e: Exception) {
@@ -401,18 +420,23 @@ class JourneyViewModel(
             if (!syncMutex.tryLock()) return@launch
             try {
                 withContext(Dispatchers.Main) { isSyncing = true }
-                journeysRepository.synchronize()
-                claimedCountriesRepository.synchronize()
-                val refreshedShares = journeysRepository.listJourneyShares()
+                val journeyResult = runCatching { journeysRepository.synchronize() }
+                val claimedResult = runCatching { claimedCountriesRepository.synchronize() }
+                val shareResult = runCatching { journeysRepository.refreshJourneyShares() }
                 val refreshedJourneys = currentDao.getAllJourneys().map { it.toDomain() }
                 val refreshedClaims = claimedDao?.getAllClaims()?.map { it.id } ?: emptyList()
                 withContext(Dispatchers.Main) {
                     _journeys.clear()
                     _journeys.addAll(refreshedJourneys)
-                    _journeyShares.clear()
-                    _journeyShares.addAll(refreshedShares)
+                    shareResult.getOrNull()?.let { refreshedShares ->
+                        _journeyShares.clear()
+                        _journeyShares.addAll(refreshedShares)
+                    }
                     _claimedCountries.clear()
                     _claimedCountries.addAll(refreshedClaims)
+                    journeySyncError = journeyResult.exceptionOrNull()?.message
+                    claimedCountrySyncError = claimedResult.exceptionOrNull()?.message
+                    shareSyncError = shareResult.exceptionOrNull()?.message
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -435,6 +459,9 @@ class JourneyViewModel(
         isSyncing = false
         isSharing = false
         shareError = null
+        shareFeedback = null
+        qrDeepLink = null
+        qrExpiresAt = null
         _journeyShares.clear()
     }
 
@@ -445,7 +472,24 @@ class JourneyViewModel(
     // journey management
     fun getJourney(id: Int): Journey? {
         return _journeys.find { it.id == id }
-            ?: _journeyShares.firstOrNull { it.journey.id == id }?.journey
+    }
+
+    fun getSharedJourney(ownerId: Int, serverJourneyId: Int): Journey? =
+        _journeyShares.firstOrNull {
+            it.ownerId == ownerId && it.journey.serverId == serverJourneyId
+        }?.journey
+
+    fun getShare(ownerId: Int, serverJourneyId: Int, recipientId: Int): JourneyShareSnapshot? =
+        _journeyShares.firstOrNull {
+            it.ownerId == ownerId &&
+                it.recipientId == recipientId &&
+                it.journey.serverId == serverJourneyId
+        }
+
+    fun shareFor(journey: Journey, friendId: Int): JourneyShareSnapshot? {
+        val serverId = journey.serverId ?: return null
+        val ownerId = journeysRepository.currentUserId() ?: return null
+        return getShare(ownerId, serverId, friendId)
     }
 
     fun sharedByMeWith(friendId: Int): List<Journey> =
@@ -456,8 +500,15 @@ class JourneyViewModel(
     fun sharedWithMeBy(friendId: Int): List<Journey> =
         _journeyShares.filter { it.ownerId == friendId }.map { it.journey }
 
+    fun sharesByMeWith(friendId: Int): List<JourneyShareSnapshot> =
+        _journeyShares.filter { it.recipientId == friendId }
+
+    fun sharesWithMeBy(friendId: Int): List<JourneyShareSnapshot> =
+        _journeyShares.filter { it.ownerId == friendId }
+
     fun clearShareError() {
         shareError = null
+        shareFeedback = null
     }
 
     fun shareJourney(journeyId: Int, friendId: Int, onResult: (Boolean) -> Unit = {}) {
@@ -476,16 +527,19 @@ class JourneyViewModel(
             try {
                 withContext(Dispatchers.Main) {
                     isSharing = true
+                    shareOperationKey = "$journeyId:$friendId"
                     shareError = null
+                    shareFeedback = null
                 }
                 journeysRepository.shareJourney(journeyId, friendId)
                 val refreshedJourneys = currentDao.getAllJourneys().map { it.toDomain() }
-                val refreshedShares = journeysRepository.listJourneyShares()
+                val refreshedShares = journeysRepository.refreshJourneyShares()
                 withContext(Dispatchers.Main) {
                     _journeys.clear()
                     _journeys.addAll(refreshedJourneys)
                     _journeyShares.clear()
                     _journeyShares.addAll(refreshedShares)
+                    shareFeedback = "Reise erfolgreich geteilt."
                     onResult(true)
                 }
             } catch (exception: Exception) {
@@ -495,7 +549,106 @@ class JourneyViewModel(
                 }
             } finally {
                 syncMutex.unlock()
-                withContext(Dispatchers.Main) { isSharing = false }
+                withContext(Dispatchers.Main) {
+                    isSharing = false
+                    shareOperationKey = null
+                }
+            }
+        }
+    }
+
+    fun unshareJourney(journeyId: Int, friendId: Int, onResult: (Boolean) -> Unit = {}) {
+        if (!isNetworkAvailable || !journeysRepository.hasSession()) {
+            shareError = "Zum Aufheben der Freigabe ist eine Serververbindung erforderlich."
+            onResult(false)
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            syncMutex.lock()
+            try {
+                withContext(Dispatchers.Main) {
+                    isSharing = true
+                    shareOperationKey = "$journeyId:$friendId"
+                    shareError = null
+                    shareFeedback = null
+                }
+                journeysRepository.unshareJourney(journeyId, friendId)
+                val refreshedShares = journeysRepository.refreshJourneyShares()
+                withContext(Dispatchers.Main) {
+                    _journeyShares.clear()
+                    _journeyShares.addAll(refreshedShares)
+                    shareFeedback = "Freigabe wurde aufgehoben."
+                    onResult(true)
+                }
+            } catch (exception: Exception) {
+                withContext(Dispatchers.Main) {
+                    shareError = exception.message ?: "Die Freigabe konnte nicht aufgehoben werden."
+                    onResult(false)
+                }
+            } finally {
+                syncMutex.unlock()
+                withContext(Dispatchers.Main) {
+                    isSharing = false
+                    shareOperationKey = null
+                }
+            }
+        }
+    }
+
+    fun createQrShareLink(journeyId: Int) {
+        if (isCreatingQrLink || qrDeepLink != null) return
+        if (!isNetworkAvailable || !journeysRepository.hasSession()) {
+            shareError = "Zum Erstellen des QR-Codes ist eine Serververbindung erforderlich."
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                withContext(Dispatchers.Main) {
+                    isCreatingQrLink = true
+                    shareError = null
+                }
+                val link = journeysRepository.createShareLink(journeyId)
+                withContext(Dispatchers.Main) {
+                    qrDeepLink = link.deepLink
+                    qrExpiresAt = link.expiresAt
+                }
+            } catch (exception: Exception) {
+                withContext(Dispatchers.Main) {
+                    shareError = exception.message ?: "Der QR-Code konnte nicht erstellt werden."
+                }
+            } finally {
+                withContext(Dispatchers.Main) { isCreatingQrLink = false }
+            }
+        }
+    }
+
+    fun resetQrShareLink() {
+        qrDeepLink = null
+        qrExpiresAt = null
+        shareError = null
+    }
+
+    fun acceptShareLink(token: String, onResult: (JourneyShareSnapshot?) -> Unit) {
+        if (!journeysRepository.hasSession()) {
+            shareError = "Bitte melde dich an, um die geteilte Reise zu öffnen."
+            onResult(null)
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val accepted = journeysRepository.acceptShareLink(token)
+                val refreshed = journeysRepository.loadCachedJourneyShares()
+                withContext(Dispatchers.Main) {
+                    _journeyShares.clear()
+                    _journeyShares.addAll(refreshed)
+                    shareFeedback = "Geteilte Reise wurde hinzugefügt."
+                    onResult(accepted)
+                }
+            } catch (exception: Exception) {
+                withContext(Dispatchers.Main) {
+                    shareError = exception.message ?: "Der Freigabelink konnte nicht geöffnet werden."
+                    onResult(null)
+                }
             }
         }
     }

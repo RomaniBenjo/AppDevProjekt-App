@@ -24,6 +24,12 @@
     <string name="cancel">Cancel</string>
     <string name="show">Show</string>
     <string name="share">Share</string>
+    <string name="unshare">Unshare</string>
+    <string name="shared_automatically">Automatic</string>
+    <string name="qr_unavailable">QR code unavailable</string>
+    <string name="qr_expires">One-time link, valid until %1$s</string>
+    <string name="automatic_share_metadata">Automatically shared by %1$s</string>
+    <string name="manual_share_metadata">Shared by %1$s · %2$s</string>
     <string name="edit">Edit</string>
     <string name="new_pin">Add Pin</string>
     <string name="new_journey">Add Journey</string>

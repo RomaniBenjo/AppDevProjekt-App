@@ -184,6 +184,22 @@ fun AppNavHost (
                 overlayViewModel = overlayViewModel
             )
         }
+        composable(
+            route = NavScreens.SharedJourneyDetail.route
+        ) { backStackEntry ->
+            val ownerId = backStackEntry.arguments?.getString("ownerId")?.toIntOrNull()
+                ?: return@composable
+            val serverJourneyId = backStackEntry.arguments
+                ?.getString("serverJourneyId")?.toIntOrNull()
+                ?: return@composable
+            JourneyDetailScreen(
+                journeyId = serverJourneyId,
+                ownerId = ownerId,
+                viewModel = journeyViewModel,
+                navController = navController,
+                overlayViewModel = overlayViewModel
+            )
+        }
 
         composable(NavScreens.OpenGuesser.route) {
             OpenGuesserScreen(navController = navController)

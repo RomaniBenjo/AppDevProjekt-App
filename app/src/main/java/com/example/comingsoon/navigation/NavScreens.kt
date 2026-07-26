@@ -33,6 +33,14 @@ sealed class NavScreens (
             return "journey/$jouneyId"
         }
     }
+    object SharedJourneyDetail : NavScreens(
+        "shared-journey/{ownerId}/{serverJourneyId}",
+        R.string.journey_detail
+    ) {
+        fun createRoute(ownerId: Int, serverJourneyId: Int): String {
+            return "shared-journey/$ownerId/$serverJourneyId"
+        }
+    }
     object OpenGuesser : NavScreens("openguesser",R.string.play_guesser, icon = Icons.Default.PlayArrow)
     object OpenGuesserOnline : NavScreens("openguesser/online", R.string.guesser_online)
     object OpenGuesserLocal : NavScreens("openguesser/local", R.string.guesser_local)
