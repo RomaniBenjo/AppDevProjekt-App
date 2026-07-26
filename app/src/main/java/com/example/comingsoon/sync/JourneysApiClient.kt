@@ -36,6 +36,14 @@ data class JourneyUpsertBody(
 
 private data class ServerJourneysList(val journeys: List<ServerJourney>)
 
+data class ServerJourneyShare(
+    @SerializedName("owner_id") val ownerId: Int,
+    @SerializedName("recipient_id") val recipientId: Int,
+    val journey: ServerJourney
+)
+
+private data class ServerJourneySharesList(val shares: List<ServerJourneyShare>)
+
 class JourneysApiException(message: String) : Exception(message)
 
 class JourneysApiClient(baseUrl: String, private val gson: Gson = Gson()) {
@@ -58,6 +66,16 @@ class JourneysApiClient(baseUrl: String, private val gson: Gson = Gson()) {
 
     suspend fun deleteJourney(token: String, serverId: Int) {
         request("DELETE", "/journeys/$serverId", token)
+    }
+
+    suspend fun listJourneyShares(token: String): List<ServerJourneyShare> = gson.fromJson(
+        request("GET", "/journey-shares", token),
+        ServerJourneySharesList::class.java
+    ).shares
+
+    suspend fun shareJourney(token: String, serverId: Int, friendUserId: Int) {
+        val body = JsonObject().apply { addProperty("friend_user_id", friendUserId) }
+        request("POST", "/journeys/$serverId/shares", token, gson.toJson(body))
     }
 
     private suspend fun request(
@@ -109,6 +127,7 @@ class JourneysApiClient(baseUrl: String, private val gson: Gson = Gson()) {
         }.getOrNull()
         return when (status) {
             401 -> "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an."
+            403 -> detail ?: "Reisen können nur mit Freunden geteilt werden."
             404 -> detail ?: "Reise wurde nicht gefunden."
             422 -> detail ?: "Die Reisedaten sind ungültig."
             else -> detail ?: "Die Reise-Synchronisation ist fehlgeschlagen (HTTP $status)."

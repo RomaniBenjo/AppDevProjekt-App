@@ -58,10 +58,13 @@ fun AppLayoutViewModel (
             overlayViewModel.selectedJourney?.let { journey ->
                 ShareJourneyOverlay(
                     journey = journey,
-                    friends = friendViewModel.friends,
+                    friends = friendViewModel.friends.filter { it.isServerFriend && it.id > 0 },
+                    errorMessage = journeyViewModel.shareError,
                     onDismiss = { overlayViewModel.dismiss() },
                     onShare = { friend ->
-                        // TODO
+                        journeyViewModel.shareJourney(journey.id, friend.id) { success ->
+                            if (success) overlayViewModel.dismiss()
+                        }
                     }
                 )
             }
@@ -71,9 +74,12 @@ fun AppLayoutViewModel (
                 ShareWithFriendOverlay(
                     friend = friend,
                     journeys = journeyViewModel.journeys,
+                    errorMessage = journeyViewModel.shareError,
                     onDismiss = { overlayViewModel.dismiss() },
                     onShare = { journey ->
-                        // TODO
+                        journeyViewModel.shareJourney(journey.id, friend.id) { success ->
+                            if (success) overlayViewModel.dismiss()
+                        }
                     }
                 )
             }

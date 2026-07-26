@@ -37,11 +37,13 @@ import com.example.comingsoon.navigation.NavScreens
 import com.example.comingsoon.viewmodels.FriendJourneyTab
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.Journey
+import com.example.comingsoon.viewmodels.JourneyViewModel
 
 @Composable
 fun FriendDetailScreen(
     friendId: Int,
     friendViewModel: FriendViewModel,
+    journeyViewModel: JourneyViewModel,
     navController: NavHostController
 ) {
 
@@ -99,9 +101,9 @@ fun FriendDetailScreen(
         ) {
             val journeys =
                 if (selectedTab == FriendJourneyTab.SHARED_BY_ME) {
-                    friend.sharedByMe
+                    journeyViewModel.sharedByMeWith(friend.id)
                 } else {
-                    friend.sharedWithMe
+                    journeyViewModel.sharedWithMeBy(friend.id)
                 }
             itemsIndexed(journeys) { index, journey ->
                 FriendJourneyCard(

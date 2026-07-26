@@ -113,6 +113,11 @@ class MainActivity : ComponentActivity() {
                 themeViewModel.updateMode(isDark)
                 journeyViewModel.loadJourneys(context)
             }
+            LaunchedEffect(friendViewModel.journeyShareUpdateVersion) {
+                if (friendViewModel.journeyShareUpdateVersion > 0) {
+                    journeyViewModel.triggerSync()
+                }
+            }
 
             val currentAppTheme = themeViewModel.getThemeDefinition()
 
@@ -149,4 +154,3 @@ class MainActivity : ComponentActivity() {
         FriendQrPayload.parse(intent?.dataString)?.let { pendingFriendId = it }
     }
 }
-

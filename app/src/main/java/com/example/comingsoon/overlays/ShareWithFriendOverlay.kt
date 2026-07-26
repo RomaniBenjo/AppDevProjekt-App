@@ -42,6 +42,7 @@ import com.example.comingsoon.R
 fun ShareWithFriendOverlay (
     friend: Friend,
     journeys: List<Journey>,
+    errorMessage: String? = null,
     onDismiss: () -> Unit,
     onShare: (Journey) -> Unit
 ) {
@@ -81,6 +82,13 @@ fun ShareWithFriendOverlay (
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Spacer(Modifier.height(24.dp))
 

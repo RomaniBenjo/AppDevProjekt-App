@@ -178,7 +178,7 @@ fun JourneyDetailScreen (
         }
     }
 
-    Box(
+    if (journey.isOwned) Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {

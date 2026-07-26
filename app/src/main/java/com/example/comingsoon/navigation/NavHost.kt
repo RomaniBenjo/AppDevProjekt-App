@@ -216,6 +216,7 @@ fun AppNavHost (
             FriendDetailScreen(
                 friendId = friendId,
                 friendViewModel = friendViewModel,
+                journeyViewModel = journeyViewModel,
                 navController = navController
             )
         }

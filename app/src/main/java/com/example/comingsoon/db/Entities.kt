@@ -28,7 +28,8 @@ data class JourneyEntity(
             endDate = endDate,
             shared = shared,
             locations = locations,
-            visitedCountries = visitedCountries
+            visitedCountries = visitedCountries,
+            serverId = serverId
         )
     }
 

@@ -84,6 +84,8 @@ class FriendViewModel(
         private set
     var errorMessage by mutableStateOf<String?>(null)
         private set
+    var journeyShareUpdateVersion by mutableStateOf(0)
+        private set
 
     val currentUserId: Int?
         get() = repository.currentUserId()
@@ -118,8 +120,16 @@ class FriendViewModel(
             while (isActive && repository.hasSession()) {
                 try {
                     refresh(showLoading = false, showErrors = false)
-                    repository.listenForUpdates {
-                        refresh(showLoading = false, showErrors = false)
+                    repository.listenForUpdates { eventType ->
+                        viewModelScope.launch {
+                            if (
+                                eventType == "journey_shared" ||
+                                eventType == "friends_changed"
+                            ) {
+                                journeyShareUpdateVersion += 1
+                            }
+                            refresh(showLoading = false, showErrors = false)
+                        }
                     }
                     retryDelayMillis = 1_000L
                 } catch (exception: CancellationException) {
@@ -143,6 +153,7 @@ class FriendViewModel(
         errorMessage = null
         isLoading = false
         isSearching = false
+        journeyShareUpdateVersion = 0
     }
 
     private fun refresh(showLoading: Boolean, showErrors: Boolean) {

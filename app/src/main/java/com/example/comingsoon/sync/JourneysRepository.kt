@@ -4,7 +4,15 @@ import com.example.comingsoon.auth.AuthSessionStore
 import com.example.comingsoon.db.JourneyDao
 import com.example.comingsoon.db.JourneyEntity
 import com.example.comingsoon.viewmodels.JourneyLocation
+import com.example.comingsoon.viewmodels.Journey
 import java.time.LocalDate
+import kotlin.math.absoluteValue
+
+data class JourneyShareSnapshot(
+    val ownerId: Int,
+    val recipientId: Int,
+    val journey: Journey
+)
 
 class JourneysRepository(
     private val apiClient: JourneysApiClient,
@@ -12,6 +20,7 @@ class JourneysRepository(
     private val journeyDao: JourneyDao
 ) {
     fun hasSession(): Boolean = sessionStore.load() != null
+    fun currentUserId(): Int? = sessionStore.load()?.user?.id?.toInt()
 
     /** Push local dirty rows, then pull the authoritative list, then reconcile. */
     suspend fun synchronize() {
@@ -62,6 +71,23 @@ class JourneysRepository(
             .forEach { journeyDao.deleteById(it.id) }
     }
 
+    suspend fun shareJourney(localJourneyId: Int, friendUserId: Int) {
+        // A newly-created offline journey needs a server id before it can be shared.
+        synchronize()
+        val serverId = journeyDao.getJourneyById(localJourneyId)?.serverId
+            ?: throw JourneysApiException("Die Reise konnte noch nicht synchronisiert werden.")
+        apiClient.shareJourney(token(), serverId, friendUserId)
+    }
+
+    suspend fun listJourneyShares(): List<JourneyShareSnapshot> =
+        apiClient.listJourneyShares(token()).map { share ->
+            JourneyShareSnapshot(
+                ownerId = share.ownerId,
+                recipientId = share.recipientId,
+                journey = share.journey.toSharedDomain(share.ownerId)
+            )
+        }
+
     private fun token(): String = sessionStore.load()?.accessToken
         ?: throw JourneysApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
 
@@ -87,4 +113,25 @@ class JourneysRepository(
         serverId = id,
         deletedLocally = false
     )
+
+    private fun ServerJourney.toSharedDomain(ownerId: Int): Journey {
+        val stableValue = (ownerId.toLong() * 1_000_003L + id.toLong()).hashCode()
+        val localId = when (stableValue) {
+            0 -> -1
+            Int.MIN_VALUE -> Int.MIN_VALUE + 1
+            else -> -stableValue.absoluteValue
+        }
+        return Journey(
+            id = localId,
+            title = title,
+            startDate = LocalDate.parse(startDate),
+            endDate = LocalDate.parse(endDate),
+            shared = shared,
+            locations = locations.map { JourneyLocation(it.id, it.name, it.latitude, it.longitude) },
+            visitedCountries = visitedCountries,
+            serverId = id,
+            ownerId = ownerId,
+            isOwned = false
+        )
+    }
 }

@@ -63,6 +63,7 @@ enum class ShareTab {
 fun ShareJourneyOverlay(
     journey: Journey,
     friends: List<Friend>,
+    errorMessage: String? = null,
     onDismiss: () -> Unit,
     onShare: (Friend) -> Unit
 ) {
@@ -102,6 +103,13 @@ fun ShareJourneyOverlay(
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             ShareModeSwitch(
                 selected = currentTab,

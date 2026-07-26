@@ -29,6 +29,7 @@ import com.example.comingsoon.db.ClaimedCountryDao
 import com.example.comingsoon.db.ClaimedCountryEntity
 import com.example.comingsoon.sync.ClaimedCountriesRepository
 import com.example.comingsoon.sync.JourneysRepository
+import com.example.comingsoon.sync.JourneyShareSnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -43,7 +44,10 @@ data class Journey(
     val endDate: LocalDate,
     val shared: Boolean? = null,
     val locations: List<JourneyLocation>,
-    val visitedCountries: List<String> = emptyList()
+    val visitedCountries: List<String> = emptyList(),
+    val serverId: Int? = null,
+    val ownerId: Int? = null,
+    val isOwned: Boolean = true
 ) {
     val pinCount: Int
         get() = locations.size
@@ -71,6 +75,14 @@ class JourneyViewModel(
 
     val journeys: List<Journey>
         get() = _journeys
+
+    private val _journeyShares = mutableStateListOf<JourneyShareSnapshot>()
+
+    var shareError by mutableStateOf<String?>(null)
+        private set
+
+    var isSharing by mutableStateOf(false)
+        private set
 
     private val _claimedCountries = mutableStateListOf<String>()
     val claimedCountries: List<String>
@@ -391,11 +403,14 @@ class JourneyViewModel(
                 withContext(Dispatchers.Main) { isSyncing = true }
                 journeysRepository.synchronize()
                 claimedCountriesRepository.synchronize()
+                val refreshedShares = journeysRepository.listJourneyShares()
                 val refreshedJourneys = currentDao.getAllJourneys().map { it.toDomain() }
                 val refreshedClaims = claimedDao?.getAllClaims()?.map { it.id } ?: emptyList()
                 withContext(Dispatchers.Main) {
                     _journeys.clear()
                     _journeys.addAll(refreshedJourneys)
+                    _journeyShares.clear()
+                    _journeyShares.addAll(refreshedShares)
                     _claimedCountries.clear()
                     _claimedCountries.addAll(refreshedClaims)
                 }
@@ -418,6 +433,9 @@ class JourneyViewModel(
     /** Local journeys/claims stay visible; syncing simply stops until the next sign-in. */
     fun onSignedOut() {
         isSyncing = false
+        isSharing = false
+        shareError = null
+        _journeyShares.clear()
     }
 
     fun getNextJourneyId(): Int {
@@ -427,6 +445,59 @@ class JourneyViewModel(
     // journey management
     fun getJourney(id: Int): Journey? {
         return _journeys.find { it.id == id }
+            ?: _journeyShares.firstOrNull { it.journey.id == id }?.journey
+    }
+
+    fun sharedByMeWith(friendId: Int): List<Journey> =
+        _journeyShares.filter { it.recipientId == friendId }.map { share ->
+            _journeys.firstOrNull { it.serverId == share.journey.serverId } ?: share.journey
+        }
+
+    fun sharedWithMeBy(friendId: Int): List<Journey> =
+        _journeyShares.filter { it.ownerId == friendId }.map { it.journey }
+
+    fun clearShareError() {
+        shareError = null
+    }
+
+    fun shareJourney(journeyId: Int, friendId: Int, onResult: (Boolean) -> Unit = {}) {
+        if (!isNetworkAvailable || !journeysRepository.hasSession()) {
+            shareError = "Zum Teilen ist eine aktive Serververbindung erforderlich."
+            onResult(false)
+            return
+        }
+        val currentDao = dao ?: run {
+            shareError = "Die Reisedaten sind noch nicht geladen."
+            onResult(false)
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            syncMutex.lock()
+            try {
+                withContext(Dispatchers.Main) {
+                    isSharing = true
+                    shareError = null
+                }
+                journeysRepository.shareJourney(journeyId, friendId)
+                val refreshedJourneys = currentDao.getAllJourneys().map { it.toDomain() }
+                val refreshedShares = journeysRepository.listJourneyShares()
+                withContext(Dispatchers.Main) {
+                    _journeys.clear()
+                    _journeys.addAll(refreshedJourneys)
+                    _journeyShares.clear()
+                    _journeyShares.addAll(refreshedShares)
+                    onResult(true)
+                }
+            } catch (exception: Exception) {
+                withContext(Dispatchers.Main) {
+                    shareError = exception.message ?: "Die Reise konnte nicht geteilt werden."
+                    onResult(false)
+                }
+            } finally {
+                syncMutex.unlock()
+                withContext(Dispatchers.Main) { isSharing = false }
+            }
+        }
     }
 
     fun addJourney(journey: Journey) {
