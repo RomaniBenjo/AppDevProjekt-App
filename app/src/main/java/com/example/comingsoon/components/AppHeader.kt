@@ -27,6 +27,8 @@ import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import com.example.comingsoon.R
+import com.example.comingsoon.language.appString
 
 @Composable
 fun AppHeader(
@@ -94,7 +96,7 @@ fun AppHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Menu,
-                        contentDescription = "Menu",
+                        contentDescription = appString(R.string.menu),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -126,7 +128,7 @@ fun AppHeader(
             ) {
                 Icon(
                     imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu",
+                    contentDescription = appString(R.string.menu),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }

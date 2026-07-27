@@ -61,12 +61,17 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.comingsoon.R
 import com.example.comingsoon.language.appString
+import com.example.comingsoon.language.appQuantityString
+import com.example.comingsoon.language.appDateString
+import com.example.comingsoon.language.LocalAppLanguage
+import com.example.comingsoon.language.localizedCountryName
 import com.example.comingsoon.navigation.NavScreens
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.viewmodels.JourneyViewModel
 import com.example.comingsoon.components.InteractiveWorldMap
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.CircularProgressIndicator
@@ -236,7 +241,7 @@ fun HomeScreen (
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Schließen",
+                        contentDescription = appString(R.string.close),
                         tint = Color.Black
                     )
                 }
@@ -297,7 +302,7 @@ fun HomeScreen (
                     ) {
                         if (viewModel.countries.isEmpty()) {
                             Text(
-                                text = "Loading Map...",
+                                text = appString(R.string.loading_map),
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         } else {
@@ -344,13 +349,13 @@ fun HomeScreen (
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.MyLocation,
-                                    contentDescription = "Claim Location",
+                                    contentDescription = appString(R.string.claim_location),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    text = "Länder beanspruchen",
+                                    text = appString(R.string.claim_countries),
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }
@@ -360,7 +365,7 @@ fun HomeScreen (
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "Claims löschen",
+                                        contentDescription = appString(R.string.clear_claims),
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -370,7 +375,7 @@ fun HomeScreen (
                         Spacer(Modifier.height(8.dp))
                         
                         Text(
-                            text = "Bist du gerade in diesem Land? Claimen schaltet es dauerhaft in Gold auf deiner Karte frei.",
+                            text = appString(R.string.claim_explanation),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -383,7 +388,7 @@ fun HomeScreen (
                                     onClick = onClaimClick,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text("Aktuellen Standort verifizieren & claimen")
+                                    Text(appString(R.string.claim_current_location))
                                 }
                             }
                             is ClaimStatus.Detecting -> {
@@ -394,7 +399,7 @@ fun HomeScreen (
                                 ) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                                     Spacer(Modifier.width(12.dp))
-                                    Text("Ermittle Standort...", style = MaterialTheme.typography.bodyMedium)
+                                    Text(appString(R.string.detecting_location), style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                             is ClaimStatus.Success -> {
@@ -406,10 +411,10 @@ fun HomeScreen (
                                 ) {
                                     Column {
                                         Text(
-                                            text = if (status.isNew) 
-                                                "🎉 Erfolgreich! Du hast ${status.countryName} beansprucht!" 
-                                            else 
-                                                "Du hast ${status.countryName} bereits beansprucht!",
+                                            text = if (status.isNew)
+                                                appString(R.string.claim_success, status.countryName)
+                                            else
+                                                appString(R.string.claim_already_exists, status.countryName),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = Color(0xFF2E7D32)
                                         )
@@ -418,7 +423,7 @@ fun HomeScreen (
                                             onClick = { viewModel.resetClaimStatus() },
                                             modifier = Modifier.align(Alignment.End)
                                         ) {
-                                            Text("OK")
+                                            Text(appString(R.string.ok))
                                         }
                                     }
                                 }
@@ -432,7 +437,7 @@ fun HomeScreen (
                                 ) {
                                     Column {
                                         Text(
-                                            text = "❌ Fehler: ${status.message}",
+                                            text = appString(R.string.claim_error, status.message),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = Color(0xFFC62828)
                                         )
@@ -442,13 +447,13 @@ fun HomeScreen (
                                                 onClick = { viewModel.resetClaimStatus() },
                                                 colors = androidx.compose.material3.ButtonDefaults.textButtonColors()
                                             ) {
-                                                Text("Abbrechen")
+                                                Text(appString(R.string.cancel))
                                             }
                                             Spacer(Modifier.width(8.dp))
                                             Button(
                                                 onClick = onClaimClick
                                             ) {
-                                                Text("Erneut versuchen")
+                                                Text(appString(R.string.try_again))
                                             }
                                         }
                                     }
@@ -458,13 +463,22 @@ fun HomeScreen (
 
                         if (viewModel.claimedCountries.isNotEmpty()) {
                             Spacer(Modifier.height(12.dp))
-                            val names = remember(viewModel.claimedCountries.toList(), viewModel.countries) {
+                            val language = LocalAppLanguage.current
+                            val names = remember(
+                                viewModel.claimedCountries.toList(),
+                                viewModel.countries,
+                                language
+                            ) {
+                                val locale = Locale.forLanguageTag(language.languageTag)
                                 viewModel.claimedCountries.map { code ->
-                                    viewModel.countries.find { it.id.equals(code, ignoreCase = true) }?.name ?: code.uppercase()
+                                    val country = viewModel.countries.find {
+                                        it.id.equals(code, ignoreCase = true)
+                                    }
+                                    localizedCountryName(code, country?.name, locale)
                                 }.joinToString(", ")
                             }
                             Text(
-                                text = "Beanspruchte Länder: $names",
+                                text = appString(R.string.claimed_countries, names),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -585,7 +599,7 @@ fun JourneyCard (
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = journey.startDate.toString(),
+                        text = appDateString(journey.startDate),
                         color = Color.Gray.copy(alpha = .7f),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -595,7 +609,7 @@ fun JourneyCard (
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        text = journey.endDate.toString(),
+                        text = appDateString(journey.endDate),
                         color = Color.Gray.copy(alpha = .7f),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -614,7 +628,7 @@ fun JourneyCard (
 
                 // Pins
                 Text(
-                    text = "${journey.pinCount} Pins",
+                    text = appQuantityString(R.plurals.pin_count, journey.pinCount),
                     modifier = Modifier.align(Alignment.Bottom),
                     color = Color.Gray.copy(alpha = .7f)
                 )

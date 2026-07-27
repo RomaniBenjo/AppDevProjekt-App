@@ -3,6 +3,7 @@ package com.example.comingsoon.ui.screens.localopenguesser.connection
 import android.content.Context
 import androidx.annotation.StringRes
 import com.example.comingsoon.R
+import com.example.comingsoon.language.localizedString
 import com.example.comingsoon.ui.screens.localopenguesser.IndexedPhoto
 import com.example.comingsoon.ui.screens.localopenguesser.OfflineCountryResolver
 import com.example.comingsoon.ui.screens.localopenguesser.PhotoIndexDatabase
@@ -708,7 +709,7 @@ internal class NearbyConnectionManager(context: Context) {
             pendingConnection = null,
             errorMessage = message(
                 messageId,
-                error.localizedMessage ?: error.javaClass.simpleName
+                appContext.localizedString(R.string.local_guesser_unknown_connection_error)
             )
         )
     }

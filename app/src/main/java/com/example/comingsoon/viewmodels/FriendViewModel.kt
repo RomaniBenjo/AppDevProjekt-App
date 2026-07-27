@@ -11,6 +11,7 @@ import com.example.comingsoon.auth.AuthenticatedUser
 import com.example.comingsoon.friends.FriendsRepository
 import com.example.comingsoon.friends.OfflineFriendEndpoint
 import com.example.comingsoon.friends.OfflineFriendPairingManager
+import com.example.comingsoon.friends.OfflinePairingPhase
 import com.example.comingsoon.friends.ServerFriendRequest
 import com.example.comingsoon.friends.StoredFriend
 import kotlinx.coroutines.CancellationException
@@ -19,6 +20,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.time.Instant
+import com.example.comingsoon.R
+import com.example.comingsoon.language.localizedString
 
 data class Friend(
     val id: Int,
@@ -53,7 +56,7 @@ enum class FriendJourneyTab {
 
 class FriendViewModel(
     private val repository: FriendsRepository,
-    context: Context
+    private val context: Context
 ) : ViewModel() {
     private var realtimeJob: Job? = null
     private val offlinePairingManager = OfflineFriendPairingManager(
@@ -185,7 +188,7 @@ class FriendViewModel(
         val normalized = query.trim()
         if (normalized.length < 2) {
             _searchResults.clear()
-            errorMessage = "Die Suche muss mindestens zwei Zeichen enthalten."
+            errorMessage = context.localizedString(R.string.friends_search_too_short)
             return
         }
         viewModelScope.launch {
@@ -236,6 +239,13 @@ class FriendViewModel(
 
     fun clearError() {
         errorMessage = null
+    }
+
+    fun onLanguageChanged() {
+        errorMessage = null
+        if (offlinePairingState.value.phase == OfflinePairingPhase.ERROR) {
+            offlinePairingManager.stop()
+        }
     }
 
     private fun mutate(block: suspend () -> Unit) {
@@ -311,7 +321,7 @@ class FriendViewModel(
     }
 
     private fun showError(throwable: Throwable) {
-        errorMessage = throwable.message ?: "Die Friends-Daten konnten nicht geladen werden."
+        errorMessage = context.localizedString(R.string.friends_load_failed)
     }
 
     private fun <T> MutableList<T>.replaceWith(items: List<T>) {

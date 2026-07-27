@@ -193,6 +193,8 @@ private fun OpenGuesserModeCard(
 @Composable
 fun OnlineOpenGuesserScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val signInAgainMessage = appString(R.string.online_guesser_sign_in_again)
+    val serverErrorMessage = appString(R.string.online_guesser_server_error)
     val coroutineScope = rememberCoroutineScope()
     val sessionStore = remember(context) { AuthSessionStore(context.applicationContext) }
     val apiClient = remember { OpenGuesserApiClient(BuildConfig.API_BASE_URL) }
@@ -207,16 +209,13 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
             if (showLoading) state = OnlineGuesserUiState.Loading
             val accessToken = sessionStore.load()?.accessToken
             state = if (accessToken == null) {
-                OnlineGuesserUiState.Error(context.getString(R.string.online_guesser_sign_in_again))
+                OnlineGuesserUiState.Error(signInAgainMessage)
             } else {
                 runCatching { apiClient.listLobbies(accessToken) }
                     .fold(
                         onSuccess = { OnlineGuesserUiState.Browser(it) },
                         onFailure = {
-                            OnlineGuesserUiState.Error(
-                                it.localizedMessage
-                                    ?: context.getString(R.string.online_guesser_server_error)
-                            )
+                            OnlineGuesserUiState.Error(serverErrorMessage)
                         }
                     )
             }
@@ -228,7 +227,7 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
             state = OnlineGuesserUiState.Loading
             val accessToken = sessionStore.load()?.accessToken
             state = if (accessToken == null) {
-                OnlineGuesserUiState.Error(context.getString(R.string.online_guesser_sign_in_again))
+                OnlineGuesserUiState.Error(signInAgainMessage)
             } else {
                 runCatching { request(accessToken) }
                     .fold(
@@ -240,10 +239,7 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
                             }
                         },
                         onFailure = {
-                            OnlineGuesserUiState.Error(
-                                it.localizedMessage
-                                    ?: context.getString(R.string.online_guesser_server_error)
-                            )
+                            OnlineGuesserUiState.Error(serverErrorMessage)
                         }
                     )
             }
@@ -272,9 +268,7 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
             state = OnlineGuesserUiState.Loading
             val accessToken = sessionStore.load()?.accessToken
             if (accessToken == null) {
-                state = OnlineGuesserUiState.Error(
-                    context.getString(R.string.online_guesser_sign_in_again)
-                )
+                state = OnlineGuesserUiState.Error(signInAgainMessage)
                 return@launch
             }
             state = runCatching {
@@ -283,10 +277,7 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
             }.fold(
                 onSuccess = { OnlineGuesserUiState.Browser(it) },
                 onFailure = {
-                    OnlineGuesserUiState.Error(
-                        it.localizedMessage
-                            ?: context.getString(R.string.online_guesser_server_error)
-                    )
+                    OnlineGuesserUiState.Error(serverErrorMessage)
                 }
             )
         }
@@ -295,19 +286,14 @@ fun OnlineOpenGuesserScreen(navController: NavHostController) {
     LaunchedEffect(Unit) {
         val accessToken = sessionStore.load()?.accessToken
         if (accessToken == null) {
-            state = OnlineGuesserUiState.Error(
-                context.getString(R.string.online_guesser_sign_in_again)
-            )
+            state = OnlineGuesserUiState.Error(signInAgainMessage)
             return@LaunchedEffect
         }
         state = runCatching { apiClient.listLobbies(accessToken) }
             .fold(
                 onSuccess = { OnlineGuesserUiState.Browser(it) },
                 onFailure = {
-                    OnlineGuesserUiState.Error(
-                        it.localizedMessage
-                            ?: context.getString(R.string.online_guesser_server_error)
-                    )
+                    OnlineGuesserUiState.Error(serverErrorMessage)
                 }
             )
 

@@ -45,6 +45,8 @@ import androidx.navigation.NavHostController
 import com.example.comingsoon.R
 import com.example.comingsoon.components.InteractiveWorldMap
 import com.example.comingsoon.language.appString
+import com.example.comingsoon.language.appQuantityString
+import com.example.comingsoon.language.appDateString
 import com.example.comingsoon.navigation.NavScreens
 import com.example.comingsoon.sync.JourneyShareSnapshot
 import com.example.comingsoon.viewmodels.FriendJourneyTab
@@ -439,7 +441,7 @@ fun FriendJourneyCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = journey.startDate.toString(),
+                    text = appDateString(journey.startDate),
                     color = Color.Gray.copy(alpha = .7f),
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -449,7 +451,7 @@ fun FriendJourneyCard(
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = journey.endDate.toString(),
+                    text = appDateString(journey.endDate),
                     color = Color.Gray.copy(alpha = .7f),
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -466,7 +468,7 @@ fun FriendJourneyCard(
             Spacer(Modifier.width(20.dp))
 
             Text(
-                text = "${journey.pinCount} Pins",
+                text = appQuantityString(R.plurals.pin_count, journey.pinCount),
                 color = Color.Gray.copy(alpha = .7f),
                 style = MaterialTheme.typography.bodySmall
             )

@@ -12,9 +12,10 @@ import kotlinx.coroutines.flow.map
 import java.io.IOException
 import java.time.LocalTime
 import com.example.comingsoon.language.AppLanguage
+import com.example.comingsoon.language.persistAppLanguage
 import com.example.comingsoon.ui.theme.AppThemeType
 
-class AppPreferenceRepository (context: Context) {
+class AppPreferenceRepository (private val context: Context) {
     private val dataStore = context.dataStore
     companion object {
         private val DARK_MODE = booleanPreferencesKey("dark_mode")
@@ -55,7 +56,12 @@ class AppPreferenceRepository (context: Context) {
     }
 
     suspend fun saveLanguage(language: AppLanguage) {
+        context.persistAppLanguage(language)
         dataStore.edit { it[LANGUAGE] = language.name }
+    }
+
+    fun cacheLanguage(language: AppLanguage) {
+        context.persistAppLanguage(language)
     }
 
     suspend fun saveNotificationTime(time: LocalTime) {

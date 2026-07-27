@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.UUID
+import com.example.comingsoon.R
+import com.example.comingsoon.language.localizedString
 
 enum class OfflinePairingPhase {
     IDLE,
@@ -87,7 +89,9 @@ class OfflineFriendPairingManager(
         val name = ownIdentity().name.take(32)
         val options = AdvertisingOptions.Builder().setStrategy(strategy).build()
         client.startAdvertising(name, serviceId, connectionLifecycleCallback, options)
-            .addOnFailureListener { fail("Dieses Gerät konnte nicht sichtbar gemacht werden.", it) }
+            .addOnFailureListener {
+                fail(appContext.localizedString(R.string.offline_friend_visible_failed))
+            }
     }
 
     fun startDiscovery() {
@@ -98,7 +102,9 @@ class OfflineFriendPairingManager(
         )
         val options = DiscoveryOptions.Builder().setStrategy(strategy).build()
         client.startDiscovery(serviceId, endpointDiscoveryCallback, options)
-            .addOnFailureListener { fail("Geräte in der Nähe konnten nicht gesucht werden.", it) }
+            .addOnFailureListener {
+                fail(appContext.localizedString(R.string.offline_friend_search_failed))
+            }
     }
 
     fun requestConnection(endpoint: OfflineFriendEndpoint) {
@@ -111,7 +117,9 @@ class OfflineFriendPairingManager(
             ownIdentity().name.take(32),
             endpoint.id,
             connectionLifecycleCallback
-        ).addOnFailureListener { fail("Die Verbindung konnte nicht angefordert werden.", it) }
+        ).addOnFailureListener {
+            fail(appContext.localizedString(R.string.offline_friend_request_failed))
+        }
     }
 
     fun acceptPendingConnection() {
@@ -121,7 +129,9 @@ class OfflineFriendPairingManager(
             pendingConnection = null
         )
         client.acceptConnection(pending.endpoint.id, payloadCallback)
-            .addOnFailureListener { fail("Die Verbindung konnte nicht bestätigt werden.", it) }
+            .addOnFailureListener {
+                fail(appContext.localizedString(R.string.offline_friend_confirm_failed))
+            }
     }
 
     fun rejectPendingConnection() {
@@ -149,7 +159,9 @@ class OfflineFriendPairingManager(
         )
         val bytes = gson.toJson(envelope).toByteArray(Charsets.UTF_8)
         client.sendPayload(endpointId, Payload.fromBytes(bytes))
-            .addOnFailureListener { fail("Das Offline-Profil konnte nicht übertragen werden.", it) }
+            .addOnFailureListener {
+                fail(appContext.localizedString(R.string.offline_friend_transfer_failed))
+            }
     }
 
     private fun receiveIdentity(bytes: ByteArray) {
@@ -165,7 +177,7 @@ class OfflineFriendPairingManager(
             identity.deviceId.isBlank() ||
             identity.name.isBlank()
         ) {
-            fail("Das andere Gerät hat kein gültiges Offline-Profil gesendet.")
+            fail(appContext.localizedString(R.string.offline_friend_invalid_profile))
             return
         }
         val pairingId = offlinePairingId(
@@ -184,7 +196,9 @@ class OfflineFriendPairingManager(
                         errorMessage = null
                     )
                 }
-                .onFailure { fail(it.message ?: "Der Freund konnte nicht gespeichert werden.") }
+                .onFailure {
+                    fail(appContext.localizedString(R.string.offline_friend_save_failed))
+                }
         }
     }
 
@@ -199,11 +213,11 @@ class OfflineFriendPairingManager(
         client.stopDiscovery()
     }
 
-    private fun fail(message: String, throwable: Throwable? = null) {
+    private fun fail(message: String) {
         resetConnections()
         mutableState.value = OfflineFriendPairingState(
             phase = OfflinePairingPhase.ERROR,
-            errorMessage = throwable?.localizedMessage?.let { "$message $it" } ?: message
+            errorMessage = message
         )
     }
 
@@ -251,8 +265,10 @@ class OfflineFriendPairingManager(
                     sendIdentity(endpointId)
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED ->
-                    fail("Die andere Person hat die Verbindung abgelehnt.")
-                else -> fail("Die Verbindung in der Nähe konnte nicht hergestellt werden.")
+                    fail(appContext.localizedString(R.string.offline_friend_rejected))
+                else -> fail(
+                    appContext.localizedString(R.string.offline_friend_connection_failed)
+                )
             }
         }
 
@@ -262,7 +278,7 @@ class OfflineFriendPairingManager(
                 mutableState.value.phase == OfflinePairingPhase.CONNECTING ||
                 mutableState.value.phase == OfflinePairingPhase.EXCHANGING_PROFILE
             ) {
-                fail("Die Verbindung zum anderen Gerät wurde getrennt.")
+                fail(appContext.localizedString(R.string.offline_friend_disconnected))
             }
         }
     }

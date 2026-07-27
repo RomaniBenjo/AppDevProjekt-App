@@ -53,6 +53,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.comingsoon.R
 import com.example.comingsoon.language.appString
+import com.example.comingsoon.language.appQuantityString
+import com.example.comingsoon.language.appDateString
 import com.example.comingsoon.navigation.NavScreens
 import com.example.comingsoon.overlays.OverlayViewModel
 import com.example.comingsoon.viewmodels.Journey
@@ -101,7 +103,7 @@ fun JourneyOverviewScreen (
                         contentAlignment = Alignment.Center
                     ) {
                         if (viewModel.countries.isEmpty()) {
-                            Text("Loading Map...")
+                            Text(appString(R.string.loading_map))
                         } else {
                             val visitedCountryColor = MaterialTheme.colorScheme.primary
                             val customCountryColors = remember(viewModel.journeys, viewModel.countries, visitedCountryColor) {
@@ -171,7 +173,7 @@ fun JourneyOverviewScreen (
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Tap to expand map",
+                            text = appString(R.string.tap_to_expand_map),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -195,7 +197,7 @@ fun JourneyOverviewScreen (
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             } else {
                 IconButton(onClick = { viewModel.triggerSync() }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Aktualisieren")
+                    Icon(Icons.Default.Refresh, contentDescription = appString(R.string.refresh))
                 }
             }
         }
@@ -460,7 +462,7 @@ fun JourneyListingCard (
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = journey.startDate.toString(),
+                        text = appDateString(journey.startDate),
                         color = Color.Gray.copy(alpha = .7f),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -470,7 +472,7 @@ fun JourneyListingCard (
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        text = journey.endDate.toString(),
+                        text = appDateString(journey.endDate),
                         color = Color.Gray.copy(alpha = .7f),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -489,7 +491,7 @@ fun JourneyListingCard (
 
                 // Pins
                 Text(
-                    text = "${journey.pinCount} Pins",
+                    text = appQuantityString(R.plurals.pin_count, journey.pinCount),
                     modifier = Modifier.align(Alignment.Bottom),
                     color = Color.Gray.copy(alpha = .7f)
                 )

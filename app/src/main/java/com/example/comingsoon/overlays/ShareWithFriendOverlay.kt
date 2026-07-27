@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.comingsoon.language.appString
+import com.example.comingsoon.language.appDateString
 import com.example.comingsoon.viewmodels.Friend
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.R
@@ -182,7 +183,7 @@ fun JourneyShareItem(
             Spacer(Modifier.height(2.dp))
 
             Text(
-                text = "${journey.startDate} - ${journey.endDate}",
+                text = "${appDateString(journey.startDate)} – ${appDateString(journey.endDate)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )

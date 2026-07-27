@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.comingsoon.R
 import com.example.comingsoon.language.appString
+import com.example.comingsoon.language.appDateString
 import com.example.comingsoon.navigation.NavScreens
 import com.example.comingsoon.overlays.OverlayViewModel
 import com.example.comingsoon.viewmodels.JourneyLocation
@@ -89,7 +90,7 @@ fun JourneyDetailScreen (
         Spacer(Modifier.height(4.dp))
 
         Text(
-            text = "${journey.startDate} - ${journey.endDate}",
+            text = "${appDateString(journey.startDate)} – ${appDateString(journey.endDate)}",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray,
             modifier = Modifier.padding(horizontal = 16.dp)

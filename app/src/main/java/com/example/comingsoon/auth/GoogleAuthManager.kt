@@ -9,6 +9,8 @@ import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.example.comingsoon.R
+import com.example.comingsoon.language.localizedString
 
 data class GoogleUser(
     val id: String,
@@ -25,6 +27,7 @@ sealed interface GoogleSignInResult {
 }
 
 class GoogleAuthManager(context: Context) {
+    private val appContext = context.applicationContext
     private val credentialManager = CredentialManager.create(context)
 
     suspend fun signIn(
@@ -33,7 +36,7 @@ class GoogleAuthManager(context: Context) {
     ): GoogleSignInResult {
         if (serverClientId.isBlank() || serverClientId.startsWith("YOUR_")) {
             return GoogleSignInResult.Error(
-                "Die Google Web-Client-ID wurde noch nicht konfiguriert."
+                appContext.localizedString(R.string.google_client_id_missing)
             )
         }
 
@@ -66,15 +69,19 @@ class GoogleAuthManager(context: Context) {
                     )
                 )
             } else {
-                GoogleSignInResult.Error("Google hat einen unbekannten Anmeldetyp geliefert.")
+                GoogleSignInResult.Error(
+                    appContext.localizedString(R.string.google_sign_in_type_unknown)
+                )
             }
         } catch (_: GetCredentialCancellationException) {
             GoogleSignInResult.Cancelled
         } catch (_: GoogleIdTokenParsingException) {
-            GoogleSignInResult.Error("Die Google-Anmeldedaten konnten nicht gelesen werden.")
+            GoogleSignInResult.Error(
+                appContext.localizedString(R.string.google_credentials_unreadable)
+            )
         } catch (exception: GetCredentialException) {
             GoogleSignInResult.Error(
-                exception.localizedMessage ?: "Die Google-Anmeldung ist fehlgeschlagen."
+                appContext.localizedString(R.string.google_sign_in_failed)
             )
         }
     }

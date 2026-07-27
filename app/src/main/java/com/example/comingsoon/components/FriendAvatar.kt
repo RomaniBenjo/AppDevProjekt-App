@@ -8,6 +8,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import com.example.comingsoon.R
+import com.example.comingsoon.language.appString
 import com.example.comingsoon.viewmodels.Friend
 
 @Composable
@@ -18,7 +19,7 @@ fun FriendAvatar(
     val fallback = painterResource(friend.image ?: R.drawable.profile_placeholder)
     AsyncImage(
         model = friend.imageUrl,
-        contentDescription = "Profilbild von ${friend.name}",
+        contentDescription = appString(R.string.profile_picture_of, friend.name),
         placeholder = fallback,
         error = fallback,
         fallback = fallback,

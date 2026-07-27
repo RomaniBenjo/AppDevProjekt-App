@@ -11,6 +11,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.comingsoon.R
+import com.example.comingsoon.language.localized
+import com.example.comingsoon.language.persistedAppLanguage
 
 
 class NotificationsHelper(
@@ -18,9 +20,7 @@ class NotificationsHelper(
 ) {
     companion object {
         const val CHANNEL_ID = "travel_notifications"
-        const val CHANNEL_NAME = "Travel Notifications"
         const val LIVE_LOCATION_CHANNEL_ID = "live_location_sharing"
-        const val LIVE_LOCATION_CHANNEL_NAME = "Live Location Sharing"
         const val LIVE_LOCATION_NOTIFICATION_ID = 3
         private const val JOURNEY_NOTIFICATION_ID = 1
         private const val COUNTRY_NOTIFICATION_ID = 2
@@ -28,46 +28,50 @@ class NotificationsHelper(
     }
 
     fun createNotificationChannel() {
+        val localizedContext = context.localized(context.persistedAppLanguage())
         val channel = NotificationChannel(
             CHANNEL_ID,
-            CHANNEL_NAME,
+            localizedContext.getString(R.string.notification_travel_channel),
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
-            description = "Notifications for journeys and travel updates"
+            description = localizedContext.getString(R.string.notification_travel_channel_description)
         }
         val manager = context.getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)
     }
 
     fun createLiveLocationNotificationChannel() {
+        val localizedContext = context.localized(context.persistedAppLanguage())
         val channel = NotificationChannel(
             LIVE_LOCATION_CHANNEL_ID,
-            LIVE_LOCATION_CHANNEL_NAME,
+            localizedContext.getString(R.string.notification_live_location_channel),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Shown while your live location is being shared with friends"
+            description = localizedContext.getString(R.string.notification_live_location_channel_description)
         }
         val manager = context.getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)
     }
 
     fun buildLiveLocationNotification(contentIntent: PendingIntent?, stopIntent: PendingIntent): Notification {
-        return NotificationCompat.Builder(context, LIVE_LOCATION_CHANNEL_ID)
+        val localizedContext = context.localized(context.persistedAppLanguage())
+        return NotificationCompat.Builder(localizedContext, LIVE_LOCATION_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Standort wird geteilt")
-            .setContentText("Deine Freunde können deinen Live-Standort sehen.")
+            .setContentTitle(localizedContext.getString(R.string.notification_live_location_title))
+            .setContentText(localizedContext.getString(R.string.notification_live_location_text))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setContentIntent(contentIntent)
-            .addAction(0, "Teilen stoppen", stopIntent)
+            .addAction(0, localizedContext.getString(R.string.notification_stop_sharing), stopIntent)
             .build()
     }
 
     fun showJourneyStarted(journeyName: String) {
+        val localizedContext = context.localized(context.persistedAppLanguage())
         showNotification(
             id = JOURNEY_NOTIFICATION_ID,
-            title = context.getString(R.string.notification_journey_title),
-            text = context.getString(R.string.notification_journey_text,journeyName)
+            title = localizedContext.getString(R.string.notification_journey_title),
+            text = localizedContext.getString(R.string.notification_journey_text, journeyName)
         )
     }
 
@@ -75,18 +79,24 @@ class NotificationsHelper(
         oldCountry: String,
         newCountry: String
     ) {
+        val localizedContext = context.localized(context.persistedAppLanguage())
         showNotification(
             id = COUNTRY_NOTIFICATION_ID,
-            title = context.getString(R.string.notification_country_title),
-            text = context.getString(R.string.notification_country_text,oldCountry, newCountry)
+            title = localizedContext.getString(R.string.notification_country_title),
+            text = localizedContext.getString(
+                R.string.notification_country_text,
+                oldCountry,
+                newCountry
+            )
         )
     }
 
     fun showTestNotification() {
+        val localizedContext = context.localized(context.persistedAppLanguage())
         showNotification(
             id = TEST_NOTIFICATION_ID,
-            title = context.getString(R.string.notification_test_title),
-            text = context.getString(R.string.notification_test_text)
+            title = localizedContext.getString(R.string.notification_test_title),
+            text = localizedContext.getString(R.string.notification_test_text)
         )
     }
 

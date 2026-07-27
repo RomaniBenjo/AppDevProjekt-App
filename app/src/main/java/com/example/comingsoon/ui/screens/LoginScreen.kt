@@ -35,6 +35,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.comingsoon.R
+import com.example.comingsoon.language.appString
 import com.example.comingsoon.ui.theme.ComingSoonTheme
 import com.example.comingsoon.ui.theme.VioletTheme
 
@@ -88,7 +90,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = "Coming Soon",
+                text = appString(R.string.app_name),
                 color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold,
@@ -98,7 +100,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Entdecke die Welt, plane deine Reisen und teile deine Abenteuer.",
+                text = appString(R.string.login_tagline),
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -109,7 +111,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
-                text = "Melde dich an, um loszulegen",
+                text = appString(R.string.login_prompt),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
@@ -156,7 +158,7 @@ fun LoginScreen(
                             )
                         }
                         Text(
-                            text = "Mit Google anmelden",
+                            text = appString(R.string.sign_in_with_google),
                             modifier = Modifier.padding(start = 14.dp),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
@@ -179,7 +181,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "Mit der Anmeldung akzeptierst du unsere Nutzungsbedingungen und Datenschutzrichtlinie.",
+                text = appString(R.string.login_legal),
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

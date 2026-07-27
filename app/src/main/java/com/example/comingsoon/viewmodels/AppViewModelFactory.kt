@@ -33,7 +33,11 @@ class AppViewModelFactory (
             modelClass.isAssignableFrom(FriendViewModel::class.java) ->
                 FriendViewModel(friendsRepository, context.applicationContext) as T
             modelClass.isAssignableFrom(JourneyViewModel::class.java) ->
-                JourneyViewModel(journeysRepository, claimedCountriesRepository) as T
+                JourneyViewModel(
+                    journeysRepository,
+                    claimedCountriesRepository,
+                    context.applicationContext
+                ) as T
             modelClass.isAssignableFrom(LiveLocationViewModel::class.java) ->
                 LiveLocationViewModel(liveLocationRepository, context.applicationContext) as T
             else ->
