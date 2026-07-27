@@ -130,8 +130,11 @@ fun FriendDetailScreen(
                     isLast = index == shares.lastIndex,
                     onClick = {
                         if (selectedTab == FriendJourneyTab.SHARED_BY_ME) {
-                            val ownJourney = journeyViewModel.journeys.firstOrNull {
-                                it.serverId == share.journey.serverId
+                            val ownJourney = share.localJourneyId?.let(
+                                journeyViewModel::getJourney
+                            ) ?: journeyViewModel.journeys.firstOrNull {
+                                share.journey.serverId != null &&
+                                    it.serverId == share.journey.serverId
                             }
                             if (ownJourney != null) {
                                 navController.navigate(

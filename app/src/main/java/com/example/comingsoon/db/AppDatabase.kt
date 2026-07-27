@@ -12,16 +12,18 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     entities = [
         JourneyEntity::class,
         SharedJourneyEntity::class,
+        PendingJourneyShareEntity::class,
         ClaimedCountryEntity::class,
         FriendEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun journeyDao(): JourneyDao
     abstract fun sharedJourneyDao(): SharedJourneyDao
+    abstract fun pendingJourneyShareDao(): PendingJourneyShareDao
     abstract fun claimedCountryDao(): ClaimedCountryDao
     abstract fun friendDao(): FriendDao
 
@@ -36,7 +38,13 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "journey_database"
                 )
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7
+                )
                 .fallbackToDestructiveMigration(true)
                 .build()
                 INSTANCE = instance
@@ -114,6 +122,35 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     CREATE INDEX IF NOT EXISTS index_shared_journeys_ownerId_serverJourneyId
                     ON shared_journeys(ownerId, serverJourneyId)
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS pending_journey_shares (
+                        ownerId INTEGER NOT NULL,
+                        localJourneyId INTEGER NOT NULL,
+                        recipientId INTEGER NOT NULL,
+                        action TEXT NOT NULL,
+                        createdAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY (ownerId, localJourneyId, recipientId)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_pending_journey_shares_ownerId
+                    ON pending_journey_shares(ownerId)
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_pending_journey_shares_localJourneyId
+                    ON pending_journey_shares(localJourneyId)
                     """.trimIndent()
                 )
             }

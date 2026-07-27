@@ -71,9 +71,11 @@ fun AppLayoutViewModel (
             overlayViewModel.selectedJourney?.let { journey ->
                 ShareJourneyOverlay(
                     journey = journey,
-                    friends = friendViewModel.friends.filter { it.isServerFriend && it.id > 0 },
+                    friends = friendViewModel.friends.filter {
+                        it.id > 0 && (it.isServerFriend || it.addedNearby)
+                    },
                     shareTypesByFriendId = friendViewModel.friends.associate { friend ->
-                        friend.id to journeyViewModel.shareFor(journey, friend.id)?.shareType
+                        friend.id to journeyViewModel.shareTypeFor(journey, friend.id)
                     }.filterValues { it != null }.mapValues { requireNotNull(it.value) },
                     operationKey = journeyViewModel.shareOperationKey,
                     errorMessage = journeyViewModel.shareError,
@@ -104,7 +106,7 @@ fun AppLayoutViewModel (
                     friend = friend,
                     journeys = journeyViewModel.journeys,
                     shareTypesByJourneyId = journeyViewModel.journeys.associate { journey ->
-                        journey.id to journeyViewModel.shareFor(journey, friend.id)?.shareType
+                        journey.id to journeyViewModel.shareTypeFor(journey, friend.id)
                     }.filterValues { it != null }.mapValues { requireNotNull(it.value) },
                     operationKey = journeyViewModel.shareOperationKey,
                     errorMessage = journeyViewModel.shareError,

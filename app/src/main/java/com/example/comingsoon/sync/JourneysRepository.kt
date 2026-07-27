@@ -1,8 +1,11 @@
 package com.example.comingsoon.sync
 
 import com.example.comingsoon.auth.AuthSessionStore
+import com.example.comingsoon.auth.AuthenticatedUser
 import com.example.comingsoon.db.JourneyDao
 import com.example.comingsoon.db.JourneyEntity
+import com.example.comingsoon.db.PendingJourneyShareDao
+import com.example.comingsoon.db.PendingJourneyShareEntity
 import com.example.comingsoon.db.SharedJourneyDao
 import com.example.comingsoon.db.SharedJourneyEntity
 import com.example.comingsoon.viewmodels.JourneyLocation
@@ -17,17 +20,42 @@ data class JourneyShareSnapshot(
     val ownerPictureUrl: String?,
     val shareType: String,
     val sharedAt: String,
-    val journey: Journey
+    val journey: Journey,
+    val localJourneyId: Int? = null
+)
+
+enum class PendingJourneyShareAction {
+    SHARE,
+    UNSHARE
+}
+
+internal fun effectiveJourneyShareType(
+    remoteShareType: String?,
+    pendingAction: PendingJourneyShareAction?
+): String? = when (pendingAction) {
+    PendingJourneyShareAction.SHARE -> "manual"
+    PendingJourneyShareAction.UNSHARE -> null
+    null -> remoteShareType
+}
+
+data class PendingJourneyShare(
+    val ownerId: Int,
+    val localJourneyId: Int,
+    val recipientId: Int,
+    val action: PendingJourneyShareAction,
+    val createdAtEpochMillis: Long
 )
 
 class JourneysRepository(
     private val apiClient: JourneysApiClient,
     private val sessionStore: AuthSessionStore,
     private val journeyDao: JourneyDao,
-    private val sharedJourneyDao: SharedJourneyDao
+    private val sharedJourneyDao: SharedJourneyDao,
+    private val pendingJourneyShareDao: PendingJourneyShareDao
 ) {
     fun hasSession(): Boolean = sessionStore.load() != null
-    fun currentUserId(): Int? = sessionStore.load()?.user?.id?.toInt()
+    fun currentUserId(): Int? = sessionStore.cachedUser()?.id?.toInt()
+    fun currentUser(): AuthenticatedUser? = sessionStore.cachedUser()
 
     /** Push local dirty rows, then pull the authoritative list, then reconcile. */
     suspend fun synchronize() {
@@ -55,6 +83,8 @@ class JourneysRepository(
             }
         }
 
+        synchronizePendingShares(token)
+
         val remote = apiClient.listJourneys(token)
         val remoteIds = remote.mapTo(mutableSetOf()) { it.id }
         val unlinkedLocal = journeyDao.getAllForSync()
@@ -78,18 +108,27 @@ class JourneysRepository(
             .forEach { journeyDao.deleteById(it.id) }
     }
 
+    suspend fun queueShare(localJourneyId: Int, friendUserId: Int) {
+        queueShareAction(localJourneyId, friendUserId, PendingJourneyShareAction.SHARE)
+    }
+
+    suspend fun queueUnshare(localJourneyId: Int, friendUserId: Int) {
+        queueShareAction(localJourneyId, friendUserId, PendingJourneyShareAction.UNSHARE)
+    }
+
+    suspend fun loadPendingShares(): List<PendingJourneyShare> {
+        val ownerId = currentUserId() ?: return emptyList()
+        return pendingJourneyShareDao.getForOwner(ownerId).mapNotNull { it.toDomainOrNull() }
+    }
+
     suspend fun shareJourney(localJourneyId: Int, friendUserId: Int) {
-        // A newly-created offline journey needs a server id before it can be shared.
+        queueShare(localJourneyId, friendUserId)
         synchronize()
-        val serverId = journeyDao.getJourneyById(localJourneyId)?.serverId
-            ?: throw JourneysApiException("Die Reise konnte noch nicht synchronisiert werden.")
-        apiClient.shareJourney(token(), serverId, friendUserId)
     }
 
     suspend fun unshareJourney(localJourneyId: Int, friendUserId: Int) {
-        val serverId = journeyDao.getJourneyById(localJourneyId)?.serverId
-            ?: throw JourneysApiException("Die Reise konnte noch nicht synchronisiert werden.")
-        apiClient.unshareJourney(token(), serverId, friendUserId)
+        queueUnshare(localJourneyId, friendUserId)
+        synchronize()
     }
 
     suspend fun createShareLink(localJourneyId: Int): ServerJourneyShareLink {
@@ -122,6 +161,67 @@ class JourneysRepository(
 
     private fun token(): String = sessionStore.load()?.accessToken
         ?: throw JourneysApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
+
+    private suspend fun queueShareAction(
+        localJourneyId: Int,
+        friendUserId: Int,
+        action: PendingJourneyShareAction
+    ) {
+        require(friendUserId > 0) {
+            "Diese Freundschaft muss zuerst mit einem Server-Konto verknüpft werden."
+        }
+        val ownerId = currentUserId()
+            ?: throw JourneysApiException("Bitte melde dich an, um eine Reise zu teilen.")
+        val journey = journeyDao.getJourneyById(localJourneyId)
+            ?: throw JourneysApiException("Die Reise wurde nicht gefunden.")
+        check(!journey.deletedLocally) { "Gelöschte Reisen können nicht geteilt werden." }
+
+        pendingJourneyShareDao.upsert(
+            PendingJourneyShareEntity(
+                ownerId = ownerId,
+                localJourneyId = localJourneyId,
+                recipientId = friendUserId,
+                action = action.name,
+                createdAtEpochMillis = System.currentTimeMillis()
+            )
+        )
+    }
+
+    private suspend fun synchronizePendingShares(token: String) {
+        val ownerId = currentUserId() ?: return
+        pendingJourneyShareDao.getForOwner(ownerId).forEach { pending ->
+            val journey = journeyDao.getJourneyById(pending.localJourneyId)
+            val serverId = journey?.serverId
+            if (journey == null || journey.deletedLocally) {
+                pendingJourneyShareDao.delete(pending)
+                return@forEach
+            }
+            if (serverId == null) return@forEach
+
+            try {
+                when (pending.toDomainOrNull()?.action) {
+                    PendingJourneyShareAction.SHARE -> {
+                        apiClient.shareJourney(token, serverId, pending.recipientId)
+                    }
+                    PendingJourneyShareAction.UNSHARE -> {
+                        apiClient.unshareJourney(token, serverId, pending.recipientId)
+                    }
+                    null -> Unit
+                }
+                pendingJourneyShareDao.delete(pending)
+            } catch (exception: JourneysApiException) {
+                // DELETE is idempotent from the outbox's perspective: an already absent
+                // manual share has reached the requested final state.
+                if (
+                    pending.action == PendingJourneyShareAction.UNSHARE.name &&
+                    exception.statusCode == 404
+                ) {
+                    pendingJourneyShareDao.delete(pending)
+                }
+                // Other failures remain queued and are retried by the next sync.
+            }
+        }
+    }
 
     private fun JourneyEntity.toUpsertBody(): JourneyUpsertBody = JourneyUpsertBody(
         title = title,
@@ -212,4 +312,17 @@ class JourneysRepository(
             isOwned = false
         )
     )
+
+    private fun PendingJourneyShareEntity.toDomainOrNull(): PendingJourneyShare? {
+        val parsedAction = runCatching {
+            PendingJourneyShareAction.valueOf(action)
+        }.getOrNull() ?: return null
+        return PendingJourneyShare(
+            ownerId = ownerId,
+            localJourneyId = localJourneyId,
+            recipientId = recipientId,
+            action = parsedAction,
+            createdAtEpochMillis = createdAtEpochMillis
+        )
+    }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,6 +54,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -143,7 +145,7 @@ fun HomeScreen (
         }
     }
 
-    val isLight = MaterialTheme.colorScheme.background == Color.White
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val oceanColor = if (isLight) Color(0xFFD4F0FC) else Color(0xFF1E293B)
     val defaultCountryColor = if (isLight) Color(0xFFECECEC) else Color(0xFF334155)
     val borderColor = if (isLight) Color(0xFFCCCCCC) else Color(0xFF475569)
@@ -250,6 +252,32 @@ fun HomeScreen (
                 expanded = mapExpanded,
                 onExpandedChange = {
                     mapExpanded = it
+                },
+                content = {
+                    if (viewModel.countries.isEmpty()) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else {
+                        InteractiveWorldMap(
+                            countries = viewModel.countries,
+                            countryColors = customCountryColors,
+                            oceanColor = oceanColor,
+                            defaultCountryColor = defaultCountryColor,
+                            borderColor = borderColor,
+                            borderWidth = 0.4f,
+                            zoomable = false,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp),
+                            onCountrySelected = { clickedId ->
+                                testSelectedCountryId = clickedId
+                            },
+                            onMapTapped = {
+                                isFullscreen = true
+                            }
+                        )
+                    }
                 }
             )
         } else {
@@ -604,7 +632,8 @@ fun JourneyCard (
 @Composable
 fun ExpandableMap(
     expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit
+    onExpandedChange: (Boolean) -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -673,13 +702,9 @@ fun ExpandableMap(
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(appString(R.string.map_placeholder))
-
-                        // TODO: world map hier einsetzen, dann ist es für beide (home und journey) screens sichtbar
-
-                    }
+                        contentAlignment = Alignment.Center,
+                        content = content
+                    )
                 }
             }
         }

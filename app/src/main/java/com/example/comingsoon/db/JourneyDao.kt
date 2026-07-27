@@ -63,6 +63,53 @@ interface SharedJourneyDao {
 }
 
 @Dao
+interface PendingJourneyShareDao {
+    @Query(
+        """
+        SELECT * FROM pending_journey_shares
+        WHERE ownerId = :ownerId
+        ORDER BY createdAtEpochMillis ASC
+        """
+    )
+    suspend fun getForOwner(ownerId: Int): List<PendingJourneyShareEntity>
+
+    @Query(
+        """
+        SELECT * FROM pending_journey_shares
+        WHERE ownerId = :ownerId
+          AND localJourneyId = :localJourneyId
+          AND recipientId = :recipientId
+        LIMIT 1
+        """
+    )
+    suspend fun get(
+        ownerId: Int,
+        localJourneyId: Int,
+        recipientId: Int
+    ): PendingJourneyShareEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(action: PendingJourneyShareEntity)
+
+    @Delete
+    suspend fun delete(action: PendingJourneyShareEntity)
+
+    @Query(
+        """
+        DELETE FROM pending_journey_shares
+        WHERE ownerId = :ownerId
+          AND localJourneyId = :localJourneyId
+          AND recipientId = :recipientId
+        """
+    )
+    suspend fun delete(
+        ownerId: Int,
+        localJourneyId: Int,
+        recipientId: Int
+    )
+}
+
+@Dao
 interface ClaimedCountryDao {
     @Query("SELECT * FROM claimed_countries")
     suspend fun getAllClaims(): List<ClaimedCountryEntity>

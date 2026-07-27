@@ -52,7 +52,10 @@ data class ServerJourneyShareLink(
     @SerializedName("expires_at") val expiresAt: String
 )
 
-class JourneysApiException(message: String) : Exception(message)
+class JourneysApiException(
+    message: String,
+    val statusCode: Int? = null
+) : Exception(message)
 
 class JourneysApiClient(baseUrl: String, private val gson: Gson = Gson()) {
     private val baseUrl = baseUrl.trim().trimEnd('/')
@@ -131,7 +134,9 @@ class JourneysApiClient(baseUrl: String, private val gson: Gson = Gson()) {
             val status = connection.responseCode
             val stream = if (status in 200..299) connection.inputStream else connection.errorStream
             val response = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-            if (status !in 200..299) throw JourneysApiException(errorMessage(status, response))
+            if (status !in 200..299) {
+                throw JourneysApiException(errorMessage(status, response), status)
+            }
             response
         } catch (exception: JourneysApiException) {
             throw exception
