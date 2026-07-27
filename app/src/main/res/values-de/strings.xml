@@ -23,6 +23,12 @@
     <string name="cancel">Abbrechen</string>
     <string name="show">Anzeigen</string>
     <string name="share">Teilen</string>
+    <string name="unshare">Freigabe aufheben</string>
+    <string name="shared_automatically">Automatisch</string>
+    <string name="qr_unavailable">QR-Code nicht verfügbar</string>
+    <string name="qr_expires">Einmal-Link, gültig bis %1$s</string>
+    <string name="automatic_share_metadata">Automatisch geteilt von %1$s</string>
+    <string name="manual_share_metadata">Von %1$s geteilt · %2$s</string>
     <string name="edit">Bearbeiten</string>
     <string name="new_pin">Pin hinzufügen</string>
     <string name="new_journey">Neue Reise</string>
@@ -109,6 +115,12 @@
     <string name="notification_test_text">Die Benachrichtigungen funktionieren.</string>
 
     <string name="map_placeholder">Platzhalter für Karte</string>
+    <string name="friend_map_loading">Gemeinsame Reisekarte wird geladen…</string>
+    <string name="friend_map_empty">Teilt eine Reise, um eure Karte zu füllen.</string>
+    <string name="friend_map_my_trips">Meine Reisen</string>
+    <string name="friend_map_friend_trips">Reisen von %1$s</string>
+    <string name="friend_map_both">Beide</string>
+    <string name="friend_map_content_description">Weltkarte der zwischen dir und %1$s geteilten Reisen</string>
     <string name="map_live_placeholder">Platzhalter für Live Standort-Karte</string>
     <string name="online_guesser_starting">Ein neues Spiel wird gestartet…</string>
     <string name="online_guesser_retry">Erneut versuchen</string>

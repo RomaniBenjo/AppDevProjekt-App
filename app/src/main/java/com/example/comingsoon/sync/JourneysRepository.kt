@@ -3,15 +3,31 @@ package com.example.comingsoon.sync
 import com.example.comingsoon.auth.AuthSessionStore
 import com.example.comingsoon.db.JourneyDao
 import com.example.comingsoon.db.JourneyEntity
+import com.example.comingsoon.db.SharedJourneyDao
+import com.example.comingsoon.db.SharedJourneyEntity
 import com.example.comingsoon.viewmodels.JourneyLocation
+import com.example.comingsoon.viewmodels.Journey
 import java.time.LocalDate
+
+data class JourneyShareSnapshot(
+    val ownerId: Int,
+    val recipientId: Int,
+    val ownerName: String,
+    val ownerEmail: String,
+    val ownerPictureUrl: String?,
+    val shareType: String,
+    val sharedAt: String,
+    val journey: Journey
+)
 
 class JourneysRepository(
     private val apiClient: JourneysApiClient,
     private val sessionStore: AuthSessionStore,
-    private val journeyDao: JourneyDao
+    private val journeyDao: JourneyDao,
+    private val sharedJourneyDao: SharedJourneyDao
 ) {
     fun hasSession(): Boolean = sessionStore.load() != null
+    fun currentUserId(): Int? = sessionStore.load()?.user?.id?.toInt()
 
     /** Push local dirty rows, then pull the authoritative list, then reconcile. */
     suspend fun synchronize() {
@@ -62,6 +78,48 @@ class JourneysRepository(
             .forEach { journeyDao.deleteById(it.id) }
     }
 
+    suspend fun shareJourney(localJourneyId: Int, friendUserId: Int) {
+        // A newly-created offline journey needs a server id before it can be shared.
+        synchronize()
+        val serverId = journeyDao.getJourneyById(localJourneyId)?.serverId
+            ?: throw JourneysApiException("Die Reise konnte noch nicht synchronisiert werden.")
+        apiClient.shareJourney(token(), serverId, friendUserId)
+    }
+
+    suspend fun unshareJourney(localJourneyId: Int, friendUserId: Int) {
+        val serverId = journeyDao.getJourneyById(localJourneyId)?.serverId
+            ?: throw JourneysApiException("Die Reise konnte noch nicht synchronisiert werden.")
+        apiClient.unshareJourney(token(), serverId, friendUserId)
+    }
+
+    suspend fun createShareLink(localJourneyId: Int): ServerJourneyShareLink {
+        synchronize()
+        val serverId = journeyDao.getJourneyById(localJourneyId)?.serverId
+            ?: throw JourneysApiException("Die Reise konnte noch nicht synchronisiert werden.")
+        return apiClient.createShareLink(token(), serverId)
+    }
+
+    suspend fun acceptShareLink(shareToken: String): JourneyShareSnapshot {
+        val share = apiClient.acceptShareLink(token(), shareToken)
+        refreshJourneyShares()
+        return share.toSnapshot()
+    }
+
+    suspend fun loadCachedJourneyShares(): List<JourneyShareSnapshot> {
+        val viewerId = currentUserId() ?: return emptyList()
+        return sharedJourneyDao.getForViewer(viewerId).map { it.toSnapshot() }
+    }
+
+    suspend fun refreshJourneyShares(): List<JourneyShareSnapshot> {
+        val viewerId = currentUserId()
+            ?: throw JourneysApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
+        val remote = apiClient.listJourneyShares(token())
+        sharedJourneyDao.replaceForViewer(viewerId, remote.map { it.toEntity(viewerId) })
+        return remote.map { it.toSnapshot() }
+    }
+
+    suspend fun listJourneyShares(): List<JourneyShareSnapshot> = refreshJourneyShares()
+
     private fun token(): String = sessionStore.load()?.accessToken
         ?: throw JourneysApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
 
@@ -86,5 +144,72 @@ class JourneysRepository(
         isSynced = true,
         serverId = id,
         deletedLocally = false
+    )
+
+    private fun ServerJourney.toSharedDomain(ownerId: Int): Journey =
+        Journey(
+            id = id,
+            title = title,
+            startDate = LocalDate.parse(startDate),
+            endDate = LocalDate.parse(endDate),
+            shared = shared,
+            locations = locations.map { JourneyLocation(it.id, it.name, it.latitude, it.longitude) },
+            visitedCountries = visitedCountries,
+            serverId = id,
+            ownerId = ownerId,
+            isOwned = false
+        )
+
+    private fun ServerJourneyShare.toSnapshot() = JourneyShareSnapshot(
+        ownerId = ownerId,
+        recipientId = recipientId,
+        ownerName = owner.name?.takeIf { it.isNotBlank() } ?: owner.email.substringBefore('@'),
+        ownerEmail = owner.email,
+        ownerPictureUrl = owner.pictureUrl,
+        shareType = shareType,
+        sharedAt = createdAt,
+        journey = journey.toSharedDomain(ownerId)
+    )
+
+    private fun ServerJourneyShare.toEntity(viewerId: Int) = SharedJourneyEntity(
+        viewerId = viewerId,
+        ownerId = ownerId,
+        recipientId = recipientId,
+        serverJourneyId = journey.id,
+        ownerName = owner.name?.takeIf { it.isNotBlank() } ?: owner.email.substringBefore('@'),
+        ownerEmail = owner.email,
+        ownerPictureUrl = owner.pictureUrl,
+        shareType = shareType,
+        sharedAt = createdAt,
+        title = journey.title,
+        startDate = LocalDate.parse(journey.startDate),
+        endDate = LocalDate.parse(journey.endDate),
+        shared = journey.shared,
+        locations = journey.locations.map {
+            JourneyLocation(it.id, it.name, it.latitude, it.longitude)
+        },
+        visitedCountries = journey.visitedCountries
+    )
+
+    private fun SharedJourneyEntity.toSnapshot() = JourneyShareSnapshot(
+        ownerId = ownerId,
+        recipientId = recipientId,
+        ownerName = ownerName,
+        ownerEmail = ownerEmail,
+        ownerPictureUrl = ownerPictureUrl,
+        shareType = shareType,
+        sharedAt = sharedAt,
+        journey = Journey(
+            id = serverJourneyId,
+            title = title,
+            startDate = startDate,
+            endDate = endDate,
+            shared = shared,
+            locations = locations,
+            visitedCountries = visitedCountries,
+            serverId = serverJourneyId,
+            ownerId = ownerId,
+            isOwned = false
+        )
     )
 }

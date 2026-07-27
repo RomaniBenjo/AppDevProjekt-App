@@ -158,7 +158,7 @@ class FriendsRepository(
         }
     }
 
-    suspend fun listenForUpdates(onUpdate: () -> Unit) =
+    suspend fun listenForUpdates(onUpdate: (String) -> Unit) =
         apiClient.listenForFriendUpdates(token(), onUpdate)
 
     private suspend fun cacheServerFriends(users: List<AuthenticatedUser>) {

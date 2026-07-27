@@ -26,6 +26,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.LinkOff
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -42,8 +44,13 @@ import com.example.comingsoon.R
 fun ShareWithFriendOverlay (
     friend: Friend,
     journeys: List<Journey>,
+    shareTypesByJourneyId: Map<Int, String> = emptyMap(),
+    operationKey: String? = null,
+    errorMessage: String? = null,
+    feedbackMessage: String? = null,
     onDismiss: () -> Unit,
-    onShare: (Journey) -> Unit
+    onShare: (Journey) -> Unit,
+    onUnshare: (Journey) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -81,12 +88,30 @@ fun ShareWithFriendOverlay (
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            feedbackMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Spacer(Modifier.height(24.dp))
 
             JourneyShareList(
                 journeys = journeys,
-                onShare = onShare
+                friendId = friend.id,
+                shareTypesByJourneyId = shareTypesByJourneyId,
+                operationKey = operationKey,
+                onShare = onShare,
+                onUnshare = onUnshare
             )
 
             Spacer(Modifier.height(16.dp))
@@ -97,7 +122,11 @@ fun ShareWithFriendOverlay (
 @Composable
 fun JourneyShareList(
     journeys: List<Journey>,
-    onShare: (Journey) -> Unit
+    friendId: Int,
+    shareTypesByJourneyId: Map<Int, String>,
+    operationKey: String?,
+    onShare: (Journey) -> Unit,
+    onUnshare: (Journey) -> Unit
 ) {
 
     LazyColumn(
@@ -109,9 +138,12 @@ fun JourneyShareList(
         items(journeys) { journey ->
             JourneyShareItem(
                 journey = journey,
+                shareType = shareTypesByJourneyId[journey.id],
+                isLoading = operationKey == "${journey.id}:$friendId",
                 onShare = {
                     onShare(journey)
-                }
+                },
+                onUnshare = { onUnshare(journey) }
             )
             HorizontalDivider(
                 color = Color.LightGray.copy(alpha = .3f),
@@ -128,7 +160,10 @@ fun JourneyShareList(
 @Composable
 fun JourneyShareItem(
     journey: Journey,
-    onShare: () -> Unit
+    shareType: String?,
+    isLoading: Boolean,
+    onShare: () -> Unit,
+    onUnshare: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -154,22 +189,38 @@ fun JourneyShareItem(
         }
 
         FilledTonalButton(
-            onClick = onShare,
+            onClick = if (shareType == "manual") onUnshare else onShare,
+            enabled = !isLoading && shareType != "automatic",
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.background
             )
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Share,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
-
-            Spacer(Modifier.width(6.dp))
-
-            Text(appString(R.string.share))
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = if (shareType == "manual") {
+                        Icons.Outlined.LinkOff
+                    } else {
+                        Icons.Outlined.Share
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    when (shareType) {
+                        "manual" -> appString(R.string.unshare)
+                        "automatic" -> appString(R.string.shared_automatically)
+                        else -> appString(R.string.share)
+                    }
+                )
+            }
         }
     }
 }

@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -44,6 +48,7 @@ fun AppLayoutViewModel (
     viewModelFactory: AppViewModelFactory
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
@@ -52,16 +57,43 @@ fun AppLayoutViewModel (
         currentRoute != NavScreens.OpenGuesserOnline.route &&
         currentRoute != NavScreens.LiveLocations.route &&
         !isLoginScreen
+    val sharingMessage = journeyViewModel.shareFeedback ?: journeyViewModel.shareError
+
+    LaunchedEffect(sharingMessage) {
+        sharingMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            journeyViewModel.clearShareError()
+        }
+    }
 
     when (overlayViewModel.overlayType) {
         OverlayType.SHARE_JOURNEY -> {
             overlayViewModel.selectedJourney?.let { journey ->
                 ShareJourneyOverlay(
                     journey = journey,
-                    friends = friendViewModel.friends,
-                    onDismiss = { overlayViewModel.dismiss() },
+                    friends = friendViewModel.friends.filter { it.isServerFriend && it.id > 0 },
+                    shareTypesByFriendId = friendViewModel.friends.associate { friend ->
+                        friend.id to journeyViewModel.shareFor(journey, friend.id)?.shareType
+                    }.filterValues { it != null }.mapValues { requireNotNull(it.value) },
+                    operationKey = journeyViewModel.shareOperationKey,
+                    errorMessage = journeyViewModel.shareError,
+                    feedbackMessage = journeyViewModel.shareFeedback,
+                    qrDeepLink = journeyViewModel.qrDeepLink,
+                    qrExpiresAt = journeyViewModel.qrExpiresAt,
+                    isCreatingQrLink = journeyViewModel.isCreatingQrLink,
+                    onDismiss = {
+                        journeyViewModel.resetQrShareLink()
+                        journeyViewModel.clearShareError()
+                        overlayViewModel.dismiss()
+                    },
                     onShare = { friend ->
-                        // TODO
+                        journeyViewModel.shareJourney(journey.id, friend.id)
+                    },
+                    onUnshare = { friend ->
+                        journeyViewModel.unshareJourney(journey.id, friend.id)
+                    },
+                    onRequestQrLink = {
+                        journeyViewModel.createQrShareLink(journey.id)
                     }
                 )
             }
@@ -71,9 +103,21 @@ fun AppLayoutViewModel (
                 ShareWithFriendOverlay(
                     friend = friend,
                     journeys = journeyViewModel.journeys,
-                    onDismiss = { overlayViewModel.dismiss() },
+                    shareTypesByJourneyId = journeyViewModel.journeys.associate { journey ->
+                        journey.id to journeyViewModel.shareFor(journey, friend.id)?.shareType
+                    }.filterValues { it != null }.mapValues { requireNotNull(it.value) },
+                    operationKey = journeyViewModel.shareOperationKey,
+                    errorMessage = journeyViewModel.shareError,
+                    feedbackMessage = journeyViewModel.shareFeedback,
+                    onDismiss = {
+                        journeyViewModel.clearShareError()
+                        overlayViewModel.dismiss()
+                    },
                     onShare = { journey ->
-                        // TODO
+                        journeyViewModel.shareJourney(journey.id, friend.id)
+                    },
+                    onUnshare = { journey ->
+                        journeyViewModel.unshareJourney(journey.id, friend.id)
                     }
                 )
             }
@@ -103,6 +147,7 @@ fun AppLayoutViewModel (
         }
     )  {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 if (!isLoginScreen) {
                     AppHeader(

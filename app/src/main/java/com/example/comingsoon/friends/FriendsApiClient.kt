@@ -106,7 +106,7 @@ class FriendsApiClient(
     }
 
     /** Keeps one authenticated WebSocket open until it disconnects or is cancelled. */
-    suspend fun listenForFriendUpdates(token: String, onUpdate: () -> Unit) {
+    suspend fun listenForFriendUpdates(token: String, onUpdate: (String) -> Unit) {
         if (baseUrl.isBlank()) {
             throw FriendsApiException("Die Server-URL wurde noch nicht konfiguriert.")
         }
@@ -123,7 +123,7 @@ class FriendsApiClient(
                         gson.fromJson(text, JsonObject::class.java)
                             ?.get("type")?.takeUnless { it.isJsonNull }?.asString
                     }.getOrNull()
-                    if (eventType != null && eventType != "ping") onUpdate()
+                    if (eventType != null && eventType != "ping") onUpdate(eventType)
                 }
 
                 override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {

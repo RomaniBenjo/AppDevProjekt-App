@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.LinkOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,23 +36,30 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.comingsoon.viewmodels.Friend
 import com.example.comingsoon.R
 import com.example.comingsoon.language.appString
 import com.example.comingsoon.viewmodels.Journey
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.MultiFormatWriter
+import android.graphics.Bitmap
 
 enum class ShareTab {
     FRIENDS,
@@ -63,8 +71,17 @@ enum class ShareTab {
 fun ShareJourneyOverlay(
     journey: Journey,
     friends: List<Friend>,
+    shareTypesByFriendId: Map<Int, String> = emptyMap(),
+    operationKey: String? = null,
+    errorMessage: String? = null,
+    feedbackMessage: String? = null,
+    qrDeepLink: String? = null,
+    qrExpiresAt: String? = null,
+    isCreatingQrLink: Boolean = false,
     onDismiss: () -> Unit,
-    onShare: (Friend) -> Unit
+    onShare: (Friend) -> Unit,
+    onUnshare: (Friend) -> Unit,
+    onRequestQrLink: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentTab by rememberSaveable { mutableStateOf(ShareTab.FRIENDS) }
@@ -102,6 +119,20 @@ fun ShareJourneyOverlay(
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            feedbackMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             ShareModeSwitch(
                 selected = currentTab,
@@ -116,12 +147,20 @@ fun ShareJourneyOverlay(
                 ShareTab.FRIENDS -> {
                     FriendShareList(
                         friends = friends,
-                        onShare = onShare
+                        shareTypesByFriendId = shareTypesByFriendId,
+                        operationKey = operationKey,
+                        journeyId = journey.id,
+                        onShare = onShare,
+                        onUnshare = onUnshare
                     )
                 }
                 ShareTab.QR_CODE -> {
+                    LaunchedEffect(Unit) { onRequestQrLink() }
                     QrCodeView(
-                        journey = journey
+                        journey = journey,
+                        deepLink = qrDeepLink,
+                        expiresAt = qrExpiresAt,
+                        isLoading = isCreatingQrLink
                     )
                 }
             }
@@ -191,7 +230,11 @@ fun ShareModeSwitch(
 @Composable
 fun FriendShareList(
     friends: List<Friend>,
-    onShare: (Friend) -> Unit
+    shareTypesByFriendId: Map<Int, String>,
+    operationKey: String?,
+    journeyId: Int,
+    onShare: (Friend) -> Unit,
+    onUnshare: (Friend) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -202,7 +245,10 @@ fun FriendShareList(
         items(friends) { friend ->
             FriendShareItem(
                 friend = friend,
-                onShare = { onShare(friend) }
+                shareType = shareTypesByFriendId[friend.id],
+                isLoading = operationKey == "$journeyId:${friend.id}",
+                onShare = { onShare(friend) },
+                onUnshare = { onUnshare(friend) }
             )
             HorizontalDivider(
                 color = Color.LightGray.copy(alpha = .3f),
@@ -219,7 +265,10 @@ fun FriendShareList(
 @Composable
 fun FriendShareItem(
     friend: Friend,
-    onShare: () -> Unit
+    shareType: String?,
+    isLoading: Boolean,
+    onShare: () -> Unit,
+    onUnshare: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -246,30 +295,52 @@ fun FriendShareItem(
         )
 
         FilledTonalButton(
-            onClick = onShare,
+            onClick = if (shareType == "manual") onUnshare else onShare,
+            enabled = !isLoading && shareType != "automatic",
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.background
             )
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Share,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
-
-            Spacer(Modifier.width(6.dp))
-
-            Text(appString(R.string.share))
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = if (shareType == "manual") {
+                        Icons.Outlined.LinkOff
+                    } else {
+                        Icons.Outlined.Share
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    when (shareType) {
+                        "manual" -> appString(R.string.unshare)
+                        "automatic" -> appString(R.string.shared_automatically)
+                        else -> appString(R.string.share)
+                    }
+                )
+            }
         }
     }
 }
 
 @Composable
 fun QrCodeView(
-    journey: Journey
+    journey: Journey,
+    deepLink: String?,
+    expiresAt: String?,
+    isLoading: Boolean
 ) {
+    val qrBitmap = remember(deepLink) {
+        deepLink?.let { createQrBitmap(it, 760) }
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -301,18 +372,26 @@ fun QrCodeView(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(R.drawable.qr_placeholder), // TODO: creating real QR codes
-                    contentDescription = appString(R.string.qr_code),
-                    modifier = Modifier.size(190.dp)
-                )
+                when {
+                    isLoading -> CircularProgressIndicator()
+                    qrBitmap != null -> Image(
+                        bitmap = qrBitmap.asImageBitmap(),
+                        contentDescription = appString(R.string.qr_code),
+                        modifier = Modifier.size(210.dp)
+                    )
+                    else -> Text(appString(R.string.qr_unavailable))
+                }
             }
         }
 
         Spacer(Modifier.height(28.dp))
 
         Text(
-            text = appString(R.string.friends_can_scan),
+            text = if (expiresAt != null) {
+                appString(R.string.qr_expires, expiresAt.take(16).replace("T", " "))
+            } else {
+                appString(R.string.friends_can_scan)
+            },
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray,
@@ -342,4 +421,19 @@ fun QrCodeView(
 
         Spacer(Modifier.height(20.dp))
     }
+}
+
+private fun createQrBitmap(value: String, size: Int): Bitmap {
+    val matrix = MultiFormatWriter().encode(value, BarcodeFormat.QR_CODE, size, size)
+    val pixels = IntArray(size * size)
+    for (y in 0 until size) {
+        for (x in 0 until size) {
+            pixels[y * size + x] = if (matrix[x, y]) {
+                android.graphics.Color.BLACK
+            } else {
+                android.graphics.Color.WHITE
+            }
+        }
+    }
+    return Bitmap.createBitmap(pixels, size, size, Bitmap.Config.ARGB_8888)
 }
