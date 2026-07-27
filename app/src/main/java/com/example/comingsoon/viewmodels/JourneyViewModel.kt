@@ -30,6 +30,9 @@ import com.example.comingsoon.db.ClaimedCountryEntity
 import com.example.comingsoon.sync.ClaimedCountriesRepository
 import com.example.comingsoon.sync.JourneysRepository
 import com.example.comingsoon.sync.JourneyShareSnapshot
+import com.example.comingsoon.sync.PendingJourneyShare
+import com.example.comingsoon.sync.PendingJourneyShareAction
+import com.example.comingsoon.sync.effectiveJourneyShareType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -77,6 +80,7 @@ class JourneyViewModel(
         get() = _journeys
 
     private val _journeyShares = mutableStateListOf<JourneyShareSnapshot>()
+    private val _pendingJourneyShares = mutableStateListOf<PendingJourneyShare>()
 
     var shareError by mutableStateOf<String?>(null)
         private set
@@ -182,6 +186,7 @@ class JourneyViewModel(
                 val dbClaimedDao = claimedDao
                 val claims = dbClaimedDao?.getAllClaims() ?: emptyList()
                 val cachedShares = journeysRepository.loadCachedJourneyShares()
+                val pendingShares = journeysRepository.loadPendingShares()
                 withContext(Dispatchers.Main) {
                     _journeys.clear()
                     _journeys.addAll(list.map { it.toDomain() })
@@ -189,6 +194,8 @@ class JourneyViewModel(
                     _claimedCountries.addAll(claims.map { it.id })
                     _journeyShares.clear()
                     _journeyShares.addAll(cachedShares)
+                    _pendingJourneyShares.clear()
+                    _pendingJourneyShares.addAll(pendingShares)
                     triggerSync()
                 }
             } catch (e: Exception) {
@@ -425,6 +432,7 @@ class JourneyViewModel(
                 val shareResult = runCatching { journeysRepository.refreshJourneyShares() }
                 val refreshedJourneys = currentDao.getAllJourneys().map { it.toDomain() }
                 val refreshedClaims = claimedDao?.getAllClaims()?.map { it.id } ?: emptyList()
+                val pendingShares = journeysRepository.loadPendingShares()
                 withContext(Dispatchers.Main) {
                     _journeys.clear()
                     _journeys.addAll(refreshedJourneys)
@@ -432,6 +440,8 @@ class JourneyViewModel(
                         _journeyShares.clear()
                         _journeyShares.addAll(refreshedShares)
                     }
+                    _pendingJourneyShares.clear()
+                    _pendingJourneyShares.addAll(pendingShares)
                     _claimedCountries.clear()
                     _claimedCountries.addAll(refreshedClaims)
                     journeySyncError = journeyResult.exceptionOrNull()?.message
@@ -463,6 +473,7 @@ class JourneyViewModel(
         qrDeepLink = null
         qrExpiresAt = null
         _journeyShares.clear()
+        _pendingJourneyShares.clear()
     }
 
     fun getNextJourneyId(): Int {
@@ -492,16 +503,70 @@ class JourneyViewModel(
         return getShare(ownerId, serverId, friendId)
     }
 
+    fun shareTypeFor(journey: Journey, friendId: Int): String? {
+        return effectiveJourneyShareType(
+            remoteShareType = shareFor(journey, friendId)?.shareType,
+            pendingAction = pendingActionFor(journey.id, friendId)
+        )
+    }
+
     fun sharedByMeWith(friendId: Int): List<Journey> =
-        _journeyShares.filter { it.recipientId == friendId }.map { share ->
+        sharesByMeWith(friendId).map { share ->
             _journeys.firstOrNull { it.serverId == share.journey.serverId } ?: share.journey
         }
 
     fun sharedWithMeBy(friendId: Int): List<Journey> =
         _journeyShares.filter { it.ownerId == friendId }.map { it.journey }
 
-    fun sharesByMeWith(friendId: Int): List<JourneyShareSnapshot> =
-        _journeyShares.filter { it.recipientId == friendId }
+    fun sharesByMeWith(friendId: Int): List<JourneyShareSnapshot> {
+        val pendingUnshares = _pendingJourneyShares
+            .filter {
+                it.recipientId == friendId &&
+                    it.action == PendingJourneyShareAction.UNSHARE
+            }
+            .mapTo(mutableSetOf()) { it.localJourneyId }
+        val remoteShares = _journeyShares
+            .filter { share ->
+                if (share.recipientId != friendId) return@filter false
+                val localId = _journeys.firstOrNull {
+                    it.serverId == share.journey.serverId
+                }?.id
+                localId == null || localId !in pendingUnshares
+            }
+            .toMutableList()
+        val remoteServerIds = remoteShares.mapNotNullTo(mutableSetOf()) {
+            it.journey.serverId
+        }
+        val owner = journeysRepository.currentUser()
+        _pendingJourneyShares
+            .filter {
+                it.recipientId == friendId &&
+                    it.action == PendingJourneyShareAction.SHARE
+            }
+            .forEach { pending ->
+                val journey = _journeys.firstOrNull { it.id == pending.localJourneyId }
+                    ?: return@forEach
+                if (journey.serverId != null && journey.serverId in remoteServerIds) {
+                    return@forEach
+                }
+                remoteShares += JourneyShareSnapshot(
+                    ownerId = pending.ownerId,
+                    recipientId = pending.recipientId,
+                    ownerName = owner?.name?.takeIf { it.isNotBlank() }
+                        ?: owner?.email?.substringBefore('@')
+                        ?: "Du",
+                    ownerEmail = owner?.email.orEmpty(),
+                    ownerPictureUrl = owner?.pictureUrl,
+                    shareType = "manual",
+                    sharedAt = java.time.Instant
+                        .ofEpochMilli(pending.createdAtEpochMillis)
+                        .toString(),
+                    journey = journey,
+                    localJourneyId = journey.id
+                )
+            }
+        return remoteShares.sortedByDescending { it.journey.startDate }
+    }
 
     fun sharesWithMeBy(friendId: Int): List<JourneyShareSnapshot> =
         _journeyShares.filter { it.ownerId == friendId }
@@ -512,11 +577,6 @@ class JourneyViewModel(
     }
 
     fun shareJourney(journeyId: Int, friendId: Int, onResult: (Boolean) -> Unit = {}) {
-        if (!isNetworkAvailable || !journeysRepository.hasSession()) {
-            shareError = "Zum Teilen ist eine aktive Serververbindung erforderlich."
-            onResult(false)
-            return
-        }
         val currentDao = dao ?: run {
             shareError = "Die Reisedaten sind noch nicht geladen."
             onResult(false)
@@ -531,15 +591,38 @@ class JourneyViewModel(
                     shareError = null
                     shareFeedback = null
                 }
-                journeysRepository.shareJourney(journeyId, friendId)
+                if (isNetworkAvailable && journeysRepository.hasSession()) {
+                    journeysRepository.shareJourney(journeyId, friendId)
+                } else {
+                    journeysRepository.queueShare(journeyId, friendId)
+                }
                 val refreshedJourneys = currentDao.getAllJourneys().map { it.toDomain() }
-                val refreshedShares = journeysRepository.refreshJourneyShares()
+                val refreshedShares =
+                    if (isNetworkAvailable && journeysRepository.hasSession()) {
+                        runCatching { journeysRepository.refreshJourneyShares() }.getOrNull()
+                    } else {
+                        null
+                    }
+                val pendingShares = journeysRepository.loadPendingShares()
+                val remainsPending = pendingShares.any {
+                    it.localJourneyId == journeyId &&
+                        it.recipientId == friendId &&
+                        it.action == PendingJourneyShareAction.SHARE
+                }
                 withContext(Dispatchers.Main) {
                     _journeys.clear()
                     _journeys.addAll(refreshedJourneys)
-                    _journeyShares.clear()
-                    _journeyShares.addAll(refreshedShares)
-                    shareFeedback = "Reise erfolgreich geteilt."
+                    refreshedShares?.let {
+                        _journeyShares.clear()
+                        _journeyShares.addAll(it)
+                    }
+                    _pendingJourneyShares.clear()
+                    _pendingJourneyShares.addAll(pendingShares)
+                    shareFeedback = if (remainsPending) {
+                        "Freigabe vorgemerkt. Sie wird bei der nächsten Verbindung synchronisiert."
+                    } else {
+                        "Reise erfolgreich geteilt."
+                    }
                     onResult(true)
                 }
             } catch (exception: Exception) {
@@ -558,11 +641,6 @@ class JourneyViewModel(
     }
 
     fun unshareJourney(journeyId: Int, friendId: Int, onResult: (Boolean) -> Unit = {}) {
-        if (!isNetworkAvailable || !journeysRepository.hasSession()) {
-            shareError = "Zum Aufheben der Freigabe ist eine Serververbindung erforderlich."
-            onResult(false)
-            return
-        }
         viewModelScope.launch(Dispatchers.IO) {
             syncMutex.lock()
             try {
@@ -572,12 +650,35 @@ class JourneyViewModel(
                     shareError = null
                     shareFeedback = null
                 }
-                journeysRepository.unshareJourney(journeyId, friendId)
-                val refreshedShares = journeysRepository.refreshJourneyShares()
+                if (isNetworkAvailable && journeysRepository.hasSession()) {
+                    journeysRepository.unshareJourney(journeyId, friendId)
+                } else {
+                    journeysRepository.queueUnshare(journeyId, friendId)
+                }
+                val refreshedShares =
+                    if (isNetworkAvailable && journeysRepository.hasSession()) {
+                        runCatching { journeysRepository.refreshJourneyShares() }.getOrNull()
+                    } else {
+                        null
+                    }
+                val pendingShares = journeysRepository.loadPendingShares()
+                val remainsPending = pendingShares.any {
+                    it.localJourneyId == journeyId &&
+                        it.recipientId == friendId &&
+                        it.action == PendingJourneyShareAction.UNSHARE
+                }
                 withContext(Dispatchers.Main) {
-                    _journeyShares.clear()
-                    _journeyShares.addAll(refreshedShares)
-                    shareFeedback = "Freigabe wurde aufgehoben."
+                    refreshedShares?.let {
+                        _journeyShares.clear()
+                        _journeyShares.addAll(it)
+                    }
+                    _pendingJourneyShares.clear()
+                    _pendingJourneyShares.addAll(pendingShares)
+                    shareFeedback = if (remainsPending) {
+                        "Aufheben vorgemerkt. Die Änderung wird bei der nächsten Verbindung synchronisiert."
+                    } else {
+                        "Freigabe wurde aufgehoben."
+                    }
                     onResult(true)
                 }
             } catch (exception: Exception) {
@@ -594,6 +695,14 @@ class JourneyViewModel(
             }
         }
     }
+
+    private fun pendingActionFor(
+        journeyId: Int,
+        friendId: Int
+    ): PendingJourneyShareAction? =
+        _pendingJourneyShares.firstOrNull {
+            it.localJourneyId == journeyId && it.recipientId == friendId
+        }?.action
 
     fun createQrShareLink(journeyId: Int) {
         if (isCreatingQrLink || qrDeepLink != null) return

@@ -115,7 +115,6 @@
     <string name="notification_test_title">Test Notification</string>
     <string name="notification_test_text">Notifications are working correctly.</string>
 
-    <string name="map_placeholder">Placeholder for Map</string>
     <string name="friend_map_loading">Loading shared travel map…</string>
     <string name="friend_map_empty">Share a journey to fill your map.</string>
     <string name="friend_map_my_trips">My trips</string>

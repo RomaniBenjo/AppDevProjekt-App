@@ -68,7 +68,9 @@ class MainActivity : ComponentActivity() {
                 apiClient = JourneysApiClient(BuildConfig.API_BASE_URL),
                 sessionStore = AuthSessionStore(applicationContext),
                 journeyDao = AppDatabase.getDatabase(applicationContext).journeyDao(),
-                sharedJourneyDao = AppDatabase.getDatabase(applicationContext).sharedJourneyDao()
+                sharedJourneyDao = AppDatabase.getDatabase(applicationContext).sharedJourneyDao(),
+                pendingJourneyShareDao = AppDatabase.getDatabase(applicationContext)
+                    .pendingJourneyShareDao()
             )
             val claimedCountriesRepository = ClaimedCountriesRepository(
                 apiClient = ClaimedCountriesApiClient(BuildConfig.API_BASE_URL),

@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -135,7 +136,7 @@ fun JourneyOverviewScreen (
                                 colors
                             }
 
-                            val isLight = MaterialTheme.colorScheme.background == Color.White
+                            val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
                             val oceanColor = if (isLight) Color(0xFFD4F0FC) else Color(0xFF1E293B)
                             val defaultCountryColor = if (isLight) Color(0xFFECECEC) else Color(0xFF334155)
                             val borderColor = if (isLight) Color(0xFFCCCCCC) else Color(0xFF475569)

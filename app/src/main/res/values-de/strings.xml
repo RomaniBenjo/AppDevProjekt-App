@@ -114,7 +114,6 @@
     <string name="notification_test_title">Test Benachrichtigung</string>
     <string name="notification_test_text">Die Benachrichtigungen funktionieren.</string>
 
-    <string name="map_placeholder">Platzhalter für Karte</string>
     <string name="friend_map_loading">Gemeinsame Reisekarte wird geladen…</string>
     <string name="friend_map_empty">Teilt eine Reise, um eure Karte zu füllen.</string>
     <string name="friend_map_my_trips">Meine Reisen</string>

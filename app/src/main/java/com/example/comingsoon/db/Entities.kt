@@ -84,3 +84,19 @@ data class SharedJourneyEntity(
     val locations: List<JourneyLocation>,
     val visitedCountries: List<String>
 )
+
+@Entity(
+    tableName = "pending_journey_shares",
+    primaryKeys = ["ownerId", "localJourneyId", "recipientId"],
+    indices = [
+        Index(value = ["ownerId"]),
+        Index(value = ["localJourneyId"])
+    ]
+)
+data class PendingJourneyShareEntity(
+    val ownerId: Int,
+    val localJourneyId: Int,
+    val recipientId: Int,
+    val action: String,
+    val createdAtEpochMillis: Long
+)
