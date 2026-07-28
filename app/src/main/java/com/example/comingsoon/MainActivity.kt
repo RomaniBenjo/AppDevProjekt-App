@@ -143,6 +143,14 @@ class MainActivity : ComponentActivity() {
             val currentAppTheme = themeViewModel.getThemeDefinition()
 
             val localizedContext = LocalContext.current.localized(languageViewModel.currentLanguage)
+            LaunchedEffect(languageViewModel.currentLanguage) {
+                journeyViewModel.onLanguageChanged()
+                friendViewModel.onLanguageChanged()
+                NotificationsHelper(applicationContext).apply {
+                    createNotificationChannel()
+                    createLiveLocationNotificationChannel()
+                }
+            }
             CompositionLocalProvider(
                 LocalAppLanguage provides languageViewModel.currentLanguage,
                 LocalLocalizedContext provides localizedContext
@@ -154,7 +162,7 @@ class MainActivity : ComponentActivity() {
                     AppLayoutViewModel(
                         navController = navController,
                         themeDefinition = currentAppTheme,
-                        title = "Coming Soon",
+                        title = localizedContext.getString(R.string.app_name),
                         themeViewModel = themeViewModel,
                         languageViewModel = languageViewModel,
                         settingsViewModel = settingsViewModel,

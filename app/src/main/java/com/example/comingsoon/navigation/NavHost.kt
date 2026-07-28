@@ -8,10 +8,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.comingsoon.language.AppLanguageViewModel
+import com.example.comingsoon.language.appString
 import com.example.comingsoon.R
 import com.example.comingsoon.BuildConfig
 import com.example.comingsoon.auth.AuthApiClient
@@ -86,7 +88,8 @@ fun AppNavHost (
             val coroutineScope = rememberCoroutineScope()
             var isLoading by remember { mutableStateOf(false) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
-            val serverClientId = context.getString(R.string.google_web_client_id)
+            val serverClientId = stringResource(R.string.google_web_client_id)
+            val signInFailedMessage = appString(R.string.sign_in_failed)
 
             LoginScreen(
                 onGoogleSignInClick = {
@@ -113,11 +116,10 @@ fun AppNavHost (
                                             popUpTo(NavScreens.Login.route) { inclusive = true }
                                             launchSingleTop = true
                                         }
-                                    } catch (exception: AuthApiException) {
-                                        errorMessage = exception.message
-                                    } catch (exception: Exception) {
-                                        errorMessage = exception.localizedMessage
-                                            ?: "Die Anmeldung konnte nicht abgeschlossen werden."
+                                    } catch (_: AuthApiException) {
+                                        errorMessage = signInFailedMessage
+                                    } catch (_: Exception) {
+                                        errorMessage = signInFailedMessage
                                     }
                                 }
                                 GoogleSignInResult.Cancelled -> Unit

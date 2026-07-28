@@ -18,6 +18,7 @@ class AppLanguageViewModel (
         viewModelScope.launch {
             repository.settingsFlow.collect {
                 currentLanguage = it.language
+                repository.cacheLanguage(it.language)
             }
         }
     }
@@ -25,6 +26,7 @@ class AppLanguageViewModel (
         if (language == currentLanguage) {
             return
         }
+        repository.cacheLanguage(language)
         currentLanguage = language
 
         viewModelScope.launch {

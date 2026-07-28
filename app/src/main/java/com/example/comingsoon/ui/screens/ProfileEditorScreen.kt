@@ -61,7 +61,7 @@ fun ProfileEditorScreen(
 
         ProfileAvatar(
             profile = viewModel.profile,
-            contentDescription = "Profilbild von ${viewModel.profile.name}",
+            contentDescription = appString(R.string.profile_picture_of, viewModel.profile.name),
             modifier = Modifier
                 .size(180.dp)
         )

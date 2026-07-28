@@ -82,6 +82,92 @@
     <string name="longitude_name">Längengrad</string>
     <string name="journey_notification">Reisebenachrichtigung</string>
     <string name="journey_notification_description">Erhalte am Morgen des Starttags deiner Reise eine Erinnerung.</string>
+    <string name="menu">Menü</string>
+    <string name="close">Schließen</string>
+    <string name="clear">Leeren</string>
+    <string name="selected">Ausgewählt</string>
+    <string name="refresh">Aktualisieren</string>
+    <string name="loading_map">Karte wird geladen…</string>
+    <string name="tap_to_expand_map">Tippen, um die Karte zu vergrößern</string>
+    <string name="profile_picture_of">Profilbild von %1$s</string>
+    <plurals name="pin_count">
+        <item quantity="one">%1$d Pin</item>
+        <item quantity="other">%1$d Pins</item>
+    </plurals>
+
+    <!-- Anmeldung -->
+    <string name="login_tagline">Entdecke die Welt, plane deine Reisen und teile deine Abenteuer.</string>
+    <string name="login_prompt">Melde dich an, um loszulegen</string>
+    <string name="sign_in_with_google">Mit Google anmelden</string>
+    <string name="login_legal">Mit der Anmeldung akzeptierst du unsere Nutzungsbedingungen und Datenschutzrichtlinie.</string>
+
+    <!-- Reiseländer und Beanspruchen -->
+    <string name="visited_countries">Besuchte Länder</string>
+    <string name="no_countries_selected">Noch keine Länder ausgewählt.</string>
+    <string name="select_visited_countries">Besuchte Länder auswählen</string>
+    <string name="search_country">Land suchen</string>
+    <string name="remove_country">%1$s entfernen</string>
+    <string name="claim_location">Standort beanspruchen</string>
+    <string name="claim_countries">Länder beanspruchen</string>
+    <string name="clear_claims">Beanspruchte Länder löschen</string>
+    <string name="claim_explanation">Bist du gerade in diesem Land? Durch das Beanspruchen wird es dauerhaft gold auf deiner Karte markiert.</string>
+    <string name="claim_current_location">Aktuellen Standort verifizieren und beanspruchen</string>
+    <string name="detecting_location">Standort wird ermittelt…</string>
+    <string name="claim_success">🎉 Erfolgreich! Du hast %1$s beansprucht!</string>
+    <string name="claim_already_exists">Du hast %1$s bereits beansprucht.</string>
+    <string name="claim_error">❌ Fehler: %1$s</string>
+    <string name="claimed_countries">Beanspruchte Länder: %1$s</string>
+
+    <!-- Live-Standort -->
+    <string name="you">Du</string>
+    <string name="share_location">Standort teilen</string>
+    <string name="friends_see_live_location">Freunde sehen deinen Live-Standort</string>
+    <string name="turned_off">Ausgeschaltet</string>
+    <string name="location_permission_title">Standortzugriff erforderlich</string>
+    <string name="location_permission_message">Die App benötigt Standortzugriff, um deine Position und ihre Genauigkeit mit Freunden zu teilen.</string>
+    <string name="continue_action">Weiter</string>
+    <string name="background_location_title">Standort im Hintergrund</string>
+    <string name="background_location_message">Damit das Teilen auch bei gesperrtem Bildschirm oder geschlossener App weiterläuft, wähle auf dem nächsten Bildschirm „Immer erlauben“.</string>
+    <string name="permission_required_title">Berechtigung erforderlich</string>
+    <string name="permission_settings_message">Erlaube den Standortzugriff „Immer“ in den App-Einstellungen, damit du deinen Standort teilen kannst.</string>
+    <string name="open_settings">Einstellungen öffnen</string>
+    <string name="notification_travel_channel">Reisebenachrichtigungen</string>
+    <string name="notification_travel_channel_description">Benachrichtigungen zu Reisen und Reiseaktualisierungen</string>
+    <string name="notification_live_location_channel">Live-Standort teilen</string>
+    <string name="notification_live_location_channel_description">Wird angezeigt, während dein Live-Standort mit Freunden geteilt wird</string>
+    <string name="notification_live_location_title">Standort wird geteilt</string>
+    <string name="notification_live_location_text">Deine Freunde können deinen Live-Standort sehen.</string>
+    <string name="notification_stop_sharing">Teilen stoppen</string>
+    <string name="sign_in_failed">Die Anmeldung konnte nicht abgeschlossen werden.</string>
+    <string name="google_client_id_missing">Die Google-Web-Client-ID wurde noch nicht konfiguriert.</string>
+    <string name="google_sign_in_type_unknown">Google hat einen unbekannten Anmeldetyp geliefert.</string>
+    <string name="google_credentials_unreadable">Die Google-Anmeldedaten konnten nicht gelesen werden.</string>
+    <string name="google_sign_in_failed">Die Google-Anmeldung ist fehlgeschlagen.</string>
+    <string name="friends_search_too_short">Gib für die Suche mindestens zwei Zeichen ein.</string>
+    <string name="friends_load_failed">Die Freundesdaten konnten nicht geladen werden.</string>
+    <string name="live_locations_load_failed">Die Live-Standorte konnten nicht geladen werden.</string>
+    <string name="map_load_failed">Die Karte konnte nicht geladen werden.</string>
+    <string name="claim_permission_denied">Die Standortberechtigung wurde nicht erteilt.</string>
+    <string name="claim_location_unavailable">Dein Standort konnte nicht ermittelt werden. Stelle sicher, dass die Standortdienste aktiviert sind, und versuche es im Freien erneut.</string>
+    <string name="claim_country_not_recognized">Für die Koordinaten (%1$s, %2$s) wurde kein Land erkannt.</string>
+    <string name="claim_country_not_on_map">Das erkannte Land (%1$s, Code: %2$s) ist auf der Karte nicht verfügbar.</string>
+    <string name="claim_failed">Beanspruchen fehlgeschlagen: %1$s</string>
+    <string name="journey_sync_failed">Die Reisen konnten nicht synchronisiert werden.</string>
+    <string name="claim_sync_failed">Die beanspruchten Länder konnten nicht synchronisiert werden.</string>
+    <string name="share_sync_failed">Die geteilten Reisen konnten nicht synchronisiert werden.</string>
+    <string name="journey_data_loading">Die Reisedaten werden noch geladen.</string>
+    <string name="share_queued">Freigabe vorgemerkt. Sie wird bei der nächsten Verbindung synchronisiert.</string>
+    <string name="share_succeeded">Reise erfolgreich geteilt.</string>
+    <string name="share_failed">Die Reise konnte nicht geteilt werden.</string>
+    <string name="unshare_queued">Aufheben vorgemerkt. Die Änderung wird bei der nächsten Verbindung synchronisiert.</string>
+    <string name="unshare_succeeded">Die Freigabe wurde aufgehoben.</string>
+    <string name="unshare_failed">Die Freigabe konnte nicht aufgehoben werden.</string>
+    <string name="qr_requires_connection">Zum Erstellen des QR-Codes ist eine Serververbindung erforderlich.</string>
+    <string name="qr_create_failed">Der QR-Code konnte nicht erstellt werden.</string>
+    <string name="shared_journey_sign_in">Melde dich an, um die geteilte Reise zu öffnen.</string>
+    <string name="shared_journey_added">Die geteilte Reise wurde hinzugefügt.</string>
+    <string name="share_link_open_failed">Der Freigabelink konnte nicht geöffnet werden.</string>
+    <string name="unknown_error">Unbekannter Fehler</string>
 
     <string name="how_to_play">Wie möchtest du spielen?</string>
     <string name="online_or_local">Spiele online mit Freunden oder verbinde zwei Smartphones in der Nähe.</string>
@@ -379,4 +465,14 @@
     <string name="offline_friend_code_matches">Codes stimmen überein – Freund hinzufügen</string>
     <string name="offline_friend_exchanging">Profile werden sicher ausgetauscht…</string>
     <string name="offline_friend_added">%1$s wurde als Offline-Freund hinzugefügt.</string>
+    <string name="offline_friend_visible_failed">Dieses Smartphone konnte nicht sichtbar gemacht werden.</string>
+    <string name="offline_friend_search_failed">Geräte in der Nähe konnten nicht gesucht werden.</string>
+    <string name="offline_friend_request_failed">Die Verbindung konnte nicht angefordert werden.</string>
+    <string name="offline_friend_confirm_failed">Die Verbindung konnte nicht bestätigt werden.</string>
+    <string name="offline_friend_transfer_failed">Das Offline-Profil konnte nicht übertragen werden.</string>
+    <string name="offline_friend_invalid_profile">Das andere Smartphone hat kein gültiges Offline-Profil gesendet.</string>
+    <string name="offline_friend_save_failed">Der Freund konnte nicht gespeichert werden.</string>
+    <string name="offline_friend_rejected">Die andere Person hat die Verbindung abgelehnt.</string>
+    <string name="offline_friend_connection_failed">Die Verbindung in der Nähe konnte nicht hergestellt werden.</string>
+    <string name="offline_friend_disconnected">Die Verbindung zum anderen Smartphone wurde getrennt.</string>
 </resources>

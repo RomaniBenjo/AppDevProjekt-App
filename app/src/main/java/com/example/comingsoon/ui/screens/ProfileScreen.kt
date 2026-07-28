@@ -45,7 +45,7 @@ fun ProfileScreen(
 
             ProfileAvatar(
                 profile = profile,
-                contentDescription = "Profilbild von ${profile.name}",
+                contentDescription = appString(R.string.profile_picture_of, profile.name),
                 modifier = Modifier
                     .fillMaxSize()
             )

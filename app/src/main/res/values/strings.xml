@@ -83,6 +83,92 @@
     <string name="longitude_name">Longitude</string>
     <string name="journey_notification">Journey Reminder</string>
     <string name="journey_notification_description">Receive a reminder on the morning your journey begins.</string>
+    <string name="menu">Menu</string>
+    <string name="close">Close</string>
+    <string name="clear">Clear</string>
+    <string name="selected">Selected</string>
+    <string name="refresh">Refresh</string>
+    <string name="loading_map">Loading map…</string>
+    <string name="tap_to_expand_map">Tap to expand map</string>
+    <string name="profile_picture_of">Profile picture of %1$s</string>
+    <plurals name="pin_count">
+        <item quantity="one">%1$d pin</item>
+        <item quantity="other">%1$d pins</item>
+    </plurals>
+
+    <!-- Login -->
+    <string name="login_tagline">Discover the world, plan your journeys and share your adventures.</string>
+    <string name="login_prompt">Sign in to get started</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="login_legal">By signing in, you accept our Terms of Use and Privacy Policy.</string>
+
+    <!-- Journey countries and claiming -->
+    <string name="visited_countries">Visited Countries</string>
+    <string name="no_countries_selected">No countries selected yet.</string>
+    <string name="select_visited_countries">Select Visited Countries</string>
+    <string name="search_country">Search Country</string>
+    <string name="remove_country">Remove %1$s</string>
+    <string name="claim_location">Claim location</string>
+    <string name="claim_countries">Claim countries</string>
+    <string name="clear_claims">Clear claimed countries</string>
+    <string name="claim_explanation">Are you currently in this country? Claiming it permanently highlights it in gold on your map.</string>
+    <string name="claim_current_location">Verify current location and claim</string>
+    <string name="detecting_location">Detecting location…</string>
+    <string name="claim_success">🎉 Success! You claimed %1$s!</string>
+    <string name="claim_already_exists">You have already claimed %1$s.</string>
+    <string name="claim_error">❌ Error: %1$s</string>
+    <string name="claimed_countries">Claimed countries: %1$s</string>
+
+    <!-- Live location -->
+    <string name="you">You</string>
+    <string name="share_location">Share location</string>
+    <string name="friends_see_live_location">Friends can see your live location</string>
+    <string name="turned_off">Off</string>
+    <string name="location_permission_title">Location access required</string>
+    <string name="location_permission_message">The app needs location access to share your position and its accuracy with friends.</string>
+    <string name="continue_action">Continue</string>
+    <string name="background_location_title">Background location</string>
+    <string name="background_location_message">To keep sharing when the screen is locked or the app is closed, select “Allow all the time” on the next screen.</string>
+    <string name="permission_required_title">Permission required</string>
+    <string name="permission_settings_message">Allow location access “All the time” in the app settings to share your location.</string>
+    <string name="open_settings">Open settings</string>
+    <string name="notification_travel_channel">Travel notifications</string>
+    <string name="notification_travel_channel_description">Notifications for journeys and travel updates</string>
+    <string name="notification_live_location_channel">Live location sharing</string>
+    <string name="notification_live_location_channel_description">Shown while your live location is shared with friends</string>
+    <string name="notification_live_location_title">Location is being shared</string>
+    <string name="notification_live_location_text">Your friends can see your live location.</string>
+    <string name="notification_stop_sharing">Stop sharing</string>
+    <string name="sign_in_failed">Sign-in could not be completed.</string>
+    <string name="google_client_id_missing">The Google web client ID has not been configured.</string>
+    <string name="google_sign_in_type_unknown">Google returned an unknown sign-in type.</string>
+    <string name="google_credentials_unreadable">The Google credentials could not be read.</string>
+    <string name="google_sign_in_failed">Google sign-in failed.</string>
+    <string name="friends_search_too_short">Enter at least two characters to search.</string>
+    <string name="friends_load_failed">Friend data could not be loaded.</string>
+    <string name="live_locations_load_failed">Live locations could not be loaded.</string>
+    <string name="map_load_failed">The map could not be loaded.</string>
+    <string name="claim_permission_denied">Location permission was not granted.</string>
+    <string name="claim_location_unavailable">Your location could not be determined. Make sure location services are enabled and try again outdoors.</string>
+    <string name="claim_country_not_recognized">No country was found for the coordinates (%1$s, %2$s).</string>
+    <string name="claim_country_not_on_map">The detected country (%1$s, code: %2$s) is not available on the map.</string>
+    <string name="claim_failed">Claiming failed: %1$s</string>
+    <string name="journey_sync_failed">Journeys could not be synchronized.</string>
+    <string name="claim_sync_failed">Claimed countries could not be synchronized.</string>
+    <string name="share_sync_failed">Shared journeys could not be synchronized.</string>
+    <string name="journey_data_loading">Journey data is still loading.</string>
+    <string name="share_queued">Sharing queued. It will synchronize when you are back online.</string>
+    <string name="share_succeeded">Journey shared successfully.</string>
+    <string name="share_failed">The journey could not be shared.</string>
+    <string name="unshare_queued">Removal queued. The change will synchronize when you are back online.</string>
+    <string name="unshare_succeeded">Sharing was removed.</string>
+    <string name="unshare_failed">Sharing could not be removed.</string>
+    <string name="qr_requires_connection">A server connection is required to create the QR code.</string>
+    <string name="qr_create_failed">The QR code could not be created.</string>
+    <string name="shared_journey_sign_in">Sign in to open the shared journey.</string>
+    <string name="shared_journey_added">The shared journey was added.</string>
+    <string name="share_link_open_failed">The share link could not be opened.</string>
+    <string name="unknown_error">Unknown error</string>
 
     <string name="how_to_play">How do you want to play?</string>
     <string name="online_or_local">Play online with friends or connect two nearby phones.</string>
@@ -380,4 +466,14 @@
     <string name="offline_friend_code_matches">Codes match – add friend</string>
     <string name="offline_friend_exchanging">Securely exchanging profiles…</string>
     <string name="offline_friend_added">%1$s was added as an offline friend.</string>
+    <string name="offline_friend_visible_failed">This phone could not be made visible.</string>
+    <string name="offline_friend_search_failed">Nearby devices could not be searched.</string>
+    <string name="offline_friend_request_failed">The connection could not be requested.</string>
+    <string name="offline_friend_confirm_failed">The connection could not be confirmed.</string>
+    <string name="offline_friend_transfer_failed">The offline profile could not be transferred.</string>
+    <string name="offline_friend_invalid_profile">The other phone sent an invalid offline profile.</string>
+    <string name="offline_friend_save_failed">The friend could not be saved.</string>
+    <string name="offline_friend_rejected">The other person rejected the connection.</string>
+    <string name="offline_friend_connection_failed">The nearby connection could not be established.</string>
+    <string name="offline_friend_disconnected">The connection to the other phone was lost.</string>
 </resources>

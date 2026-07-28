@@ -54,7 +54,7 @@ fun LiveLocationScreen(
         viewModel.selfPosition?.let { position ->
             add(
                 LiveMapEntry(
-                    label = "Du",
+                    label = appString(R.string.you),
                     position = position,
                     accuracyMeters = viewModel.selfAccuracyMeters,
                     trail = viewModel.selfTrail,
@@ -75,7 +75,11 @@ fun LiveLocationScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LiveLocationMap(entries = entries, modifier = Modifier.fillMaxSize())
+        LiveLocationMap(
+            entries = entries,
+            mapLoadError = appString(R.string.map_load_failed),
+            modifier = Modifier.fillMaxSize()
+        )
 
         Card(
             modifier = Modifier
@@ -94,9 +98,13 @@ fun LiveLocationScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("Standort teilen", style = MaterialTheme.typography.titleMedium)
+                    Text(appString(R.string.share_location), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        text = if (viewModel.isSharing) "Freunde sehen deine Live-Position" else "Ausgeschaltet",
+                        text = if (viewModel.isSharing) {
+                            appString(R.string.friends_see_live_location)
+                        } else {
+                            appString(R.string.turned_off)
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

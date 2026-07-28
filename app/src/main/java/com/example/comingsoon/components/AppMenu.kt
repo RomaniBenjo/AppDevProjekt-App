@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalConfiguration
 import com.example.comingsoon.language.appString
+import com.example.comingsoon.R
 import com.example.comingsoon.viewmodels.Profile
 
 @Composable
@@ -84,7 +85,7 @@ fun AppMenu (
                     ) {
                         ProfileAvatar(
                             profile = profile,
-                            contentDescription = "Profilbild von ${profile.name}",
+                            contentDescription = appString(R.string.profile_picture_of, profile.name),
                             modifier = Modifier.size(84.dp)
                         )
                         Spacer(Modifier.height(10.dp))

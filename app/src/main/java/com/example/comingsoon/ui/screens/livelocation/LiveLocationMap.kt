@@ -55,6 +55,7 @@ private const val ARCHIVE_URL_PLACEHOLDER = "pmtiles://LOCAL_ARCHIVE"
 @Composable
 fun LiveLocationMap(
     entries: List<LiveMapEntry>,
+    mapLoadError: String,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -105,7 +106,7 @@ fun LiveLocationMap(
                         isStyleReady = true
                     }
                 }
-            }.onFailure { mapView.post { errorMessage = "Karte konnte nicht geladen werden." } }
+            }.onFailure { mapView.post { errorMessage = mapLoadError } }
         }.start()
     }
 

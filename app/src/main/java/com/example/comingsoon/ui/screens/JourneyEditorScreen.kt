@@ -61,12 +61,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.comingsoon.R
 import com.example.comingsoon.language.appString
+import com.example.comingsoon.language.appDateString
+import com.example.comingsoon.language.LocalAppLanguage
+import com.example.comingsoon.language.localizedCountryName
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.viewmodels.JourneyLocation
 import com.example.comingsoon.viewmodels.JourneyViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Locale
+
+private data class CountryOption(
+    val value: String,
+    val displayName: String
+)
 
 @Composable
 fun JourneyEditorScreen (
@@ -105,8 +114,14 @@ fun JourneyEditorScreen (
         viewModel.loadWorldMap(context)
     }
 
-    val allCountries = remember(viewModel.countries) {
-        viewModel.countries.map { it.name ?: it.id }.distinct().sorted()
+    val language = LocalAppLanguage.current
+    val allCountries = remember(viewModel.countries, language) {
+        val locale = Locale.forLanguageTag(language.languageTag)
+        viewModel.countries.map { country ->
+            val value = country.name ?: country.id
+            val displayName = localizedCountryName(country.id, country.name, locale)
+            CountryOption(value = value, displayName = displayName)
+        }.distinctBy { it.value }.sortedBy { it.displayName }
     }
 
     Box(modifier = Modifier.fillMaxSize().padding(20.dp)) {
@@ -144,7 +159,7 @@ fun JourneyEditorScreen (
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     TextField(
-                        value = startDate.toString(),
+                        value = appDateString(startDate),
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.weight(1f),
@@ -177,7 +192,7 @@ fun JourneyEditorScreen (
                     )
 
                     TextField(
-                        value = endDate.toString(),
+                        value = appDateString(endDate),
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.weight(1f),
@@ -233,7 +248,7 @@ fun JourneyEditorScreen (
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Visited Countries",
+                        text = appString(R.string.visited_countries),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -242,7 +257,7 @@ fun JourneyEditorScreen (
                     
                     if (visitedCountries.isEmpty()) {
                         Text(
-                            text = "No countries selected yet.",
+                            text = appString(R.string.no_countries_selected),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
@@ -255,6 +270,10 @@ fun JourneyEditorScreen (
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             visitedCountries.forEach { country ->
+                                val displayName = allCountries
+                                    .firstOrNull { it.value == country }
+                                    ?.displayName
+                                    ?: country
                                 Row(
                                     modifier = Modifier
                                         .background(
@@ -270,14 +289,17 @@ fun JourneyEditorScreen (
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = country,
+                                        text = displayName,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Icon(
                                         imageVector = Icons.Default.Close,
-                                        contentDescription = "Remove country",
+                                        contentDescription = appString(
+                                            R.string.remove_country,
+                                            displayName
+                                        ),
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
                                             .size(16.dp)
@@ -305,7 +327,7 @@ fun JourneyEditorScreen (
                         null
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Select Visited Countries")
+                    Text(appString(R.string.select_visited_countries))
                 }
             }
 
@@ -459,8 +481,8 @@ fun JourneyEditorScreen (
 }
 
 @Composable
-fun AddCountryDialog(
-    allCountries: List<String>,
+private fun AddCountryDialog(
+    allCountries: List<CountryOption>,
     selectedCountries: List<String>,
     onDismiss: () -> Unit,
     onCountryToggle: (String) -> Unit
@@ -469,25 +491,25 @@ fun AddCountryDialog(
     
     val filteredCountries = remember(searchQuery, allCountries) {
         allCountries.filter {
-            it.contains(searchQuery, ignoreCase = true)
+            it.displayName.contains(searchQuery, ignoreCase = true)
         }
     }
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Visited Countries") },
+        title = { Text(appString(R.string.select_visited_countries)) },
         text = {
             Column(modifier = Modifier.height(300.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = { Text("Search Country") },
+                    label = { Text(appString(R.string.search_country)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                                Icon(Icons.Default.Close, contentDescription = appString(R.string.clear))
                             }
                         }
                     }
@@ -497,18 +519,18 @@ fun AddCountryDialog(
                 
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(filteredCountries) { country ->
-                        val isSelected = selectedCountries.contains(country)
+                        val isSelected = selectedCountries.contains(country.value)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    onCountryToggle(country)
+                                    onCountryToggle(country.value)
                                 }
                                 .padding(vertical = 12.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = country,
+                                text = country.displayName,
                                 modifier = Modifier.weight(1f),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -516,7 +538,7 @@ fun AddCountryDialog(
                             if (isSelected) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
+                                    contentDescription = appString(R.string.selected),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -528,7 +550,7 @@ fun AddCountryDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Done")
+                Text(appString(R.string.done))
             }
         }
     )

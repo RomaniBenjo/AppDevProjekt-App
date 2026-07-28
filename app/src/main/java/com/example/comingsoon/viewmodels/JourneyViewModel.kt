@@ -39,6 +39,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.xmlpull.v1.XmlPullParser
 import java.time.LocalDate
+import com.example.comingsoon.R
+import com.example.comingsoon.language.localizedString
+import com.example.comingsoon.language.persistedAppLanguage
+import com.example.comingsoon.language.localizedCountryName
 
 data class Journey(
     val id: Int,
@@ -72,7 +76,8 @@ sealed interface ClaimStatus {
 
 class JourneyViewModel(
     private val journeysRepository: JourneysRepository,
-    private val claimedCountriesRepository: ClaimedCountriesRepository
+    private val claimedCountriesRepository: ClaimedCountriesRepository,
+    private val appContext: Context
 ) : ViewModel() {
     private val _journeys = mutableStateListOf<Journey>()
 
@@ -208,6 +213,15 @@ class JourneyViewModel(
         claimStatus = ClaimStatus.Idle
     }
 
+    fun onLanguageChanged() {
+        claimStatus = ClaimStatus.Idle
+        shareError = null
+        shareFeedback = null
+        journeySyncError = null
+        shareSyncError = null
+        claimedCountrySyncError = null
+    }
+
     fun claimCurrentCountry(context: Context, latitudeOverride: Double? = null, longitudeOverride: Double? = null) {
         claimStatus = ClaimStatus.Detecting
         viewModelScope.launch(Dispatchers.IO) {
@@ -222,7 +236,9 @@ class JourneyViewModel(
                     if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         withContext(Dispatchers.Main) {
-                            claimStatus = ClaimStatus.Error("Standortberechtigung nicht erteilt.")
+                            claimStatus = ClaimStatus.Error(
+                                appContext.localizedString(R.string.claim_permission_denied)
+                            )
                         }
                         return@launch
                     }
@@ -275,7 +291,9 @@ class JourneyViewModel(
                         lng = location.longitude
                     } else {
                         withContext(Dispatchers.Main) {
-                            claimStatus = ClaimStatus.Error("Standort konnte nicht ermittelt werden. Bitte stelle sicher, dass Standortdienste aktiviert sind und versuche es im Freien erneut.")
+                            claimStatus = ClaimStatus.Error(
+                                appContext.localizedString(R.string.claim_location_unavailable)
+                            )
                         }
                         return@launch
                     }
@@ -309,7 +327,13 @@ class JourneyViewModel(
 
                 if (countryCode == null || countryName == null) {
                     withContext(Dispatchers.Main) {
-                        claimStatus = ClaimStatus.Error("Land für Koordinaten ($lat, $lng) nicht erkannt.")
+                        claimStatus = ClaimStatus.Error(
+                            appContext.localizedString(
+                                R.string.claim_country_not_recognized,
+                                lat,
+                                lng
+                            )
+                        )
                     }
                     return@launch
                 }
@@ -331,7 +355,13 @@ class JourneyViewModel(
 
                 if (matchedCountry == null) {
                     withContext(Dispatchers.Main) {
-                        claimStatus = ClaimStatus.Error("Erkanntes Land ($countryName, Code: $countryCode) ist auf der Karte nicht verfügbar.")
+                        claimStatus = ClaimStatus.Error(
+                            appContext.localizedString(
+                                R.string.claim_country_not_on_map,
+                                countryName,
+                                countryCode
+                            )
+                        )
                     }
                     return@launch
                 }
@@ -356,13 +386,26 @@ class JourneyViewModel(
                     if (!alreadyClaimed) {
                         _claimedCountries.add(svgId)
                     }
-                    claimStatus = ClaimStatus.Success(matchedCountry.name ?: countryName, !alreadyClaimed)
+                    val displayLocale = Locale.forLanguageTag(
+                        appContext.persistedAppLanguage().languageTag
+                    )
+                    val displayCountry = localizedCountryName(
+                        countryCode,
+                        matchedCountry.name ?: countryName,
+                        displayLocale
+                    )
+                    claimStatus = ClaimStatus.Success(displayCountry, !alreadyClaimed)
                 }
                 if (!alreadyClaimed) triggerSync()
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    claimStatus = ClaimStatus.Error("Fehler beim Claimen: ${e.localizedMessage}")
+                    claimStatus = ClaimStatus.Error(
+                        appContext.localizedString(
+                            R.string.claim_failed,
+                            appContext.localizedString(R.string.unknown_error)
+                        )
+                    )
                 }
             }
         }
@@ -444,9 +487,15 @@ class JourneyViewModel(
                     _pendingJourneyShares.addAll(pendingShares)
                     _claimedCountries.clear()
                     _claimedCountries.addAll(refreshedClaims)
-                    journeySyncError = journeyResult.exceptionOrNull()?.message
-                    claimedCountrySyncError = claimedResult.exceptionOrNull()?.message
-                    shareSyncError = shareResult.exceptionOrNull()?.message
+                    journeySyncError = journeyResult.exceptionOrNull()?.let {
+                        appContext.localizedString(R.string.journey_sync_failed)
+                    }
+                    claimedCountrySyncError = claimedResult.exceptionOrNull()?.let {
+                        appContext.localizedString(R.string.claim_sync_failed)
+                    }
+                    shareSyncError = shareResult.exceptionOrNull()?.let {
+                        appContext.localizedString(R.string.share_sync_failed)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -554,7 +603,7 @@ class JourneyViewModel(
                     recipientId = pending.recipientId,
                     ownerName = owner?.name?.takeIf { it.isNotBlank() }
                         ?: owner?.email?.substringBefore('@')
-                        ?: "Du",
+                        ?: appContext.localizedString(R.string.you),
                     ownerEmail = owner?.email.orEmpty(),
                     ownerPictureUrl = owner?.pictureUrl,
                     shareType = "manual",
@@ -578,7 +627,7 @@ class JourneyViewModel(
 
     fun shareJourney(journeyId: Int, friendId: Int, onResult: (Boolean) -> Unit = {}) {
         val currentDao = dao ?: run {
-            shareError = "Die Reisedaten sind noch nicht geladen."
+            shareError = appContext.localizedString(R.string.journey_data_loading)
             onResult(false)
             return
         }
@@ -619,15 +668,15 @@ class JourneyViewModel(
                     _pendingJourneyShares.clear()
                     _pendingJourneyShares.addAll(pendingShares)
                     shareFeedback = if (remainsPending) {
-                        "Freigabe vorgemerkt. Sie wird bei der nächsten Verbindung synchronisiert."
+                        appContext.localizedString(R.string.share_queued)
                     } else {
-                        "Reise erfolgreich geteilt."
+                        appContext.localizedString(R.string.share_succeeded)
                     }
                     onResult(true)
                 }
             } catch (exception: Exception) {
                 withContext(Dispatchers.Main) {
-                    shareError = exception.message ?: "Die Reise konnte nicht geteilt werden."
+                    shareError = appContext.localizedString(R.string.share_failed)
                     onResult(false)
                 }
             } finally {
@@ -675,15 +724,15 @@ class JourneyViewModel(
                     _pendingJourneyShares.clear()
                     _pendingJourneyShares.addAll(pendingShares)
                     shareFeedback = if (remainsPending) {
-                        "Aufheben vorgemerkt. Die Änderung wird bei der nächsten Verbindung synchronisiert."
+                        appContext.localizedString(R.string.unshare_queued)
                     } else {
-                        "Freigabe wurde aufgehoben."
+                        appContext.localizedString(R.string.unshare_succeeded)
                     }
                     onResult(true)
                 }
             } catch (exception: Exception) {
                 withContext(Dispatchers.Main) {
-                    shareError = exception.message ?: "Die Freigabe konnte nicht aufgehoben werden."
+                    shareError = appContext.localizedString(R.string.unshare_failed)
                     onResult(false)
                 }
             } finally {
@@ -707,7 +756,7 @@ class JourneyViewModel(
     fun createQrShareLink(journeyId: Int) {
         if (isCreatingQrLink || qrDeepLink != null) return
         if (!isNetworkAvailable || !journeysRepository.hasSession()) {
-            shareError = "Zum Erstellen des QR-Codes ist eine Serververbindung erforderlich."
+            shareError = appContext.localizedString(R.string.qr_requires_connection)
             return
         }
         viewModelScope.launch(Dispatchers.IO) {
@@ -723,7 +772,7 @@ class JourneyViewModel(
                 }
             } catch (exception: Exception) {
                 withContext(Dispatchers.Main) {
-                    shareError = exception.message ?: "Der QR-Code konnte nicht erstellt werden."
+                    shareError = appContext.localizedString(R.string.qr_create_failed)
                 }
             } finally {
                 withContext(Dispatchers.Main) { isCreatingQrLink = false }
@@ -739,7 +788,7 @@ class JourneyViewModel(
 
     fun acceptShareLink(token: String, onResult: (JourneyShareSnapshot?) -> Unit) {
         if (!journeysRepository.hasSession()) {
-            shareError = "Bitte melde dich an, um die geteilte Reise zu öffnen."
+            shareError = appContext.localizedString(R.string.shared_journey_sign_in)
             onResult(null)
             return
         }
@@ -750,12 +799,12 @@ class JourneyViewModel(
                 withContext(Dispatchers.Main) {
                     _journeyShares.clear()
                     _journeyShares.addAll(refreshed)
-                    shareFeedback = "Geteilte Reise wurde hinzugefügt."
+                    shareFeedback = appContext.localizedString(R.string.shared_journey_added)
                     onResult(accepted)
                 }
             } catch (exception: Exception) {
                 withContext(Dispatchers.Main) {
-                    shareError = exception.message ?: "Der Freigabelink konnte nicht geöffnet werden."
+                    shareError = appContext.localizedString(R.string.share_link_open_failed)
                     onResult(null)
                 }
             }

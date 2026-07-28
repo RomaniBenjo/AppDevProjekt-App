@@ -19,6 +19,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.maplibre.android.geometry.LatLng
+import com.example.comingsoon.R
+import com.example.comingsoon.language.localizedString
 
 class LiveLocationViewModel(
     private val repository: LiveLocationRepository,
@@ -64,6 +66,10 @@ class LiveLocationViewModel(
         _selfTrail.clear()
     }
 
+    fun onLanguageChanged() {
+        errorMessage = null
+    }
+
     fun refreshFriendLocations() {
         viewModelScope.launch {
             runCatching { repository.getFriendsLiveLocations() }
@@ -71,7 +77,9 @@ class LiveLocationViewModel(
                     _friendLocations.clear()
                     _friendLocations.addAll(it)
                 }
-                .onFailure { errorMessage = it.localizedMessage }
+                .onFailure {
+                    errorMessage = context.localizedString(R.string.live_locations_load_failed)
+                }
         }
     }
 
