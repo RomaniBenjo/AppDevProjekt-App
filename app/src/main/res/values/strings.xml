@@ -136,6 +136,10 @@
     <string name="notification_travel_channel_description">Notifications for journeys and travel updates</string>
     <string name="notification_live_location_channel">Live location sharing</string>
     <string name="notification_live_location_channel_description">Shown while your live location is shared with friends</string>
+    <string name="notification_friends_channel">Friend requests</string>
+    <string name="notification_friends_channel_description">Notifications for new incoming friend requests</string>
+    <string name="notification_friend_request_title">New friend request</string>
+    <string name="notification_friend_request_text">%1$s sent you a friend request.</string>
     <string name="notification_live_location_title">Location is being shared</string>
     <string name="notification_live_location_text">Your friends can see your live location.</string>
     <string name="notification_stop_sharing">Stop sharing</string>

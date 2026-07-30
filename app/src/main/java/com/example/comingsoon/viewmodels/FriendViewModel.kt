@@ -26,6 +26,10 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import com.example.comingsoon.R
 import com.example.comingsoon.language.localizedString
+import com.example.comingsoon.notifications.NotificationsHelper
+import com.example.comingsoon.notifications.FriendRequestNotificationStore
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 data class Friend(
     val id: Int,
@@ -63,6 +67,9 @@ class FriendViewModel(
     private val context: Context
 ) : ViewModel() {
     private var realtimeJob: Job? = null
+    private val refreshMutex = Mutex()
+    private val friendRequestNotificationStore =
+        FriendRequestNotificationStore(context.applicationContext)
     private var onOfflineJourneyReceived: suspend (
         OfflineFriendIdentity,
         OfflineJourneyPayload
@@ -162,7 +169,11 @@ class FriendViewModel(
             var retryDelayMillis = 1_000L
             while (isActive && repository.hasSession()) {
                 try {
-                    refresh(showLoading = false, showErrors = false)
+                    refreshNow(
+                        showLoading = false,
+                        showErrors = false,
+                        notifyNewIncomingRequests = false
+                    )
                     repository.listenForUpdates { eventType ->
                         viewModelScope.launch {
                             if (
@@ -171,7 +182,12 @@ class FriendViewModel(
                             ) {
                                 journeyShareUpdateVersion += 1
                             }
-                            refresh(showLoading = false, showErrors = false)
+                            refreshNow(
+                                showLoading = false,
+                                showErrors = false,
+                                notifyNewIncomingRequests =
+                                    eventType == "friend_request_created"
+                            )
                         }
                     }
                     retryDelayMillis = 1_000L
@@ -201,26 +217,60 @@ class FriendViewModel(
 
     private fun refresh(showLoading: Boolean, showErrors: Boolean) {
         viewModelScope.launch {
-            if (showLoading) isLoading = true
-            if (showErrors) errorMessage = null
-            replaceFriendsFromCache()
-            if (!repository.hasSession()) {
-                if (showLoading) isLoading = false
-                return@launch
-            }
-            runCatching { repository.synchronizeFriends() }
-                .onSuccess { snapshot ->
-                    _friends.replaceWith(snapshot.friends.map(::toFriend))
-                    _incomingRequests.replaceWith(
-                        snapshot.requests.incoming.map { it.toRequest(incoming = true) }
-                    )
-                    _outgoingRequests.replaceWith(
-                        snapshot.requests.outgoing.map { it.toRequest(incoming = false) }
-                    )
-                }.onFailure { throwable ->
-                    if (showErrors && _friends.isEmpty()) showError(throwable)
-                }
+            refreshNow(showLoading, showErrors, notifyNewIncomingRequests = false)
+        }
+    }
+
+    private suspend fun refreshNow(
+        showLoading: Boolean,
+        showErrors: Boolean,
+        notifyNewIncomingRequests: Boolean
+    ) = refreshMutex.withLock {
+        if (showLoading) isLoading = true
+        if (showErrors) errorMessage = null
+        replaceFriendsFromCache()
+        if (!repository.hasSession()) {
             if (showLoading) isLoading = false
+            return@withLock
+        }
+        runCatching { repository.synchronizeFriends() }
+            .onSuccess { snapshot ->
+                applySnapshot(snapshot, notifyNewIncomingRequests)
+            }.onFailure { throwable ->
+                if (showErrors && _friends.isEmpty()) showError(throwable)
+            }
+        if (showLoading) isLoading = false
+    }
+
+    private fun applySnapshot(
+        snapshot: com.example.comingsoon.friends.FriendsSyncResult,
+        notifyNewIncomingRequests: Boolean
+    ) {
+        val incoming = snapshot.requests.incoming.map { it.toRequest(incoming = true) }
+        val userId = currentUserId
+        val newIncomingIds = when {
+            userId == null -> emptySet()
+            notifyNewIncomingRequests -> friendRequestNotificationStore
+                .newRequests(userId, snapshot.requests.incoming)
+                .mapTo(mutableSetOf(), ServerFriendRequest::id)
+            else -> {
+                friendRequestNotificationStore.remember(
+                    userId,
+                    snapshot.requests.incoming.map(ServerFriendRequest::id)
+                )
+                emptySet()
+            }
+        }
+        _friends.replaceWith(snapshot.friends.map(::toFriend))
+        _incomingRequests.replaceWith(incoming)
+        _outgoingRequests.replaceWith(
+            snapshot.requests.outgoing.map { it.toRequest(incoming = false) }
+        )
+        incoming.filter { it.id in newIncomingIds }.forEach { request ->
+            NotificationsHelper(context).showFriendRequest(
+                requestId = request.id,
+                senderName = request.user.name
+            )
         }
     }
 
@@ -299,9 +349,7 @@ class FriendViewModel(
 
     private suspend fun refreshAfterMutation() {
         val snapshot = repository.synchronizeFriends()
-        _friends.replaceWith(snapshot.friends.map(::toFriend))
-        _incomingRequests.replaceWith(snapshot.requests.incoming.map { it.toRequest(true) })
-        _outgoingRequests.replaceWith(snapshot.requests.outgoing.map { it.toRequest(false) })
+        applySnapshot(snapshot, notifyNewIncomingRequests = false)
     }
 
     private fun ServerFriendRequest.toRequest(incoming: Boolean) = FriendRequest(

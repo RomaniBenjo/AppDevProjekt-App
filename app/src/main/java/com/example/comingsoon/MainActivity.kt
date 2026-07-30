@@ -1,6 +1,10 @@
 package com.example.comingsoon
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,6 +18,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.core.content.ContextCompat
 import com.example.comingsoon.components.AppLayoutViewModel
 import com.example.comingsoon.data.AppPreferenceRepository
 import com.example.comingsoon.auth.AuthSessionStore
@@ -33,6 +39,7 @@ import com.example.comingsoon.language.LocalAppLanguage
 import com.example.comingsoon.language.LocalLocalizedContext
 import com.example.comingsoon.language.localized
 import com.example.comingsoon.notifications.NotificationsHelper
+import com.example.comingsoon.notifications.FriendRequestNotificationScheduler
 import com.example.comingsoon.overlays.OverlayViewModel
 import com.example.comingsoon.ui.theme.AppThemeViewModel
 import com.example.comingsoon.ui.theme.ComingSoonTheme
@@ -46,15 +53,23 @@ import com.example.comingsoon.navigation.NavScreens
 class MainActivity : ComponentActivity() {
     private var pendingFriendId by mutableStateOf<Int?>(null)
     private var pendingJourneyShareToken by mutableStateOf<String?>(null)
+    private var openFriendsFromNotification by mutableStateOf(false)
+    private var notificationPermissionRequestedThisSession = false
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pendingFriendId = FriendQrPayload.parse(intent?.dataString)
         pendingJourneyShareToken = JourneyShareLink.parse(intent?.dataString)
+        openFriendsFromNotification = intent?.getBooleanExtra(OPEN_FRIENDS_EXTRA, false) == true
         NotificationsHelper(this).apply {
             createNotificationChannel()
             createLiveLocationNotificationChannel()
+            createFriendNotificationChannel()
         }
+        FriendRequestNotificationScheduler.schedule(applicationContext)
         enableEdgeToEdge()
 
         setContent {
@@ -93,6 +108,7 @@ class MainActivity : ComponentActivity() {
             )
 
             val navController = rememberNavController()
+            val currentBackStackEntry by navController.currentBackStackEntryAsState()
             val themeViewModel: AppThemeViewModel = viewModel(factory = factory)
             val languageViewModel: AppLanguageViewModel = viewModel(factory = factory)
             val settingsViewModel: SettingsViewModel = viewModel(factory = factory)
@@ -108,6 +124,27 @@ class MainActivity : ComponentActivity() {
                 )
                 onDispose {
                     friendViewModel.unbindOfflineJourneyCallbacks()
+                }
+            }
+
+            LaunchedEffect(
+                currentBackStackEntry?.destination?.route,
+                friendViewModel.currentUserId
+            ) {
+                if (friendViewModel.currentUserId != null) {
+                    requestNotificationPermissionIfNeeded()
+                }
+            }
+
+            LaunchedEffect(openFriendsFromNotification, friendViewModel.currentUserId) {
+                if (
+                    openFriendsFromNotification &&
+                    friendViewModel.currentUserId != null
+                ) {
+                    openFriendsFromNotification = false
+                    navController.navigate(NavScreens.Friends.route) {
+                        launchSingleTop = true
+                    }
                 }
             }
 
@@ -168,6 +205,7 @@ class MainActivity : ComponentActivity() {
                 NotificationsHelper(applicationContext).apply {
                     createNotificationChannel()
                     createLiveLocationNotificationChannel()
+                    createFriendNotificationChannel()
                 }
             }
             CompositionLocalProvider(
@@ -203,5 +241,26 @@ class MainActivity : ComponentActivity() {
         JourneyShareLink.parse(intent?.dataString)?.let {
             pendingJourneyShareToken = it
         }
+        if (intent?.getBooleanExtra(OPEN_FRIENDS_EXTRA, false) == true) {
+            openFriendsFromNotification = true
+        }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < 33 || notificationPermissionRequestedThisSession) return
+        if (
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        notificationPermissionRequestedThisSession = true
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    companion object {
+        const val OPEN_FRIENDS_EXTRA = "open_friends_from_notification"
     }
 }

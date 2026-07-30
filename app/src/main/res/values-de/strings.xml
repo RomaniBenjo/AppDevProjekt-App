@@ -135,6 +135,10 @@
     <string name="notification_travel_channel_description">Benachrichtigungen zu Reisen und Reiseaktualisierungen</string>
     <string name="notification_live_location_channel">Live-Standort teilen</string>
     <string name="notification_live_location_channel_description">Wird angezeigt, während dein Live-Standort mit Freunden geteilt wird</string>
+    <string name="notification_friends_channel">Freundschaftsanfragen</string>
+    <string name="notification_friends_channel_description">Benachrichtigungen über neue eingehende Freundschaftsanfragen</string>
+    <string name="notification_friend_request_title">Neue Freundschaftsanfrage</string>
+    <string name="notification_friend_request_text">%1$s hat dir eine Freundschaftsanfrage gesendet.</string>
     <string name="notification_live_location_title">Standort wird geteilt</string>
     <string name="notification_live_location_text">Deine Freunde können deinen Live-Standort sehen.</string>
     <string name="notification_stop_sharing">Teilen stoppen</string>

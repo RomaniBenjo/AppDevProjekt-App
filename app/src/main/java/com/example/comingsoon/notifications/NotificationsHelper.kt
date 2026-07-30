@@ -1,6 +1,7 @@
 package com.example.comingsoon.notifications
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,8 +24,10 @@ class NotificationsHelper(
     companion object {
         const val CHANNEL_ID = "travel_notifications"
         const val LIVE_LOCATION_CHANNEL_ID = "live_location_sharing"
+        const val FRIENDS_CHANNEL_ID = "friend_notifications"
         const val LIVE_LOCATION_NOTIFICATION_ID = 3
         private const val JOURNEY_NOTIFICATION_BASE_ID = 10_000
+        private const val FRIEND_NOTIFICATION_BASE_ID = 20_000
         private const val COUNTRY_NOTIFICATION_ID = 2
         private const val TEST_NOTIFICATION_ID = 999
     }
@@ -53,6 +56,21 @@ class NotificationsHelper(
         }
         val manager = context.getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)
+    }
+
+    fun createFriendNotificationChannel() {
+        val localizedContext = context.localized(context.persistedAppLanguage())
+        val channel = NotificationChannel(
+            FRIENDS_CHANNEL_ID,
+            localizedContext.getString(R.string.notification_friends_channel),
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = localizedContext.getString(
+                R.string.notification_friends_channel_description
+            )
+        }
+        context.getSystemService(NotificationManager::class.java)
+            ?.createNotificationChannel(channel)
     }
 
     fun buildLiveLocationNotification(contentIntent: PendingIntent?, stopIntent: PendingIntent): Notification {
@@ -112,20 +130,48 @@ class NotificationsHelper(
         )
     }
 
+    @SuppressLint("MissingPermission")
+    fun showFriendRequest(requestId: Int, senderName: String) {
+        if (!hasNotificationPermission()) return
+        val localizedContext = context.localized(context.persistedAppLanguage())
+        val contentIntent = PendingIntent.getActivity(
+            context,
+            FRIEND_NOTIFICATION_BASE_ID + (requestId and 0x0FFF),
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(MainActivity.OPEN_FRIENDS_EXTRA, true)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val notification = NotificationCompat.Builder(localizedContext, FRIENDS_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(
+                localizedContext.getString(R.string.notification_friend_request_title)
+            )
+            .setContentText(
+                localizedContext.getString(
+                    R.string.notification_friend_request_text,
+                    senderName
+                )
+            )
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(contentIntent)
+            .build()
+        NotificationManagerCompat.from(context).notify(
+            FRIEND_NOTIFICATION_BASE_ID + (requestId and 0x0FFF),
+            notification
+        )
+    }
+
+    @SuppressLint("MissingPermission")
     private fun showNotification(
         id: Int,
         title: String,
         text: String,
         contentIntent: PendingIntent? = null
     ) {
-        if (
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
+        if (!hasNotificationPermission()) return
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
@@ -137,4 +183,12 @@ class NotificationsHelper(
 
         NotificationManagerCompat.from(context).notify(id, notification)
     }
+
+    private fun hasNotificationPermission(): Boolean =
+        android.os.Build.VERSION.SDK_INT < 33 ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
 }
