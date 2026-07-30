@@ -49,7 +49,10 @@ class ClaimedCountriesRepository(
     }
 
     private fun token(): String = sessionStore.load()?.accessToken
-        ?: throw ClaimedCountriesApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
+        ?: throw ClaimedCountriesApiException(
+            "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+            statusCode = 401
+        )
 
     private companion object {
         const val CLEAR_ALL_PENDING = "clear_all_pending"

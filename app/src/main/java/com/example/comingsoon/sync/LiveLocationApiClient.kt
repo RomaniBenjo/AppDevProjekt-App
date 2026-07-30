@@ -1,6 +1,7 @@
 package com.example.comingsoon.sync
 
 import com.example.comingsoon.auth.AuthenticatedUser
+import com.example.comingsoon.errors.AppApiException
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
@@ -33,7 +34,11 @@ data class LiveLocationSessionStatus(
 
 private data class ServerFriendLiveLocations(val friends: List<ServerFriendLiveLocation>)
 
-class LiveLocationApiException(message: String) : Exception(message)
+class LiveLocationApiException(
+    message: String,
+    statusCode: Int? = null,
+    cause: Throwable? = null
+) : AppApiException(message, statusCode, cause)
 
 class LiveLocationApiClient(baseUrl: String, private val gson: Gson = Gson()) {
     private val baseUrl = baseUrl.trim().trimEnd('/')
@@ -96,13 +101,16 @@ class LiveLocationApiClient(baseUrl: String, private val gson: Gson = Gson()) {
             val status = connection.responseCode
             val stream = if (status in 200..299) connection.inputStream else connection.errorStream
             val response = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-            if (status !in 200..299) throw LiveLocationApiException(errorMessage(status, response))
+            if (status !in 200..299) {
+                throw LiveLocationApiException(errorMessage(status, response), status)
+            }
             response
         } catch (exception: LiveLocationApiException) {
             throw exception
         } catch (exception: Exception) {
             throw LiveLocationApiException(
-                exception.localizedMessage ?: "Der Server ist nicht erreichbar."
+                exception.localizedMessage ?: "Der Server ist nicht erreichbar.",
+                cause = exception
             )
         } finally {
             connection.disconnect()

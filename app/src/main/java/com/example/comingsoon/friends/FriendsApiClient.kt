@@ -1,6 +1,7 @@
 package com.example.comingsoon.friends
 
 import com.example.comingsoon.auth.AuthenticatedUser
+import com.example.comingsoon.errors.AppApiException
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
@@ -36,7 +37,11 @@ private data class ServerFriends(val friends: List<AuthenticatedUser>)
 
 data class OfflinePairingSyncResponse(val status: String)
 
-class FriendsApiException(message: String) : Exception(message)
+class FriendsApiException(
+    message: String,
+    statusCode: Int? = null,
+    cause: Throwable? = null
+) : AppApiException(message, statusCode, cause)
 
 class FriendsApiClient(
     baseUrl: String,
@@ -141,7 +146,9 @@ class FriendsApiClient(
                     } else {
                         throwable.localizedMessage ?: "Die Live-Verbindung wurde getrennt."
                     }
-                    continuation.resumeWithException(FriendsApiException(message))
+                    continuation.resumeWithException(
+                        FriendsApiException(message, statusCode = response?.code)
+                    )
                 }
             }
 
@@ -185,13 +192,16 @@ class FriendsApiClient(
             val status = connection.responseCode
             val stream = if (status in 200..299) connection.inputStream else connection.errorStream
             val response = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-            if (status !in 200..299) throw FriendsApiException(errorMessage(status, response))
+            if (status !in 200..299) {
+                throw FriendsApiException(errorMessage(status, response), status)
+            }
             response
         } catch (exception: FriendsApiException) {
             throw exception
         } catch (exception: Exception) {
             throw FriendsApiException(
-                exception.localizedMessage ?: "Der Friends-Server ist nicht erreichbar."
+                exception.localizedMessage ?: "Der Friends-Server ist nicht erreichbar.",
+                cause = exception
             )
         } finally {
             connection.disconnect()

@@ -155,7 +155,10 @@ class JourneysRepository(
 
     suspend fun refreshJourneyShares(): List<JourneyShareSnapshot> {
         val viewerId = currentUserId()
-            ?: throw JourneysApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
+            ?: throw JourneysApiException(
+                "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+                statusCode = 401
+            )
         val remote = apiClient.listJourneyShares(token())
         sharedJourneyDao.replaceOnlineForViewer(viewerId, remote.map { it.toEntity(viewerId) })
         return loadCachedJourneyShares()
@@ -233,7 +236,10 @@ class JourneysRepository(
     suspend fun listJourneyShares(): List<JourneyShareSnapshot> = refreshJourneyShares()
 
     private fun token(): String = sessionStore.load()?.accessToken
-        ?: throw JourneysApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
+        ?: throw JourneysApiException(
+            "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+            statusCode = 401
+        )
 
     private suspend fun queueShareAction(
         localJourneyId: Int,

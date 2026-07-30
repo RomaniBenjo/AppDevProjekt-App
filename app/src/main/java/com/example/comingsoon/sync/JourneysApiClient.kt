@@ -1,6 +1,7 @@
 package com.example.comingsoon.sync
 
 import com.example.comingsoon.auth.AuthenticatedUser
+import com.example.comingsoon.errors.AppApiException
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
@@ -54,8 +55,9 @@ data class ServerJourneyShareLink(
 
 class JourneysApiException(
     message: String,
-    val statusCode: Int? = null
-) : Exception(message)
+    statusCode: Int? = null,
+    cause: Throwable? = null
+) : AppApiException(message, statusCode, cause)
 
 class JourneysApiClient(baseUrl: String, private val gson: Gson = Gson()) {
     private val baseUrl = baseUrl.trim().trimEnd('/')
@@ -142,7 +144,8 @@ class JourneysApiClient(baseUrl: String, private val gson: Gson = Gson()) {
             throw exception
         } catch (exception: Exception) {
             throw JourneysApiException(
-                exception.localizedMessage ?: "Der Server ist nicht erreichbar."
+                exception.localizedMessage ?: "Der Server ist nicht erreichbar.",
+                cause = exception
             )
         } finally {
             connection.disconnect()

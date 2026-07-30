@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.location.Location
-import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
@@ -93,15 +92,11 @@ class LiveLocationService : Service() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
         )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NotificationsHelper.LIVE_LOCATION_NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-            )
-        } else {
-            startForeground(NotificationsHelper.LIVE_LOCATION_NOTIFICATION_ID, notification)
-        }
+        startForeground(
+            NotificationsHelper.LIVE_LOCATION_NOTIFICATION_ID,
+            notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
 
         _isRunning.value = true
         scope.launch {

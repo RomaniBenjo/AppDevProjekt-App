@@ -3,6 +3,7 @@ package com.example.comingsoon.auth
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.example.comingsoon.errors.AppApiException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
@@ -22,7 +23,11 @@ data class ServerAuthResponse(
     val user: AuthenticatedUser
 )
 
-class AuthApiException(message: String) : Exception(message)
+class AuthApiException(
+    message: String,
+    statusCode: Int? = null,
+    cause: Throwable? = null
+) : AppApiException(message, statusCode, cause)
 
 class AuthApiClient(
     baseUrl: String,
@@ -32,7 +37,11 @@ class AuthApiClient(
 
     suspend fun authenticateWithGoogle(idToken: String): ServerAuthResponse =
         withContext(Dispatchers.IO) {
-            require(baseUrl.isNotBlank()) { "Die Server-URL wurde noch nicht konfiguriert." }
+            if (baseUrl.isBlank()) {
+                throw AuthApiException(
+                    "Die Server-URL wurde noch nicht konfiguriert."
+                )
+            }
 
             val connection = (URL("$baseUrl/auth/google").openConnection() as HttpURLConnection)
                 .apply {
@@ -52,7 +61,10 @@ class AuthApiClient(
 
                 val responseText = connection.responseText()
                 if (connection.responseCode !in 200..299) {
-                    throw AuthApiException(errorDetail(responseText, connection.responseCode))
+                    throw AuthApiException(
+                        errorDetail(responseText, connection.responseCode),
+                        connection.responseCode
+                    )
                 }
 
                 gson.fromJson(responseText, ServerAuthResponse::class.java)
@@ -61,7 +73,8 @@ class AuthApiClient(
                 throw exception
             } catch (exception: Exception) {
                 throw AuthApiException(
-                    exception.localizedMessage ?: "Der Authentifizierungsserver ist nicht erreichbar."
+                    exception.localizedMessage ?: "Der Authentifizierungsserver ist nicht erreichbar.",
+                    cause = exception
                 )
             } finally {
                 connection.disconnect()

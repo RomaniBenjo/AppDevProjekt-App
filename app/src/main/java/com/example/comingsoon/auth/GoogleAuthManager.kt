@@ -6,6 +6,7 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -75,6 +76,10 @@ class GoogleAuthManager(context: Context) {
             }
         } catch (_: GetCredentialCancellationException) {
             GoogleSignInResult.Cancelled
+        } catch (_: NoCredentialException) {
+            GoogleSignInResult.Error(
+                appContext.localizedString(R.string.google_no_credential)
+            )
         } catch (_: GoogleIdTokenParsingException) {
             GoogleSignInResult.Error(
                 appContext.localizedString(R.string.google_credentials_unreadable)

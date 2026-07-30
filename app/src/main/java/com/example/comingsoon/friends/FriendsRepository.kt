@@ -199,7 +199,10 @@ class FriendsRepository(
     }
 
     private fun token(): String = sessionStore.load()?.accessToken
-        ?: throw FriendsApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
+        ?: throw FriendsApiException(
+            "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+            statusCode = 401
+        )
 
     private fun List<FriendEntity>.mergeDuplicates(): List<FriendEntity> =
         groupBy { it.serverUserId?.let { id -> "server:$id" } ?: it.identityKey }
