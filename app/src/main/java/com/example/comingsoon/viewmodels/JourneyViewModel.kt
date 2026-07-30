@@ -573,13 +573,6 @@ class JourneyViewModel(
             it.ownerId == ownerId && it.journey.serverId == serverJourneyId
         }?.journey
 
-    fun getShare(ownerId: Int, serverJourneyId: Int, recipientId: Int): JourneyShareSnapshot? =
-        _journeyShares.firstOrNull {
-            it.ownerId == ownerId &&
-                it.recipientId == recipientId &&
-                it.journey.serverId == serverJourneyId
-        }
-
     fun shareFor(journey: Journey, friendId: Int): JourneyShareSnapshot? {
         val ownerId = journeysRepository.currentUserId() ?: return null
         return _journeyShares.firstOrNull {
@@ -598,14 +591,6 @@ class JourneyViewModel(
             pendingAction = pendingActionFor(journey.id, friendId)
         )
     }
-
-    fun sharedByMeWith(friendId: Int): List<Journey> =
-        sharesByMeWith(friendId).map { share ->
-            _journeys.firstOrNull { it.serverId == share.journey.serverId } ?: share.journey
-        }
-
-    fun sharedWithMeBy(friendId: Int): List<Journey> =
-        _journeyShares.filter { it.ownerId == friendId }.map { it.journey }
 
     fun sharesByMeWith(friendId: Int): List<JourneyShareSnapshot> {
         val pendingUnshares = _pendingJourneyShares
@@ -908,27 +893,6 @@ class JourneyViewModel(
         }
     }
 
-    private fun updateJourney(
-        id: Int,
-        update: Journey.() -> Journey
-    ) {
-        val index = _journeys.indexOfFirst { it.id == id }
-        if (index != -1) {
-            val updated = _journeys[index].update()
-            _journeys[index] = updated
-            scheduleJourneyReminder(updated)
-            viewModelScope.launch(Dispatchers.IO) {
-                val existing = dao?.getJourneyById(id)
-                dao?.insert(
-                    JourneyEntity.fromDomain(
-                        updated, pendingSync = true, isSynced = false, serverId = existing?.serverId
-                    )
-                )
-                triggerSync()
-            }
-        }
-    }
-
     fun updateJourney(updatedJourney: Journey) {
         val index = _journeys.indexOfFirst { it.id == updatedJourney.id }
         if (index != -1) {
@@ -946,37 +910,4 @@ class JourneyViewModel(
         }
     }
 
-    fun updateTitle(id: Int, title: String) {
-        updateJourney(id) {
-            copy(title = title)
-        }
-    }
-
-    fun updateDates(id: Int, startDate: LocalDate, endDate: LocalDate) {
-        updateJourney(id) {
-            copy(
-                startDate = startDate,
-                endDate = endDate
-            )
-        }
-    }
-
-    // pin management
-    fun addPin(journeyId: Int, location: JourneyLocation) {
-        updateJourney(journeyId) {
-            copy(locations = locations + location)
-        }
-    }
-
-    fun removePin(journeyId: Int, locationId: Int) {
-        updateJourney(journeyId) {
-            copy(locations = locations.filter { it.id != locationId })
-        }
-    }
-
-    fun updatePins(journeyId: Int, locations: List<JourneyLocation>) {
-        updateJourney(journeyId) {
-            copy(locations = locations)
-        }
-    }
 }

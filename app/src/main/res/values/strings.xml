@@ -188,7 +188,6 @@
     <string name="friends_can_scan">Friends can scan this code to instantly add your journey.</string>
     <string name="search_friend_or_qr">Search for a friend or scan a QR code</string>
     <string name="friend_name">Friend Name</string>
-    <string name="scan_friend_qr_description">Scan a friend\'s QR code to add them.</string>
     <string name="my_friend_qr">Your friend QR code</string>
     <string name="my_friend_qr_description">Let another user scan this code to send you a friend request.</string>
     <string name="scan_friend_qr">Scan friend QR code</string>
@@ -200,8 +199,6 @@
 
     <string name="notification_journey_title">Your Journey starts today!</string>
     <string name="notification_journey_text">Your Journey "%1$s" starts today. Click to see more information!</string>
-    <string name="notification_country_title">You travelled to another country!</string>
-    <string name="notification_country_text">You travelled from %1$s to %2$s. Do you want to add a Journey?</string>
     <string name="notification_test_title">Test Notification</string>
     <string name="notification_test_text">Notifications are working correctly.</string>
 
@@ -211,10 +208,8 @@
     <string name="friend_map_friend_trips">%1$s\'s trips</string>
     <string name="friend_map_both">Both</string>
     <string name="friend_map_content_description">World map of journeys shared between you and %1$s</string>
-    <string name="map_live_placeholder">Placeholder for Live Location Map</string>
     <string name="online_guesser_starting">Starting a new game…</string>
     <string name="online_guesser_retry">Try again</string>
-    <string name="online_guesser_new_location">New location</string>
     <string name="online_guesser_round">Round %1$d of %2$d</string>
     <string name="online_guesser_sign_in_again">Your session has expired. Please sign in again.</string>
     <string name="online_guesser_server_error">The OpenGuesser server could not be reached.</string>
@@ -233,7 +228,6 @@
     <string name="online_guesser_players">Players</string>
     <string name="online_guesser_host">Host</string>
     <string name="online_guesser_start_game">Start game</string>
-    <string name="online_guesser_browse_lobbies">Browse lobbies</string>
     <string name="online_guesser_guess">Guess</string>
     <string name="online_guesser_street_view">Street View</string>
     <string name="online_guesser_map_load_failed">Could not load the online map</string>
@@ -400,7 +394,6 @@
     <string name="local_guesser_tie">It\'s a tie!</string>
     <string name="local_guesser_points_by_round">Points by round</string>
     <string name="local_guesser_round_number">Round %1$d</string>
-    <string name="local_guesser_round_score_line">%1$s: +%2$d · total %3$d · %4$s</string>
     <string name="local_guesser_points">points</string>
     <string name="local_guesser_no_guess">No guess</string>
     <string name="local_guesser_meters_away">%1$d m away</string>
@@ -438,7 +431,6 @@
     <string name="local_guesser_error_connection_failed">The nearby connection could not be established.</string>
     <string name="local_guesser_error_player_disconnected">The other player disconnected.</string>
     <string name="local_guesser_error_photo_transfer">The photo transfer did not complete.</string>
-    <string name="local_guesser_android_player">Android player</string>
     <string name="local_guesser_default_host_name">Local OpenGuesser Host</string>
     <string name="local_guesser_default_player_name">Local OpenGuesser Player</string>
 

@@ -51,6 +51,4 @@ interface FriendDao {
     @Query("DELETE FROM friends WHERE identityKey = :identityKey")
     suspend fun deleteByIdentityKey(identityKey: String)
 
-    @Query("DELETE FROM friends WHERE serverUserId = :serverUserId")
-    suspend fun deleteByServerUserId(serverUserId: Long)
 }

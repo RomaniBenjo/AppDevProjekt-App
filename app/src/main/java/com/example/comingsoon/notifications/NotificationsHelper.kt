@@ -28,7 +28,6 @@ class NotificationsHelper(
         const val LIVE_LOCATION_NOTIFICATION_ID = 3
         private const val JOURNEY_NOTIFICATION_BASE_ID = 10_000
         private const val FRIEND_NOTIFICATION_BASE_ID = 20_000
-        private const val COUNTRY_NOTIFICATION_ID = 2
         private const val TEST_NOTIFICATION_ID = 999
     }
 
@@ -102,22 +101,6 @@ class NotificationsHelper(
             title = localizedContext.getString(R.string.notification_journey_title),
             text = localizedContext.getString(R.string.notification_journey_text, journeyName),
             contentIntent = contentIntent
-        )
-    }
-
-    fun showCountryChanged(
-        oldCountry: String,
-        newCountry: String
-    ) {
-        val localizedContext = context.localized(context.persistedAppLanguage())
-        showNotification(
-            id = COUNTRY_NOTIFICATION_ID,
-            title = localizedContext.getString(R.string.notification_country_title),
-            text = localizedContext.getString(
-                R.string.notification_country_text,
-                oldCountry,
-                newCountry
-            )
         )
     }
 

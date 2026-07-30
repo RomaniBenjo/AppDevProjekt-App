@@ -129,9 +129,6 @@ interface ClaimedCountryDao {
     @Update
     suspend fun updateClaim(claim: ClaimedCountryEntity)
 
-    @Query("DELETE FROM claimed_countries WHERE id = :id")
-    suspend fun deleteClaimById(id: String)
-
     @Query("DELETE FROM claimed_countries")
     suspend fun deleteAllClaims()
 }

@@ -24,15 +24,6 @@ internal object LocalGameProtocol {
         .toString()
         .toByteArray(Charsets.UTF_8)
 
-    fun decodeTestMessage(bytes: ByteArray): String? = runCatching {
-        val json = decode(bytes) ?: return@runCatching null
-        if (json.optInt("version") != VERSION || json.optString("type") != TYPE_TEST_MESSAGE) {
-            null
-        } else {
-            json.getString("message")
-        }
-    }.getOrNull()
-
     fun encode(type: String, values: Map<String, Any?> = emptyMap()): ByteArray {
         val json = JSONObject().put("version", VERSION).put("type", type)
         values.forEach { (key, value) -> json.put(key, value) }
