@@ -46,6 +46,8 @@ import com.example.comingsoon.ui.theme.ComingSoonTheme
 import com.example.comingsoon.viewmodels.AppViewModelFactory
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.JourneyShareViewModel
+import com.example.comingsoon.viewmodels.CountryViewModel
 import com.example.comingsoon.viewmodels.ProfileViewModel
 import com.example.comingsoon.viewmodels.SettingsViewModel
 import com.example.comingsoon.navigation.NavScreens
@@ -113,15 +115,18 @@ class MainActivity : ComponentActivity() {
             val languageViewModel: AppLanguageViewModel = viewModel(factory = factory)
             val settingsViewModel: SettingsViewModel = viewModel(factory = factory)
             val journeyViewModel: JourneyViewModel = viewModel(factory = factory)
+            val journeyShareViewModel: JourneyShareViewModel = viewModel(factory = factory)
+            val countryViewModel: CountryViewModel = viewModel(factory = factory)
             val friendViewModel: FriendViewModel = viewModel(factory = factory)
             val overlayViewModel: OverlayViewModel = viewModel()
             val profileViewModel: ProfileViewModel = viewModel()
 
             DisposableEffect(friendViewModel, journeyViewModel) {
                 friendViewModel.bindOfflineJourneyCallbacks(
-                    onReceived = journeyViewModel::receiveOfflineJourney,
-                    onSent = journeyViewModel::recordSentOfflineJourney
+                    onReceived = journeyShareViewModel::receiveOfflineJourney,
+                    onSent = journeyShareViewModel::recordSentOfflineJourney
                 )
+                journeyShareViewModel.bindJourneyRefresh(journeyViewModel::reloadFromDatabase)
                 onDispose {
                     friendViewModel.unbindOfflineJourneyCallbacks()
                 }
@@ -164,7 +169,7 @@ class MainActivity : ComponentActivity() {
                 val token = pendingJourneyShareToken ?: return@LaunchedEffect
                 if (friendViewModel.currentUserId == null) return@LaunchedEffect
                 pendingJourneyShareToken = null
-                journeyViewModel.acceptShareLink(token) { share ->
+                journeyShareViewModel.acceptShareLink(token) { share ->
                     if (share != null) {
                         navController.navigate(
                             NavScreens.SharedJourneyDetail.createRoute(
@@ -180,7 +185,9 @@ class MainActivity : ComponentActivity() {
             val isDark = isSystemInDarkTheme()
             LaunchedEffect(Unit) {
                 themeViewModel.updateMode(isDark)
-                journeyViewModel.loadJourneys(context)
+                journeyViewModel.loadJourneys()
+                journeyShareViewModel.load()
+                countryViewModel.load()
             }
             val journeyRemindersEnabled = settingsViewModel.isJourneyReminderEnabled()
             val journeyReminderTime = settingsViewModel.getReminderTime()
@@ -193,6 +200,13 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(friendViewModel.journeyShareUpdateVersion) {
                 if (friendViewModel.journeyShareUpdateVersion > 0) {
                     journeyViewModel.triggerSync()
+                    journeyShareViewModel.synchronize()
+                }
+            }
+            LaunchedEffect(journeyViewModel.isNetworkAvailable) {
+                if (journeyViewModel.isNetworkAvailable) {
+                    journeyShareViewModel.synchronize()
+                    countryViewModel.synchronize()
                 }
             }
 
@@ -201,6 +215,8 @@ class MainActivity : ComponentActivity() {
             val localizedContext = LocalContext.current.localized(languageViewModel.currentLanguage)
             LaunchedEffect(languageViewModel.currentLanguage) {
                 journeyViewModel.onLanguageChanged()
+                journeyShareViewModel.onLanguageChanged()
+                countryViewModel.onLanguageChanged()
                 friendViewModel.onLanguageChanged()
                 NotificationsHelper(applicationContext).apply {
                     createNotificationChannel()
@@ -224,6 +240,8 @@ class MainActivity : ComponentActivity() {
                         languageViewModel = languageViewModel,
                         settingsViewModel = settingsViewModel,
                         journeyViewModel = journeyViewModel,
+                        journeyShareViewModel = journeyShareViewModel,
+                        countryViewModel = countryViewModel,
                         friendViewModel = friendViewModel,
                         overlayViewModel = overlayViewModel,
                         profileViewModel = profileViewModel,

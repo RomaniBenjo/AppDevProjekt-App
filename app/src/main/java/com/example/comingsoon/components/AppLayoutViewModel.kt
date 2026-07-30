@@ -29,6 +29,8 @@ import com.example.comingsoon.ui.theme.AppThemeViewModel
 import com.example.comingsoon.viewmodels.AppViewModelFactory
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.JourneyShareViewModel
+import com.example.comingsoon.viewmodels.CountryViewModel
 import com.example.comingsoon.viewmodels.ProfileViewModel
 import com.example.comingsoon.viewmodels.SettingsViewModel
 import kotlinx.coroutines.launch
@@ -42,6 +44,8 @@ fun AppLayoutViewModel (
     languageViewModel: AppLanguageViewModel,
     settingsViewModel: SettingsViewModel,
     journeyViewModel: JourneyViewModel,
+    journeyShareViewModel: JourneyShareViewModel,
+    countryViewModel: CountryViewModel,
     friendViewModel: FriendViewModel,
     overlayViewModel: OverlayViewModel,
     profileViewModel: ProfileViewModel,
@@ -57,12 +61,12 @@ fun AppLayoutViewModel (
         currentRoute != NavScreens.OpenGuesserOnline.route &&
         currentRoute != NavScreens.LiveLocations.route &&
         !isLoginScreen
-    val sharingMessage = journeyViewModel.shareFeedback ?: journeyViewModel.shareError
+    val sharingMessage = journeyShareViewModel.feedback ?: journeyShareViewModel.error
 
     LaunchedEffect(sharingMessage) {
         sharingMessage?.let {
             snackbarHostState.showSnackbar(it)
-            journeyViewModel.clearShareError()
+            journeyShareViewModel.clearMessage()
         }
     }
 
@@ -77,27 +81,27 @@ fun AppLayoutViewModel (
                     friendViewModel = friendViewModel,
                     isNetworkAvailable = journeyViewModel.isNetworkAvailable,
                     shareTypesByFriendId = friendViewModel.friends.associate { friend ->
-                        friend.id to journeyViewModel.shareTypeFor(journey, friend.id)
+                        friend.id to journeyShareViewModel.shareTypeFor(journey, friend.id)
                     }.filterValues { it != null }.mapValues { requireNotNull(it.value) },
-                    operationKey = journeyViewModel.shareOperationKey,
-                    errorMessage = journeyViewModel.shareError,
-                    feedbackMessage = journeyViewModel.shareFeedback,
-                    qrDeepLink = journeyViewModel.qrDeepLink,
-                    qrExpiresAt = journeyViewModel.qrExpiresAt,
-                    isCreatingQrLink = journeyViewModel.isCreatingQrLink,
+                    operationKey = journeyShareViewModel.operationKey,
+                    errorMessage = journeyShareViewModel.error,
+                    feedbackMessage = journeyShareViewModel.feedback,
+                    qrDeepLink = journeyShareViewModel.qrDeepLink,
+                    qrExpiresAt = journeyShareViewModel.qrExpiresAt,
+                    isCreatingQrLink = journeyShareViewModel.isCreatingQrLink,
                     onDismiss = {
-                        journeyViewModel.resetQrShareLink()
-                        journeyViewModel.clearShareError()
+                        journeyShareViewModel.resetQrShareLink()
+                        journeyShareViewModel.clearMessage()
                         overlayViewModel.dismiss()
                     },
                     onShare = { friend ->
-                        journeyViewModel.shareJourney(journey.id, friend.id)
+                        journeyShareViewModel.shareJourney(journey.id, friend.id)
                     },
                     onUnshare = { friend ->
-                        journeyViewModel.unshareJourney(journey.id, friend.id)
+                        journeyShareViewModel.unshareJourney(journey.id, friend.id)
                     },
                     onRequestQrLink = {
-                        journeyViewModel.createQrShareLink(journey.id)
+                        journeyShareViewModel.createQrShareLink(journey.id)
                     }
                 )
             }
@@ -110,20 +114,20 @@ fun AppLayoutViewModel (
                     friendViewModel = friendViewModel,
                     isNetworkAvailable = journeyViewModel.isNetworkAvailable,
                     shareTypesByJourneyId = journeyViewModel.journeys.associate { journey ->
-                        journey.id to journeyViewModel.shareTypeFor(journey, friend.id)
+                        journey.id to journeyShareViewModel.shareTypeFor(journey, friend.id)
                     }.filterValues { it != null }.mapValues { requireNotNull(it.value) },
-                    operationKey = journeyViewModel.shareOperationKey,
-                    errorMessage = journeyViewModel.shareError,
-                    feedbackMessage = journeyViewModel.shareFeedback,
+                    operationKey = journeyShareViewModel.operationKey,
+                    errorMessage = journeyShareViewModel.error,
+                    feedbackMessage = journeyShareViewModel.feedback,
                     onDismiss = {
-                        journeyViewModel.clearShareError()
+                        journeyShareViewModel.clearMessage()
                         overlayViewModel.dismiss()
                     },
                     onShare = { journey ->
-                        journeyViewModel.shareJourney(journey.id, friend.id)
+                        journeyShareViewModel.shareJourney(journey.id, friend.id)
                     },
                     onUnshare = { journey ->
-                        journeyViewModel.unshareJourney(journey.id, friend.id)
+                        journeyShareViewModel.unshareJourney(journey.id, friend.id)
                     }
                 )
             }
@@ -173,6 +177,8 @@ fun AppLayoutViewModel (
                     languageViewModel = languageViewModel,
                     settingsViewModel = settingsViewModel,
                     journeyViewModel = journeyViewModel,
+                    journeyShareViewModel = journeyShareViewModel,
+                    countryViewModel = countryViewModel,
                     friendViewModel = friendViewModel,
                     overlayViewModel = overlayViewModel,
                     profileViewModel = profileViewModel,

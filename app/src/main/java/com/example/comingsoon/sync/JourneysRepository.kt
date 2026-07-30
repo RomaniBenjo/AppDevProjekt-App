@@ -15,6 +15,8 @@ import com.example.comingsoon.friends.toJourney
 import com.example.comingsoon.viewmodels.JourneyLocation
 import com.example.comingsoon.viewmodels.Journey
 import java.time.LocalDate
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 data class JourneyShareSnapshot(
     val ownerId: Int,
@@ -57,12 +59,18 @@ class JourneysRepository(
     private val sharedJourneyDao: SharedJourneyDao,
     private val pendingJourneyShareDao: PendingJourneyShareDao
 ) {
+    private val synchronizationMutex = Mutex()
+
     fun hasSession(): Boolean = sessionStore.load() != null
     fun currentUserId(): Int? = sessionStore.cachedUser()?.id?.toInt()
     fun currentUser(): AuthenticatedUser? = sessionStore.cachedUser()
 
     /** Push local dirty rows, then pull the authoritative list, then reconcile. */
-    suspend fun synchronize() {
+    suspend fun synchronize() = synchronizationMutex.withLock {
+        synchronizeUnlocked()
+    }
+
+    private suspend fun synchronizeUnlocked() {
         val token = token()
 
         journeyDao.getUnsyncedJourneys().forEach { local ->

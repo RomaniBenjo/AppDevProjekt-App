@@ -47,10 +47,11 @@ import com.example.comingsoon.navigation.NavScreens
 import com.example.comingsoon.overlays.OverlayViewModel
 import com.example.comingsoon.viewmodels.JourneyLocation
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.JourneyShareViewModel
+import com.example.comingsoon.viewmodels.CountryViewModel
 import com.example.comingsoon.components.InteractiveWorldMap
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -59,20 +60,21 @@ fun JourneyDetailScreen (
     journeyId: Int,
     ownerId: Int? = null,
     viewModel: JourneyViewModel,
+    shareViewModel: JourneyShareViewModel,
+    countryViewModel: CountryViewModel,
     navController: NavController,
     overlayViewModel: OverlayViewModel
 ) {
     val journey = if (ownerId == null) {
         viewModel.getJourney(journeyId)
     } else {
-        viewModel.getSharedJourney(ownerId, journeyId)
+        shareViewModel.getSharedJourney(ownerId, journeyId)
     } ?: return
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var mapExpanded by rememberSaveable { mutableStateOf(isLandscape) }
 
-    val context = LocalContext.current
     LaunchedEffect(Unit) {
-        viewModel.loadWorldMap(context)
+        countryViewModel.loadWorldMap()
     }
 
     Column(
@@ -109,7 +111,7 @@ fun JourneyDetailScreen (
                 content = {
                     JourneyVisitedCountriesMap(
                         journey = journey,
-                        countries = viewModel.countries,
+                        countries = countryViewModel.countries,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -128,7 +130,7 @@ fun JourneyDetailScreen (
             ) {
                 JourneyVisitedCountriesMap(
                     journey = journey,
-                    countries = viewModel.countries,
+                    countries = countryViewModel.countries,
                     modifier = Modifier.fillMaxSize()
                 )
             }

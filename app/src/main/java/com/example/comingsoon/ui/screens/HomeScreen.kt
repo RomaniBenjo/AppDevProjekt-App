@@ -68,6 +68,7 @@ import com.example.comingsoon.language.localizedCountryName
 import com.example.comingsoon.navigation.NavScreens
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.CountryViewModel
 import com.example.comingsoon.components.InteractiveWorldMap
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -90,13 +91,14 @@ private fun Context.findActivity(): Activity? {
 @Composable
 fun HomeScreen (
     viewModel: JourneyViewModel,
+    countryViewModel: CountryViewModel,
     navController: NavController
 ) {
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var mapExpanded by rememberSaveable { mutableStateOf(isLandscape) }
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        viewModel.loadWorldMap(context)
+        countryViewModel.loadWorldMap()
     }
 
     var testSelectedCountryId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -108,9 +110,9 @@ fun HomeScreen (
             val granted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                           permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
             if (granted) {
-                viewModel.claimCurrentCountry(context)
+                countryViewModel.claimCurrentCountry(context)
             } else {
-                viewModel.resetClaimStatus()
+                countryViewModel.resetClaimStatus()
             }
         }
     )
@@ -126,7 +128,7 @@ fun HomeScreen (
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
         if (fineGranted || coarseGranted) {
-            viewModel.claimCurrentCountry(context)
+            countryViewModel.claimCurrentCountry(context)
         } else {
             permissionLauncher.launch(
                 arrayOf(
@@ -160,8 +162,8 @@ fun HomeScreen (
 
     val customCountryColors = remember(
         viewModel.journeys,
-        viewModel.countries,
-        viewModel.claimedCountries.toList(),
+        countryViewModel.countries,
+        countryViewModel.claimedCountries.toList(),
         testSelectedCountryId,
         visitedCountryColor,
         selectedCountryColor
@@ -169,7 +171,7 @@ fun HomeScreen (
         val countryLatestEndDate = mutableMapOf<String, LocalDate>()
         viewModel.journeys.forEach { journey ->
             journey.visitedCountries.forEach { countryNameOrId ->
-                val svgId = viewModel.countries.find { country ->
+                val svgId = countryViewModel.countries.find { country ->
                     country.id.equals(countryNameOrId, ignoreCase = true) ||
                     country.name?.equals(countryNameOrId, ignoreCase = true) == true
                 }?.id
@@ -196,7 +198,7 @@ fun HomeScreen (
         }
 
         // Highlight claimed countries in gold/amber
-        viewModel.claimedCountries.forEach { svgId ->
+        countryViewModel.claimedCountries.forEach { svgId ->
             colors[svgId] = Color(0xFFFFB300)
         }
 
@@ -219,7 +221,7 @@ fun HomeScreen (
                     .background(oceanColor)
             ) {
                 InteractiveWorldMap(
-                    countries = viewModel.countries,
+                    countries = countryViewModel.countries,
                     countryColors = customCountryColors,
                     zoomable = true,
                     oceanColor = oceanColor,
@@ -259,13 +261,13 @@ fun HomeScreen (
                     mapExpanded = it
                 },
                 content = {
-                    if (viewModel.countries.isEmpty()) {
+                    if (countryViewModel.countries.isEmpty()) {
                         CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center)
                         )
                     } else {
                         InteractiveWorldMap(
-                            countries = viewModel.countries,
+                            countries = countryViewModel.countries,
                             countryColors = customCountryColors,
                             oceanColor = oceanColor,
                             defaultCountryColor = defaultCountryColor,
@@ -300,14 +302,14 @@ fun HomeScreen (
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (viewModel.countries.isEmpty()) {
+                        if (countryViewModel.countries.isEmpty()) {
                             Text(
                                 text = appString(R.string.loading_map),
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         } else {
                             InteractiveWorldMap(
-                                countries = viewModel.countries,
+                                countries = countryViewModel.countries,
                                 countryColors = customCountryColors,
                                 oceanColor = oceanColor,
                                 defaultCountryColor = defaultCountryColor,
@@ -359,9 +361,9 @@ fun HomeScreen (
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }
-                            if (viewModel.claimedCountries.isNotEmpty()) {
+                            if (countryViewModel.claimedCountries.isNotEmpty()) {
                                 IconButton(
-                                    onClick = { viewModel.clearAllClaims() }
+                                    onClick = { countryViewModel.clearAllClaims() }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
@@ -382,7 +384,7 @@ fun HomeScreen (
                         
                         Spacer(Modifier.height(12.dp))
 
-                        when (val status = viewModel.claimStatus) {
+                        when (val status = countryViewModel.claimStatus) {
                             is ClaimStatus.Idle -> {
                                 Button(
                                     onClick = onClaimClick,
@@ -420,7 +422,7 @@ fun HomeScreen (
                                         )
                                         Spacer(Modifier.height(8.dp))
                                         Button(
-                                            onClick = { viewModel.resetClaimStatus() },
+                                            onClick = { countryViewModel.resetClaimStatus() },
                                             modifier = Modifier.align(Alignment.End)
                                         ) {
                                             Text(appString(R.string.ok))
@@ -444,7 +446,7 @@ fun HomeScreen (
                                         Spacer(Modifier.height(8.dp))
                                         Row(modifier = Modifier.align(Alignment.End)) {
                                             Button(
-                                                onClick = { viewModel.resetClaimStatus() },
+                                                onClick = { countryViewModel.resetClaimStatus() },
                                                 colors = androidx.compose.material3.ButtonDefaults.textButtonColors()
                                             ) {
                                                 Text(appString(R.string.cancel))
@@ -461,17 +463,17 @@ fun HomeScreen (
                             }
                         }
 
-                        if (viewModel.claimedCountries.isNotEmpty()) {
+                        if (countryViewModel.claimedCountries.isNotEmpty()) {
                             Spacer(Modifier.height(12.dp))
                             val language = LocalAppLanguage.current
                             val names = remember(
-                                viewModel.claimedCountries.toList(),
-                                viewModel.countries,
+                                countryViewModel.claimedCountries.toList(),
+                                countryViewModel.countries,
                                 language
                             ) {
                                 val locale = Locale.forLanguageTag(language.languageTag)
-                                viewModel.claimedCountries.map { code ->
-                                    val country = viewModel.countries.find {
+                                countryViewModel.claimedCountries.map { code ->
+                                    val country = countryViewModel.countries.find {
                                         it.id.equals(code, ignoreCase = true)
                                     }
                                     localizedCountryName(code, country?.name, locale)

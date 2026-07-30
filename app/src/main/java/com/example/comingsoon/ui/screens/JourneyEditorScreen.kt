@@ -27,7 +27,6 @@ import androidx.compose.material.icons.outlined.AddLocationAlt
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -67,6 +66,7 @@ import com.example.comingsoon.language.localizedCountryName
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.viewmodels.JourneyLocation
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.CountryViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -80,6 +80,7 @@ private data class CountryOption(
 @Composable
 fun JourneyEditorScreen (
     viewModel: JourneyViewModel,
+    countryViewModel: CountryViewModel,
     journey: Journey? = null,
     onDiscard: () -> Unit,
     onSave: (Journey) -> Unit
@@ -109,15 +110,14 @@ fun JourneyEditorScreen (
         }
     }
 
-    val context = LocalContext.current
     LaunchedEffect(Unit) {
-        viewModel.loadWorldMap(context)
+        countryViewModel.loadWorldMap()
     }
 
     val language = LocalAppLanguage.current
-    val allCountries = remember(viewModel.countries, language) {
+    val allCountries = remember(countryViewModel.countries, language) {
         val locale = Locale.forLanguageTag(language.languageTag)
-        viewModel.countries.map { country ->
+        countryViewModel.countries.map { country ->
             val value = country.name ?: country.id
             val displayName = localizedCountryName(country.id, country.name, locale)
             CountryOption(value = value, displayName = displayName)
