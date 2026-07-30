@@ -39,8 +39,17 @@ enum class OfflinePairingPhase {
     AWAITING_CONFIRMATION,
     CONNECTING,
     EXCHANGING_PROFILE,
+    TRANSFERRING_JOURNEY,
+    JOURNEY_SHARED,
+    JOURNEY_RECEIVED,
     PAIRED,
     ERROR
+}
+
+enum class OfflinePairingMode {
+    FRIEND_PAIRING,
+    JOURNEY_SHARING,
+    JOURNEY_RECEIVING
 }
 
 data class OfflineFriendEndpoint(
@@ -55,16 +64,27 @@ data class OfflinePendingConnection(
 
 data class OfflineFriendPairingState(
     val phase: OfflinePairingPhase = OfflinePairingPhase.IDLE,
+    val mode: OfflinePairingMode = OfflinePairingMode.FRIEND_PAIRING,
     val discoveredEndpoints: List<OfflineFriendEndpoint> = emptyList(),
     val pendingConnection: OfflinePendingConnection? = null,
     val pairedFriendName: String? = null,
+    val journeyTitle: String? = null,
+    val targetFriendName: String? = null,
     val errorMessage: String? = null
 )
 
 class OfflineFriendPairingManager(
     context: Context,
     private val ownIdentity: () -> OfflineFriendIdentity,
-    private val onFriendReceived: suspend (OfflineFriendIdentity, String) -> Unit
+    private val onFriendReceived: suspend (OfflineFriendIdentity, String) -> Unit,
+    private val onJourneyReceived: suspend (
+        OfflineFriendIdentity,
+        OfflineJourneyPayload
+    ) -> Unit,
+    private val onJourneySent: suspend (
+        OfflineFriendIdentity,
+        OfflineJourneyPayload
+    ) -> Unit
 ) {
     private val appContext = context.applicationContext
     private val client: ConnectionsClient = Nearby.getConnectionsClient(appContext)
@@ -73,9 +93,11 @@ class OfflineFriendPairingManager(
     private val strategy = Strategy.P2P_POINT_TO_POINT
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val endpointNames = mutableMapOf<String, String>()
+    private val endpointIdentities = mutableMapOf<String, OfflineFriendIdentity>()
     private val mutableState = MutableStateFlow(OfflineFriendPairingState())
     val state: StateFlow<OfflineFriendPairingState> = mutableState.asStateFlow()
     private var pairingNonce = UUID.randomUUID().toString()
+    private var pendingJourneyShare: PendingJourneyShare? = null
 
     fun hasGooglePlayServices(): Boolean = GoogleApiAvailability.getInstance()
         .isGooglePlayServicesAvailable(appContext) == ConnectionResult.SUCCESS
@@ -104,6 +126,27 @@ class OfflineFriendPairingManager(
         client.startDiscovery(serviceId, endpointDiscoveryCallback, options)
             .addOnFailureListener {
                 fail(appContext.localizedString(R.string.offline_friend_search_failed))
+            }
+    }
+
+    fun startJourneyShare(
+        targetIdentityKey: String,
+        targetFriendName: String,
+        journey: OfflineJourneyPayload
+    ) {
+        resetConnections()
+        pendingJourneyShare = PendingJourneyShare(targetIdentityKey, journey)
+        pairingNonce = UUID.randomUUID().toString()
+        mutableState.value = OfflineFriendPairingState(
+            phase = OfflinePairingPhase.DISCOVERING,
+            mode = OfflinePairingMode.JOURNEY_SHARING,
+            journeyTitle = journey.title,
+            targetFriendName = targetFriendName
+        )
+        val options = DiscoveryOptions.Builder().setStrategy(strategy).build()
+        client.startDiscovery(serviceId, endpointDiscoveryCallback, options)
+            .addOnFailureListener {
+                fail(appContext.localizedString(R.string.offline_journey_search_failed))
             }
     }
 
@@ -142,6 +185,7 @@ class OfflineFriendPairingManager(
 
     fun stop() {
         resetConnections()
+        pendingJourneyShare = null
         mutableState.value = OfflineFriendPairingState()
     }
 
@@ -151,7 +195,7 @@ class OfflineFriendPairingManager(
     }
 
     private fun sendIdentity(endpointId: String) {
-        val envelope = OfflineProfileEnvelope(
+        val envelope = OfflineEnvelope(
             version = PROTOCOL_VERSION,
             type = PROFILE_TYPE,
             pairingNonce = pairingNonce,
@@ -164,13 +208,10 @@ class OfflineFriendPairingManager(
             }
     }
 
-    private fun receiveIdentity(bytes: ByteArray) {
-        val envelope = runCatching {
-            gson.fromJson(String(bytes, Charsets.UTF_8), OfflineProfileEnvelope::class.java)
-        }.getOrNull()
-        val identity = envelope?.identity
+    private fun receiveIdentity(endpointId: String, envelope: OfflineEnvelope) {
+        val identity = envelope.identity
         if (
-            envelope?.version != PROTOCOL_VERSION ||
+            envelope.version != PROTOCOL_VERSION ||
             envelope.type != PROFILE_TYPE ||
             identity == null ||
             envelope.pairingNonce.isNullOrBlank() ||
@@ -180,6 +221,7 @@ class OfflineFriendPairingManager(
             fail(appContext.localizedString(R.string.offline_friend_invalid_profile))
             return
         }
+        endpointIdentities[endpointId] = identity
         val pairingId = offlinePairingId(
             pairingNonce,
             requireNotNull(envelope.pairingNonce)
@@ -189,15 +231,129 @@ class OfflineFriendPairingManager(
             runCatching { onFriendReceived(identity, pairingId) }
                 .onSuccess {
                     stopSearchOperations()
+                    val outgoing = pendingJourneyShare
+                    if (outgoing == null) {
+                        mutableState.value = mutableState.value.copy(
+                            phase = OfflinePairingPhase.PAIRED,
+                            pendingConnection = null,
+                            pairedFriendName = identity.name,
+                            errorMessage = null
+                        )
+                    } else if (identity.identityKey != outgoing.targetIdentityKey) {
+                        fail(
+                            appContext.localizedString(
+                                R.string.offline_journey_wrong_friend,
+                                mutableState.value.targetFriendName.orEmpty()
+                            )
+                        )
+                    } else {
+                        mutableState.value = mutableState.value.copy(
+                            phase = OfflinePairingPhase.TRANSFERRING_JOURNEY,
+                            pendingConnection = null,
+                            pairedFriendName = identity.name,
+                            errorMessage = null
+                        )
+                        sendJourney(endpointId, outgoing.payload)
+                    }
+                }
+                .onFailure {
+                    fail(appContext.localizedString(R.string.offline_friend_save_failed))
+                }
+        }
+    }
+
+    private fun sendJourney(endpointId: String, journey: OfflineJourneyPayload) {
+        val bytes = gson.toJson(
+            OfflineEnvelope(
+                version = PROTOCOL_VERSION,
+                type = JOURNEY_TYPE,
+                journey = journey
+            )
+        ).toByteArray(Charsets.UTF_8)
+        if (bytes.size > MAX_BYTES_PAYLOAD) {
+            fail(appContext.localizedString(R.string.offline_journey_too_large))
+            return
+        }
+        client.sendPayload(endpointId, Payload.fromBytes(bytes))
+            .addOnFailureListener {
+                fail(appContext.localizedString(R.string.offline_journey_transfer_failed))
+            }
+    }
+
+    private fun receiveJourney(endpointId: String, envelope: OfflineEnvelope) {
+        val owner = endpointIdentities[endpointId]
+        val journey = envelope.journey
+        val startDate = journey?.startDate?.let {
+            runCatching { java.time.LocalDate.parse(it) }.getOrNull()
+        }
+        val endDate = journey?.endDate?.let {
+            runCatching { java.time.LocalDate.parse(it) }.getOrNull()
+        }
+        if (
+            owner == null ||
+            journey == null ||
+            journey.transferId.isBlank() ||
+            journey.title.isBlank() ||
+            journey.title.length > 200 ||
+            startDate == null ||
+            endDate == null ||
+            endDate < startDate ||
+            journey.locations.size > 500 ||
+            journey.visitedCountries.size > 300 ||
+            journey.locations.any {
+                it.name.length > 200 ||
+                    it.latitude !in -90.0..90.0 ||
+                    it.longitude !in -180.0..180.0
+            }
+        ) {
+            fail(appContext.localizedString(R.string.offline_journey_invalid))
+            return
+        }
+        scope.launch {
+            runCatching { onJourneyReceived(owner, journey) }
+                .onSuccess {
+                    val acknowledgement = OfflineEnvelope(
+                        version = PROTOCOL_VERSION,
+                        type = JOURNEY_ACK_TYPE,
+                        transferId = journey.transferId
+                    )
+                    client.sendPayload(
+                        endpointId,
+                        Payload.fromBytes(
+                            gson.toJson(acknowledgement).toByteArray(Charsets.UTF_8)
+                        )
+                    )
                     mutableState.value = mutableState.value.copy(
-                        phase = OfflinePairingPhase.PAIRED,
-                        pendingConnection = null,
-                        pairedFriendName = identity.name,
+                        phase = OfflinePairingPhase.JOURNEY_RECEIVED,
+                        mode = OfflinePairingMode.JOURNEY_RECEIVING,
+                        pairedFriendName = owner.name,
+                        journeyTitle = journey.title,
                         errorMessage = null
                     )
                 }
                 .onFailure {
-                    fail(appContext.localizedString(R.string.offline_friend_save_failed))
+                    fail(appContext.localizedString(R.string.offline_journey_save_failed))
+                }
+        }
+    }
+
+    private fun receiveJourneyAcknowledgement(endpointId: String, envelope: OfflineEnvelope) {
+        val recipient = endpointIdentities[endpointId] ?: return
+        val pending = pendingJourneyShare ?: return
+        if (envelope.transferId != pending.payload.transferId) return
+        scope.launch {
+            runCatching { onJourneySent(recipient, pending.payload) }
+                .onSuccess {
+                    pendingJourneyShare = null
+                    stopSearchOperations()
+                    mutableState.value = mutableState.value.copy(
+                        phase = OfflinePairingPhase.JOURNEY_SHARED,
+                        pairedFriendName = recipient.name,
+                        errorMessage = null
+                    )
+                }
+                .onFailure {
+                    fail(appContext.localizedString(R.string.offline_journey_save_failed))
                 }
         }
     }
@@ -206,6 +362,7 @@ class OfflineFriendPairingManager(
         stopSearchOperations()
         client.stopAllEndpoints()
         endpointNames.clear()
+        endpointIdentities.clear()
     }
 
     private fun stopSearchOperations() {
@@ -214,9 +371,14 @@ class OfflineFriendPairingManager(
     }
 
     private fun fail(message: String) {
+        val previous = mutableState.value
         resetConnections()
         mutableState.value = OfflineFriendPairingState(
             phase = OfflinePairingPhase.ERROR,
+            mode = previous.mode,
+            pairedFriendName = previous.pairedFriendName,
+            journeyTitle = previous.journeyTitle,
+            targetFriendName = previous.targetFriendName,
             errorMessage = message
         )
     }
@@ -276,7 +438,8 @@ class OfflineFriendPairingManager(
             endpointNames.remove(endpointId)
             if (
                 mutableState.value.phase == OfflinePairingPhase.CONNECTING ||
-                mutableState.value.phase == OfflinePairingPhase.EXCHANGING_PROFILE
+                mutableState.value.phase == OfflinePairingPhase.EXCHANGING_PROFILE ||
+                mutableState.value.phase == OfflinePairingPhase.TRANSFERRING_JOURNEY
             ) {
                 fail(appContext.localizedString(R.string.offline_friend_disconnected))
             }
@@ -286,7 +449,27 @@ class OfflineFriendPairingManager(
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             if (payload.type == Payload.Type.BYTES) {
-                payload.asBytes()?.let(::receiveIdentity)
+                val envelope = payload.asBytes()?.let { bytes ->
+                    runCatching {
+                        gson.fromJson(
+                            String(bytes, Charsets.UTF_8),
+                            OfflineEnvelope::class.java
+                        )
+                    }.getOrNull()
+                } ?: run {
+                    fail(appContext.localizedString(R.string.offline_friend_invalid_profile))
+                    return
+                }
+                if (envelope.version != PROTOCOL_VERSION) {
+                    fail(appContext.localizedString(R.string.offline_friend_invalid_profile))
+                    return
+                }
+                when (envelope.type) {
+                    PROFILE_TYPE -> receiveIdentity(endpointId, envelope)
+                    JOURNEY_TYPE -> receiveJourney(endpointId, envelope)
+                    JOURNEY_ACK_TYPE -> receiveJourneyAcknowledgement(endpointId, envelope)
+                    else -> fail(appContext.localizedString(R.string.offline_friend_invalid_profile))
+                }
             }
         }
 
@@ -296,16 +479,26 @@ class OfflineFriendPairingManager(
         ) = Unit
     }
 
-    private data class OfflineProfileEnvelope(
+    private data class OfflineEnvelope(
         val version: Int,
         val type: String,
-        val pairingNonce: String?,
-        val identity: OfflineFriendIdentity
+        val pairingNonce: String? = null,
+        val identity: OfflineFriendIdentity? = null,
+        val journey: OfflineJourneyPayload? = null,
+        val transferId: String? = null
+    )
+
+    private data class PendingJourneyShare(
+        val targetIdentityKey: String,
+        val payload: OfflineJourneyPayload
     )
 
     private companion object {
-        const val PROTOCOL_VERSION = 1
+        const val PROTOCOL_VERSION = 2
         const val PROFILE_TYPE = "friend_profile"
+        const val JOURNEY_TYPE = "journey"
+        const val JOURNEY_ACK_TYPE = "journey_ack"
+        const val MAX_BYTES_PAYLOAD = 32 * 1024
     }
 }
 

@@ -8,6 +8,10 @@ import com.example.comingsoon.db.PendingJourneyShareDao
 import com.example.comingsoon.db.PendingJourneyShareEntity
 import com.example.comingsoon.db.SharedJourneyDao
 import com.example.comingsoon.db.SharedJourneyEntity
+import com.example.comingsoon.friends.OfflineFriendIdentity
+import com.example.comingsoon.friends.OfflineJourneyPayload
+import com.example.comingsoon.friends.stableOfflineId
+import com.example.comingsoon.friends.toJourney
 import com.example.comingsoon.viewmodels.JourneyLocation
 import com.example.comingsoon.viewmodels.Journey
 import java.time.LocalDate
@@ -153,8 +157,77 @@ class JourneysRepository(
         val viewerId = currentUserId()
             ?: throw JourneysApiException("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.")
         val remote = apiClient.listJourneyShares(token())
-        sharedJourneyDao.replaceForViewer(viewerId, remote.map { it.toEntity(viewerId) })
-        return remote.map { it.toSnapshot() }
+        sharedJourneyDao.replaceOnlineForViewer(viewerId, remote.map { it.toEntity(viewerId) })
+        return loadCachedJourneyShares()
+    }
+
+    suspend fun storeReceivedOfflineShare(
+        owner: OfflineFriendIdentity,
+        payload: OfflineJourneyPayload
+    ): JourneyShareSnapshot {
+        val viewerId = currentUserId()
+            ?: throw JourneysApiException("Bitte melde dich an, um eine Offline-Reise zu empfangen.")
+        val ownerId = owner.serverUserId
+            ?.takeIf { it in 1..Int.MAX_VALUE.toLong() }
+            ?.toInt()
+            ?: stableOfflineId(owner.identityKey)
+        val journey = payload.toJourney(ownerId)
+        val entity = SharedJourneyEntity(
+            viewerId = viewerId,
+            ownerId = ownerId,
+            recipientId = viewerId,
+            serverJourneyId = requireNotNull(journey.serverId),
+            localJourneyId = null,
+            ownerName = owner.name,
+            ownerEmail = owner.email,
+            ownerPictureUrl = owner.pictureUrl,
+            shareType = OFFLINE_SHARE_TYPE,
+            sharedAt = payload.sharedAt,
+            title = journey.title,
+            startDate = journey.startDate,
+            endDate = journey.endDate,
+            shared = false,
+            locations = journey.locations,
+            visitedCountries = journey.visitedCountries
+        )
+        sharedJourneyDao.insertAll(listOf(entity))
+        return entity.toSnapshot()
+    }
+
+    suspend fun storeSentOfflineShare(
+        recipient: OfflineFriendIdentity,
+        payload: OfflineJourneyPayload
+    ): JourneyShareSnapshot {
+        val owner = currentUser()
+            ?: throw JourneysApiException("Bitte melde dich an, um eine Offline-Reise zu teilen.")
+        val viewerId = owner.id.toInt()
+        val recipientId = recipient.serverUserId
+            ?.takeIf { it in 1..Int.MAX_VALUE.toLong() }
+            ?.toInt()
+            ?: stableOfflineId(recipient.identityKey)
+        val localJourney = journeyDao.getJourneyById(payload.sourceJourneyId)
+            ?: throw JourneysApiException("Die Reise wurde nicht gefunden.")
+        val offlineJourneyId = stableOfflineId(payload.transferId)
+        val entity = SharedJourneyEntity(
+            viewerId = viewerId,
+            ownerId = viewerId,
+            recipientId = recipientId,
+            serverJourneyId = offlineJourneyId,
+            localJourneyId = localJourney.id,
+            ownerName = owner.displayName(),
+            ownerEmail = owner.email,
+            ownerPictureUrl = owner.pictureUrl,
+            shareType = OFFLINE_SHARE_TYPE,
+            sharedAt = payload.sharedAt,
+            title = localJourney.title,
+            startDate = localJourney.startDate,
+            endDate = localJourney.endDate,
+            shared = false,
+            locations = localJourney.locations,
+            visitedCountries = localJourney.visitedCountries
+        )
+        sharedJourneyDao.insertAll(listOf(entity))
+        return entity.toSnapshot().copy(localJourneyId = localJourney.id)
     }
 
     suspend fun listJourneyShares(): List<JourneyShareSnapshot> = refreshJourneyShares()
@@ -276,6 +349,7 @@ class JourneysRepository(
         ownerId = ownerId,
         recipientId = recipientId,
         serverJourneyId = journey.id,
+        localJourneyId = null,
         ownerName = owner.name?.takeIf { it.isNotBlank() } ?: owner.email.substringBefore('@'),
         ownerEmail = owner.email,
         ownerPictureUrl = owner.pictureUrl,
@@ -310,7 +384,8 @@ class JourneysRepository(
             serverId = serverJourneyId,
             ownerId = ownerId,
             isOwned = false
-        )
+        ),
+        localJourneyId = localJourneyId
     )
 
     private fun PendingJourneyShareEntity.toDomainOrNull(): PendingJourneyShare? {
@@ -324,5 +399,12 @@ class JourneysRepository(
             action = parsedAction,
             createdAtEpochMillis = createdAtEpochMillis
         )
+    }
+
+    private fun AuthenticatedUser.displayName(): String =
+        name?.takeIf { it.isNotBlank() } ?: email.substringBefore('@')
+
+    private companion object {
+        const val OFFLINE_SHARE_TYPE = "offline"
     }
 }

@@ -290,7 +290,8 @@ private fun OfflineFriendPairingView(
         }
 
         OfflinePairingPhase.CONNECTING,
-        OfflinePairingPhase.EXCHANGING_PROFILE -> PairingProgress(
+        OfflinePairingPhase.EXCHANGING_PROFILE,
+        OfflinePairingPhase.TRANSFERRING_JOURNEY -> PairingProgress(
             text = appString(R.string.offline_friend_exchanging),
             onCancel = viewModel::stopOfflinePairing
         )
@@ -299,6 +300,38 @@ private fun OfflineFriendPairingView(
             Text(
                 text = appString(
                     R.string.offline_friend_added,
+                    state.pairedFriendName.orEmpty()
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                Text(appString(R.string.done))
+            }
+        }
+
+        OfflinePairingPhase.JOURNEY_RECEIVED -> {
+            Text(
+                text = appString(
+                    R.string.offline_journey_received,
+                    state.journeyTitle.orEmpty(),
+                    state.pairedFriendName.orEmpty()
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                Text(appString(R.string.done))
+            }
+        }
+
+        OfflinePairingPhase.JOURNEY_SHARED -> {
+            Text(
+                text = appString(
+                    R.string.offline_journey_shared,
+                    state.journeyTitle.orEmpty(),
                     state.pairedFriendName.orEmpty()
                 ),
                 color = MaterialTheme.colorScheme.primary,

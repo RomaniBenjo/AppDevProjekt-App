@@ -1,5 +1,7 @@
 package com.example.comingsoon.overlays
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -57,6 +61,11 @@ import com.example.comingsoon.viewmodels.Friend
 import com.example.comingsoon.R
 import com.example.comingsoon.language.appString
 import com.example.comingsoon.viewmodels.Journey
+import com.example.comingsoon.viewmodels.FriendViewModel
+import com.example.comingsoon.friends.OfflinePairingMode
+import com.example.comingsoon.friends.OfflinePairingPhase
+import com.example.comingsoon.ui.screens.localopenguesser.connection.hasNearbyPermissions
+import com.example.comingsoon.ui.screens.localopenguesser.connection.requiredNearbyPermissions
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import android.graphics.Bitmap
@@ -71,6 +80,8 @@ enum class ShareTab {
 fun ShareJourneyOverlay(
     journey: Journey,
     friends: List<Friend>,
+    friendViewModel: FriendViewModel,
+    isNetworkAvailable: Boolean,
     shareTypesByFriendId: Map<Int, String> = emptyMap(),
     operationKey: String? = null,
     errorMessage: String? = null,
@@ -85,9 +96,38 @@ fun ShareJourneyOverlay(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentTab by rememberSaveable { mutableStateOf(ShareTab.FRIENDS) }
+    val context = LocalContext.current
+    val offlineState by friendViewModel.offlinePairingState.collectAsState()
+    var pendingOfflineFriend by remember { mutableStateOf<Friend?>(null) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val friend = pendingOfflineFriend
+        pendingOfflineFriend = null
+        if (friend != null && result.values.all { it }) {
+            friendViewModel.shareJourneyOffline(journey, friend)
+        }
+    }
+    val shareWithFriend: (Friend) -> Unit = { friend ->
+        val useNearby = friend.addedNearby && (!isNetworkAvailable || friend.id <= 0)
+        if (!useNearby) {
+            onShare(friend)
+        } else if (hasNearbyPermissions(context)) {
+            friendViewModel.shareJourneyOffline(journey, friend)
+        } else {
+            pendingOfflineFriend = friend
+            permissionLauncher.launch(requiredNearbyPermissions())
+        }
+    }
+    val offlineTransferActive =
+        offlineState.mode == OfflinePairingMode.JOURNEY_SHARING &&
+            offlineState.phase != OfflinePairingPhase.IDLE
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            if (offlineTransferActive) friendViewModel.stopOfflinePairing()
+            onDismiss()
+        },
         sheetState = sheetState,
         dragHandle = null,
         containerColor = MaterialTheme.colorScheme.background
@@ -110,10 +150,18 @@ fun ShareJourneyOverlay(
                         RoundedCornerShape(50)
                     )
             )
-            Text(
-                text = journey.title,
-                style = MaterialTheme.typography.titleLarge
-            )
+            if (offlineTransferActive) {
+                OfflineJourneyTransferPanel(
+                    viewModel = friendViewModel,
+                    onDone = {
+                        friendViewModel.stopOfflinePairing()
+                        onDismiss()
+                    }
+                )
+                return@Column
+            }
+
+            Text(text = journey.title, style = MaterialTheme.typography.titleLarge)
             Text(
                 text = appString(R.string.share_journey),
                 style = MaterialTheme.typography.bodyMedium,
@@ -150,7 +198,7 @@ fun ShareJourneyOverlay(
                         shareTypesByFriendId = shareTypesByFriendId,
                         operationKey = operationKey,
                         journeyId = journey.id,
-                        onShare = onShare,
+                        onShare = shareWithFriend,
                         onUnshare = onUnshare
                     )
                 }
@@ -296,7 +344,7 @@ fun FriendShareItem(
 
         FilledTonalButton(
             onClick = if (shareType == "manual") onUnshare else onShare,
-            enabled = !isLoading && shareType != "automatic",
+            enabled = !isLoading && shareType != "automatic" && shareType != "offline",
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -323,6 +371,7 @@ fun FriendShareItem(
                     when (shareType) {
                         "manual" -> appString(R.string.unshare)
                         "automatic" -> appString(R.string.shared_automatically)
+                        "offline" -> appString(R.string.offline_shared)
                         else -> appString(R.string.share)
                     }
                 )

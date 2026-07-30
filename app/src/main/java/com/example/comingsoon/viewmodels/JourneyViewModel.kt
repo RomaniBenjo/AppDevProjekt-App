@@ -32,6 +32,9 @@ import com.example.comingsoon.sync.JourneysRepository
 import com.example.comingsoon.sync.JourneyShareSnapshot
 import com.example.comingsoon.sync.PendingJourneyShare
 import com.example.comingsoon.sync.PendingJourneyShareAction
+import com.example.comingsoon.friends.OfflineFriendIdentity
+import com.example.comingsoon.friends.OfflineJourneyPayload
+import com.example.comingsoon.notifications.JourneyNotificationScheduler
 import com.example.comingsoon.sync.effectiveJourneyShareType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,6 +42,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.xmlpull.v1.XmlPullParser
 import java.time.LocalDate
+import java.time.LocalTime
 import com.example.comingsoon.R
 import com.example.comingsoon.language.localizedString
 import com.example.comingsoon.language.persistedAppLanguage
@@ -173,6 +177,8 @@ class JourneyViewModel(
     private val syncMutex = Mutex()
 
     private var isLoaded = false
+    private var journeyRemindersEnabled = false
+    private var journeyReminderTime = LocalTime.of(9, 0)
 
     fun loadJourneys(context: Context) {
         if (isLoaded) return
@@ -201,6 +207,7 @@ class JourneyViewModel(
                     _journeyShares.addAll(cachedShares)
                     _pendingJourneyShares.clear()
                     _pendingJourneyShares.addAll(pendingShares)
+                    refreshAllJourneyReminders()
                     triggerSync()
                 }
             } catch (e: Exception) {
@@ -525,6 +532,33 @@ class JourneyViewModel(
         _pendingJourneyShares.clear()
     }
 
+    fun configureJourneyReminders(enabled: Boolean, reminderTime: LocalTime) {
+        journeyRemindersEnabled = enabled
+        journeyReminderTime = reminderTime
+        refreshAllJourneyReminders()
+    }
+
+    private fun refreshAllJourneyReminders() {
+        if (!journeyRemindersEnabled) {
+            JourneyNotificationScheduler.cancelAll(appContext)
+            return
+        }
+        _journeys.forEach(::scheduleJourneyReminder)
+    }
+
+    private fun scheduleJourneyReminder(journey: Journey) {
+        if (!journeyRemindersEnabled) {
+            JourneyNotificationScheduler.cancel(appContext, journey.id)
+            return
+        }
+        JourneyNotificationScheduler.scheduleJourneyReminder(
+            context = appContext,
+            journeyId = journey.id,
+            journeyName = journey.title,
+            reminderTime = journey.startDate.atTime(journeyReminderTime)
+        )
+    }
+
     fun getNextJourneyId(): Int {
         return (_journeys.maxOfOrNull { it.id } ?: 0) + 1
     }
@@ -547,9 +581,15 @@ class JourneyViewModel(
         }
 
     fun shareFor(journey: Journey, friendId: Int): JourneyShareSnapshot? {
-        val serverId = journey.serverId ?: return null
         val ownerId = journeysRepository.currentUserId() ?: return null
-        return getShare(ownerId, serverId, friendId)
+        return _journeyShares.firstOrNull {
+            it.ownerId == ownerId &&
+                it.recipientId == friendId &&
+                (
+                    it.localJourneyId == journey.id ||
+                        journey.serverId != null && it.journey.serverId == journey.serverId
+                )
+        }
     }
 
     fun shareTypeFor(journey: Journey, friendId: Int): String? {
@@ -619,6 +659,40 @@ class JourneyViewModel(
 
     fun sharesWithMeBy(friendId: Int): List<JourneyShareSnapshot> =
         _journeyShares.filter { it.ownerId == friendId }
+
+    suspend fun receiveOfflineJourney(
+        owner: OfflineFriendIdentity,
+        payload: OfflineJourneyPayload
+    ) {
+        journeysRepository.storeReceivedOfflineShare(owner, payload)
+        val refreshed = journeysRepository.loadCachedJourneyShares()
+        withContext(Dispatchers.Main) {
+            _journeyShares.clear()
+            _journeyShares.addAll(refreshed)
+            shareFeedback = appContext.localizedString(
+                R.string.offline_journey_received,
+                payload.title,
+                owner.name
+            )
+        }
+    }
+
+    suspend fun recordSentOfflineJourney(
+        recipient: OfflineFriendIdentity,
+        payload: OfflineJourneyPayload
+    ) {
+        journeysRepository.storeSentOfflineShare(recipient, payload)
+        val refreshed = journeysRepository.loadCachedJourneyShares()
+        withContext(Dispatchers.Main) {
+            _journeyShares.clear()
+            _journeyShares.addAll(refreshed)
+            shareFeedback = appContext.localizedString(
+                R.string.offline_journey_shared,
+                payload.title,
+                recipient.name
+            )
+        }
+    }
 
     fun clearShareError() {
         shareError = null
@@ -813,6 +887,7 @@ class JourneyViewModel(
 
     fun addJourney(journey: Journey) {
         _journeys.add(journey)
+        scheduleJourneyReminder(journey)
         viewModelScope.launch(Dispatchers.IO) {
             dao?.insert(JourneyEntity.fromDomain(journey, pendingSync = true, isSynced = false))
             triggerSync()
@@ -821,6 +896,7 @@ class JourneyViewModel(
 
     fun removeJourney(id: Int) {
         _journeys.removeIf { it.id == id }
+        JourneyNotificationScheduler.cancel(appContext, id)
         viewModelScope.launch(Dispatchers.IO) {
             val entity = dao?.getJourneyById(id)
             if (entity?.serverId == null) {
@@ -840,6 +916,7 @@ class JourneyViewModel(
         if (index != -1) {
             val updated = _journeys[index].update()
             _journeys[index] = updated
+            scheduleJourneyReminder(updated)
             viewModelScope.launch(Dispatchers.IO) {
                 val existing = dao?.getJourneyById(id)
                 dao?.insert(
@@ -856,6 +933,7 @@ class JourneyViewModel(
         val index = _journeys.indexOfFirst { it.id == updatedJourney.id }
         if (index != -1) {
             _journeys[index] = updatedJourney
+            scheduleJourneyReminder(updatedJourney)
             viewModelScope.launch(Dispatchers.IO) {
                 val existing = dao?.getJourneyById(updatedJourney.id)
                 dao?.insert(
