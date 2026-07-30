@@ -34,7 +34,6 @@ import com.example.comingsoon.ui.screens.LiveLocationScreen
 import com.example.comingsoon.ui.screens.LoginScreen
 import com.example.comingsoon.ui.screens.OnlineOpenGuesserScreen
 import com.example.comingsoon.ui.screens.OpenGuesserScreen
-import com.example.comingsoon.ui.screens.ProfileEditorScreen
 import com.example.comingsoon.ui.screens.ProfileScreen
 import com.example.comingsoon.ui.screens.SettingsScreen
 import com.example.comingsoon.ui.screens.localopenguesser.LocalOpenGuesserStartScreen
@@ -290,12 +289,6 @@ fun AppNavHost (
                         launchSingleTop = true
                     }
                 }
-            )
-        }
-        composable(NavScreens.ProfileEditor.route) {
-            ProfileEditorScreen(
-                viewModel = profileViewModel,
-                navController = navController
             )
         }
     }

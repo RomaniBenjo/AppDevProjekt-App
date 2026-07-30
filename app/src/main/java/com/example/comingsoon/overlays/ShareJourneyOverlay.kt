@@ -1,5 +1,10 @@
 package com.example.comingsoon.overlays
 
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Bitmap
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -48,6 +53,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -68,7 +74,9 @@ import com.example.comingsoon.ui.screens.localopenguesser.connection.hasNearbyPe
 import com.example.comingsoon.ui.screens.localopenguesser.connection.requiredNearbyPermissions
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
-import android.graphics.Bitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class ShareTab {
     FRIENDS,
@@ -387,9 +395,17 @@ fun QrCodeView(
     expiresAt: String?,
     isLoading: Boolean
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val qrBitmap = remember(deepLink) {
         deepLink?.let { createQrBitmap(it, 760) }
     }
+    var isSaving by remember { mutableStateOf(false) }
+    var saveMessage by remember { mutableStateOf<String?>(null) }
+    var saveFailed by remember { mutableStateOf(false) }
+    val savedToGalleryMessage = appString(R.string.qr_saved_to_gallery)
+    val saveFailedMessage = appString(R.string.qr_save_failed)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -454,22 +470,100 @@ fun QrCodeView(
                 .fillMaxWidth()
                 .height(54.dp),
             shape = RoundedCornerShape(50),
+            enabled = qrBitmap != null && !isLoading && !isSaving,
             onClick = {
-                // TODO Save / Share QR
+                val bitmap = qrBitmap ?: return@Button
+                isSaving = true
+                saveMessage = null
+                scope.launch {
+                    val saved = saveQrBitmap(
+                        context = context,
+                        bitmap = bitmap,
+                        journeyTitle = journey.title
+                    )
+                    isSaving = false
+                    saveFailed = !saved
+                    saveMessage = if (saved) savedToGalleryMessage else saveFailedMessage
+                }
             }
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Download,
-                contentDescription = null
+            if (isSaving) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Download,
+                    contentDescription = null
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(appString(R.string.save_qr_code))
+            }
+        }
+
+        saveMessage?.let { message ->
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = message,
+                color = if (saveFailed) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
             )
-
-            Spacer(Modifier.width(8.dp))
-
-            Text(appString(R.string.save_qr_code))
         }
 
         Spacer(Modifier.height(20.dp))
     }
+}
+
+private suspend fun saveQrBitmap(
+    context: Context,
+    bitmap: Bitmap,
+    journeyTitle: String
+): Boolean = withContext(Dispatchers.IO) {
+    runCatching {
+        val safeTitle = journeyTitle
+            .trim()
+            .replace(Regex("[^A-Za-z0-9_-]+"), "-")
+            .trim('-')
+            .take(40)
+            .ifBlank { "journey" }
+        val values = ContentValues().apply {
+            put(
+                MediaStore.Images.Media.DISPLAY_NAME,
+                "comingsoon-$safeTitle-${System.currentTimeMillis()}.png"
+            )
+            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+            put(
+                MediaStore.Images.Media.RELATIVE_PATH,
+                "${Environment.DIRECTORY_PICTURES}/ComingSoon"
+            )
+            put(MediaStore.Images.Media.IS_PENDING, 1)
+        }
+        val resolver = context.contentResolver
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+            ?: error("Could not create MediaStore entry")
+        try {
+            resolver.openOutputStream(uri)?.use { output ->
+                check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
+                    "Could not encode QR bitmap"
+                }
+            } ?: error("Could not open MediaStore output")
+            resolver.update(
+                uri,
+                ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) },
+                null,
+                null
+            )
+        } catch (exception: Exception) {
+            resolver.delete(uri, null, null)
+            throw exception
+        }
+    }.isSuccess
 }
 
 private fun createQrBitmap(value: String, size: Int): Bitmap {
