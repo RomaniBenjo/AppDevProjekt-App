@@ -44,6 +44,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.comingsoon.viewmodels.AppViewModelFactory
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.JourneyShareViewModel
+import com.example.comingsoon.viewmodels.CountryViewModel
 import com.example.comingsoon.viewmodels.LiveLocationViewModel
 import com.example.comingsoon.viewmodels.ProfileViewModel
 import com.example.comingsoon.viewmodels.SettingsViewModel
@@ -56,6 +58,8 @@ fun AppNavHost (
     languageViewModel: AppLanguageViewModel,
     settingsViewModel: SettingsViewModel,
     journeyViewModel: JourneyViewModel,
+    journeyShareViewModel: JourneyShareViewModel,
+    countryViewModel: CountryViewModel,
     friendViewModel: FriendViewModel,
     overlayViewModel: OverlayViewModel,
     profileViewModel: ProfileViewModel,
@@ -112,6 +116,8 @@ fun AppNavHost (
                                         friendViewModel.refresh()
                                         friendViewModel.startRealtimeUpdates()
                                         journeyViewModel.onSignedIn()
+                                        journeyShareViewModel.onSignedIn()
+                                        countryViewModel.synchronize()
                                         navController.navigate(NavScreens.Home.route) {
                                             popUpTo(NavScreens.Login.route) { inclusive = true }
                                             launchSingleTop = true
@@ -146,6 +152,7 @@ fun AppNavHost (
         composable(NavScreens.Home.route) {
             HomeScreen(
                 viewModel = journeyViewModel,
+                countryViewModel = countryViewModel,
                 navController = navController
             )
         }
@@ -153,6 +160,8 @@ fun AppNavHost (
         composable(NavScreens.Journey.route) {
             JourneyOverviewScreen(
                 viewModel = journeyViewModel,
+                countryViewModel = countryViewModel,
+                shareViewModel = journeyShareViewModel,
                 navController = navController,
                 overlayViewModel = overlayViewModel
             )
@@ -163,6 +172,7 @@ fun AppNavHost (
 
             JourneyEditorScreen(
                 viewModel = journeyViewModel,
+                countryViewModel = countryViewModel,
                 journey = journey,
                 onDiscard = {
                     navController.popBackStack()
@@ -189,6 +199,8 @@ fun AppNavHost (
             JourneyDetailScreen(
                 journeyId = journeyId,
                 viewModel = journeyViewModel,
+                shareViewModel = journeyShareViewModel,
+                countryViewModel = countryViewModel,
                 navController = navController,
                 overlayViewModel = overlayViewModel
             )
@@ -205,6 +217,8 @@ fun AppNavHost (
                 journeyId = serverJourneyId,
                 ownerId = ownerId,
                 viewModel = journeyViewModel,
+                shareViewModel = journeyShareViewModel,
+                countryViewModel = countryViewModel,
                 navController = navController,
                 overlayViewModel = overlayViewModel
             )
@@ -242,6 +256,8 @@ fun AppNavHost (
                 friendId = friendId,
                 friendViewModel = friendViewModel,
                 journeyViewModel = journeyViewModel,
+                journeyShareViewModel = journeyShareViewModel,
+                countryViewModel = countryViewModel,
                 navController = navController
             )
         }
@@ -268,6 +284,7 @@ fun AppNavHost (
                     authRepository.signOut()
                     friendViewModel.onSignedOut()
                     journeyViewModel.onSignedOut()
+                    journeyShareViewModel.onSignedOut()
                     navController.navigate(NavScreens.Login.route) {
                         popUpTo(NavScreens.Home.route) { inclusive = true }
                         launchSingleTop = true

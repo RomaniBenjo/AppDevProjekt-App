@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,6 +52,8 @@ import com.example.comingsoon.viewmodels.FriendJourneyTab
 import com.example.comingsoon.viewmodels.FriendViewModel
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.JourneyShareViewModel
+import com.example.comingsoon.viewmodels.CountryViewModel
 import com.example.comingsoon.viewmodels.MapCountry
 import java.text.Normalizer
 import java.util.Locale
@@ -62,18 +63,21 @@ fun FriendDetailScreen(
     friendId: Int,
     friendViewModel: FriendViewModel,
     journeyViewModel: JourneyViewModel,
+    journeyShareViewModel: JourneyShareViewModel,
+    countryViewModel: CountryViewModel,
     navController: NavHostController
 ) {
 
     val friend = friendViewModel.getFriend(friendId) ?: return
 
     var selectedTab by rememberSaveable { mutableStateOf(FriendJourneyTab.SHARED_BY_ME) }
-    val sharedByMe = journeyViewModel.sharesByMeWith(friend.id)
-    val sharedWithMe = journeyViewModel.sharesWithMeBy(friend.id)
-    val context = LocalContext.current
-
+    val sharedByMe = journeyShareViewModel.sharesByMeWith(
+        friend.id,
+        journeyViewModel.journeys
+    )
+    val sharedWithMe = journeyShareViewModel.sharesWithMeBy(friend.id)
     LaunchedEffect(Unit) {
-        journeyViewModel.loadWorldMap(context)
+        countryViewModel.loadWorldMap()
     }
 
     Column(
@@ -95,7 +99,7 @@ fun FriendDetailScreen(
 
         FriendJourneyWorldMap(
             friendName = friend.name,
-            countries = journeyViewModel.countries,
+            countries = countryViewModel.countries,
             journeysSharedByMe = sharedByMe.map(JourneyShareSnapshot::journey),
             journeysSharedWithMe = sharedWithMe.map(JourneyShareSnapshot::journey)
         )

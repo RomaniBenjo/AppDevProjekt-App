@@ -59,15 +59,18 @@ import com.example.comingsoon.navigation.NavScreens
 import com.example.comingsoon.overlays.OverlayViewModel
 import com.example.comingsoon.viewmodels.Journey
 import com.example.comingsoon.viewmodels.JourneyViewModel
+import com.example.comingsoon.viewmodels.JourneyShareViewModel
+import com.example.comingsoon.viewmodels.CountryViewModel
 import com.example.comingsoon.components.InteractiveWorldMap
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 @Composable
 fun JourneyOverviewScreen (
     viewModel: JourneyViewModel,
+    countryViewModel: CountryViewModel,
+    shareViewModel: JourneyShareViewModel,
     navController: NavController,
     overlayViewModel: OverlayViewModel
 ) {
@@ -75,9 +78,8 @@ fun JourneyOverviewScreen (
     var expandedJourneyId by rememberSaveable { mutableStateOf<Int?>(null) }
     var journeyToDelete by remember { mutableStateOf<Journey?>(null) }
 
-    val context = LocalContext.current
     LaunchedEffect(Unit) {
-        viewModel.loadWorldMap(context)
+        countryViewModel.loadWorldMap()
     }
 
     // Map
@@ -102,15 +104,15 @@ fun JourneyOverviewScreen (
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (viewModel.countries.isEmpty()) {
+                        if (countryViewModel.countries.isEmpty()) {
                             Text(appString(R.string.loading_map))
                         } else {
                             val visitedCountryColor = MaterialTheme.colorScheme.primary
-                            val customCountryColors = remember(viewModel.journeys, viewModel.countries, visitedCountryColor) {
+                            val customCountryColors = remember(viewModel.journeys, countryViewModel.countries, visitedCountryColor) {
                                 val countryLatestEndDate = mutableMapOf<String, LocalDate>()
                                 viewModel.journeys.forEach { journey ->
                                     journey.visitedCountries.forEach { countryNameOrId ->
-                                        val svgId = viewModel.countries.find { country ->
+                                        val svgId = countryViewModel.countries.find { country ->
                                             country.id.equals(countryNameOrId, ignoreCase = true) ||
                                             country.name?.equals(countryNameOrId, ignoreCase = true) == true
                                         }?.id
@@ -144,7 +146,7 @@ fun JourneyOverviewScreen (
                             val borderColor = if (isLight) Color(0xFFCCCCCC) else Color(0xFF475569)
 
                             InteractiveWorldMap(
-                                countries = viewModel.countries,
+                                countries = countryViewModel.countries,
                                 countryColors = customCountryColors,
                                 oceanColor = oceanColor,
                                 defaultCountryColor = defaultCountryColor,
@@ -201,9 +203,9 @@ fun JourneyOverviewScreen (
                 }
             }
         }
-        val syncError = viewModel.journeySyncError
-            ?: viewModel.shareSyncError
-            ?: viewModel.claimedCountrySyncError
+        val syncError = viewModel.syncError
+            ?: shareViewModel.syncError
+            ?: countryViewModel.syncError
         syncError?.let {
             Text(
                 text = it,
