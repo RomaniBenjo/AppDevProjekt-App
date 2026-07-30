@@ -23,13 +23,6 @@ class ProfileViewModel : ViewModel() {
         )
     }
 
-    fun updateImage(image: Int?) {
-        profile = profile.copy(
-            image = image,
-            imageUrl = null
-        )
-    }
-
     fun updateFromAuthenticatedUser(user: AuthenticatedUser) {
         profile = Profile(
             id = user.id,

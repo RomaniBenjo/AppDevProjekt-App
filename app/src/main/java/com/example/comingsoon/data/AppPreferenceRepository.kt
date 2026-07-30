@@ -7,7 +7,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 import java.time.LocalTime
@@ -75,8 +74,5 @@ class AppPreferenceRepository (private val context: Context) {
     suspend fun saveLiveLocationSharingEnabled(enabled: Boolean) {
         dataStore.edit { it[LIVE_LOCATION_SHARING_ENABLED] = enabled }
     }
-
-    suspend fun isLiveLocationSharingEnabled(): Boolean =
-        settingsFlow.first().liveLocationSharingEnabled
 
 }
