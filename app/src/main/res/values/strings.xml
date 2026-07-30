@@ -86,7 +86,7 @@
     <string name="menu">Menu</string>
     <string name="close">Close</string>
     <string name="clear">Clear</string>
-    <string name="selected">Selected</string>
+    <string name="selected_content_description">Selected</string>
     <string name="refresh">Refresh</string>
     <string name="loading_map">Loading map…</string>
     <string name="tap_to_expand_map">Tap to expand map</string>
@@ -144,13 +144,25 @@
     <string name="notification_live_location_text">Your friends can see your live location.</string>
     <string name="notification_stop_sharing">Stop sharing</string>
     <string name="sign_in_failed">Sign-in could not be completed.</string>
+    <string name="sign_in_account_conflict">This email address is already linked to another account.</string>
     <string name="google_client_id_missing">The Google web client ID has not been configured.</string>
     <string name="google_sign_in_type_unknown">Google returned an unknown sign-in type.</string>
     <string name="google_credentials_unreadable">The Google credentials could not be read.</string>
+    <string name="google_no_credential">No Google account is available for sign-in.</string>
     <string name="google_sign_in_failed">Google sign-in failed.</string>
     <string name="friends_search_too_short">Enter at least two characters to search.</string>
     <string name="friends_load_failed">Friend data could not be loaded.</string>
+    <string name="friend_request_exists">This friendship request already exists.</string>
     <string name="live_locations_load_failed">Live locations could not be loaded.</string>
+    <string name="error_no_network">No internet connection. Check your connection and try again.</string>
+    <string name="error_timeout">The server is taking too long to respond. Try again.</string>
+    <string name="error_session_expired">Your session has expired. Please sign in again.</string>
+    <string name="error_not_allowed">You are not allowed to perform this action.</string>
+    <string name="error_not_found">The requested item could not be found.</string>
+    <string name="error_conflict">The action could not be completed because the data has changed.</string>
+    <string name="error_expired">This link or request has expired.</string>
+    <string name="error_invalid_data">The submitted data is invalid. Check your input.</string>
+    <string name="error_server_unavailable">The server is currently unavailable. Try again later.</string>
     <string name="map_load_failed">The map could not be loaded.</string>
     <string name="claim_permission_denied">Location permission was not granted.</string>
     <string name="claim_location_unavailable">Your location could not be determined. Make sure location services are enabled and try again outdoors.</string>
@@ -172,6 +184,7 @@
     <string name="shared_journey_sign_in">Sign in to open the shared journey.</string>
     <string name="shared_journey_added">The shared journey was added.</string>
     <string name="share_link_open_failed">The share link could not be opened.</string>
+    <string name="share_link_already_used">This share link has already been used.</string>
     <string name="unknown_error">Unknown error</string>
 
     <string name="how_to_play">How do you want to play?</string>

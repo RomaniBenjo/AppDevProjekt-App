@@ -63,6 +63,7 @@ import com.example.comingsoon.ui.theme.AppThemeType
 import com.example.comingsoon.ui.theme.AppThemeViewModel
 import com.example.comingsoon.viewmodels.SettingsViewModel
 import java.time.LocalTime
+import java.util.Locale
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @Composable
@@ -471,7 +472,12 @@ fun JourneyNotificationSetting(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = String.format("%02d:%02d", reminderTime.hour, reminderTime.minute)
+                    text = String.format(
+                        Locale.getDefault(),
+                        "%02d:%02d",
+                        reminderTime.hour,
+                        reminderTime.minute
+                    )
                 )
             }
         }

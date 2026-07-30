@@ -85,7 +85,7 @@
     <string name="menu">Menü</string>
     <string name="close">Schließen</string>
     <string name="clear">Leeren</string>
-    <string name="selected">Ausgewählt</string>
+    <string name="selected_content_description">Ausgewählt</string>
     <string name="refresh">Aktualisieren</string>
     <string name="loading_map">Karte wird geladen…</string>
     <string name="tap_to_expand_map">Tippen, um die Karte zu vergrößern</string>
@@ -143,13 +143,25 @@
     <string name="notification_live_location_text">Deine Freunde können deinen Live-Standort sehen.</string>
     <string name="notification_stop_sharing">Teilen stoppen</string>
     <string name="sign_in_failed">Die Anmeldung konnte nicht abgeschlossen werden.</string>
+    <string name="sign_in_account_conflict">Diese E-Mail-Adresse ist bereits mit einem anderen Konto verknüpft.</string>
     <string name="google_client_id_missing">Die Google-Web-Client-ID wurde noch nicht konfiguriert.</string>
     <string name="google_sign_in_type_unknown">Google hat einen unbekannten Anmeldetyp geliefert.</string>
     <string name="google_credentials_unreadable">Die Google-Anmeldedaten konnten nicht gelesen werden.</string>
+    <string name="google_no_credential">Für die Anmeldung ist kein Google-Konto verfügbar.</string>
     <string name="google_sign_in_failed">Die Google-Anmeldung ist fehlgeschlagen.</string>
     <string name="friends_search_too_short">Gib für die Suche mindestens zwei Zeichen ein.</string>
     <string name="friends_load_failed">Die Freundesdaten konnten nicht geladen werden.</string>
+    <string name="friend_request_exists">Diese Freundschaftsanfrage existiert bereits.</string>
     <string name="live_locations_load_failed">Die Live-Standorte konnten nicht geladen werden.</string>
+    <string name="error_no_network">Keine Internetverbindung. Prüfe deine Verbindung und versuche es erneut.</string>
+    <string name="error_timeout">Der Server braucht zu lange für eine Antwort. Versuche es erneut.</string>
+    <string name="error_session_expired">Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.</string>
+    <string name="error_not_allowed">Du darfst diese Aktion nicht ausführen.</string>
+    <string name="error_not_found">Der angeforderte Eintrag wurde nicht gefunden.</string>
+    <string name="error_conflict">Die Aktion konnte nicht abgeschlossen werden, weil sich die Daten geändert haben.</string>
+    <string name="error_expired">Dieser Link oder diese Anfrage ist abgelaufen.</string>
+    <string name="error_invalid_data">Die eingegebenen Daten sind ungültig. Prüfe deine Eingabe.</string>
+    <string name="error_server_unavailable">Der Server ist derzeit nicht verfügbar. Versuche es später erneut.</string>
     <string name="map_load_failed">Die Karte konnte nicht geladen werden.</string>
     <string name="claim_permission_denied">Die Standortberechtigung wurde nicht erteilt.</string>
     <string name="claim_location_unavailable">Dein Standort konnte nicht ermittelt werden. Stelle sicher, dass die Standortdienste aktiviert sind, und versuche es im Freien erneut.</string>
@@ -171,6 +183,7 @@
     <string name="shared_journey_sign_in">Melde dich an, um die geteilte Reise zu öffnen.</string>
     <string name="shared_journey_added">Die geteilte Reise wurde hinzugefügt.</string>
     <string name="share_link_open_failed">Der Freigabelink konnte nicht geöffnet werden.</string>
+    <string name="share_link_already_used">Dieser Freigabelink wurde bereits verwendet.</string>
     <string name="unknown_error">Unbekannter Fehler</string>
 
     <string name="how_to_play">Wie möchtest du spielen?</string>

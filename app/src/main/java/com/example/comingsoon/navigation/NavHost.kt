@@ -22,6 +22,7 @@ import com.example.comingsoon.auth.AuthRepository
 import com.example.comingsoon.auth.AuthSessionStore
 import com.example.comingsoon.auth.GoogleAuthManager
 import com.example.comingsoon.auth.GoogleSignInResult
+import com.example.comingsoon.errors.localizedUserMessage
 import com.example.comingsoon.overlays.OverlayViewModel
 import com.example.comingsoon.ui.screens.FriendDetailScreen
 import com.example.comingsoon.ui.screens.FriendOverviewScreen
@@ -89,7 +90,6 @@ fun AppNavHost (
             var isLoading by remember { mutableStateOf(false) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
             val serverClientId = stringResource(R.string.google_web_client_id)
-            val signInFailedMessage = appString(R.string.sign_in_failed)
 
             LoginScreen(
                 onGoogleSignInClick = {
@@ -116,10 +116,17 @@ fun AppNavHost (
                                             popUpTo(NavScreens.Login.route) { inclusive = true }
                                             launchSingleTop = true
                                         }
-                                    } catch (_: AuthApiException) {
-                                        errorMessage = signInFailedMessage
-                                    } catch (_: Exception) {
-                                        errorMessage = signInFailedMessage
+                                    } catch (exception: AuthApiException) {
+                                        errorMessage = exception.localizedUserMessage(
+                                            context = context,
+                                            fallback = R.string.sign_in_failed,
+                                            conflict = R.string.sign_in_account_conflict
+                                        )
+                                    } catch (exception: Exception) {
+                                        errorMessage = exception.localizedUserMessage(
+                                            context,
+                                            R.string.sign_in_failed
+                                        )
                                     }
                                 }
                                 GoogleSignInResult.Cancelled -> Unit

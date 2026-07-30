@@ -550,11 +550,7 @@ internal class NearbyConnectionManager(context: Context) {
             LocalGameProtocol.TYPE_GAME_FINISHED -> finishGame()
             LocalGameProtocol.TYPE_GAME_ERROR -> {
                 val resourceName = json.optString("messageResource")
-                val resourceId = appContext.resources.getIdentifier(
-                    resourceName,
-                    "string",
-                    appContext.packageName
-                )
+                val resourceId = gameErrorResourceId(resourceName)
                 val argsJson = json.optJSONArray("messageArgs")
                 val args = buildList {
                     if (argsJson != null) {
@@ -562,7 +558,7 @@ internal class NearbyConnectionManager(context: Context) {
                     }
                 }
                 showGameError(
-                    if (resourceId != 0) {
+                    if (resourceId != null) {
                         LocalGuesserMessage(resourceId, args)
                     } else {
                         message(R.string.local_guesser_error_other_phone_prepare)
@@ -863,6 +859,23 @@ internal class NearbyConnectionManager(context: Context) {
 
     private fun message(@StringRes resourceId: Int, vararg args: Any) =
         LocalGuesserMessage(resourceId, args.toList())
+
+    @StringRes
+    private fun gameErrorResourceId(resourceName: String): Int? = when (resourceName) {
+        "local_guesser_error_not_enough_photos" ->
+            R.string.local_guesser_error_not_enough_photos
+        "local_guesser_error_round_missing_photo" ->
+            R.string.local_guesser_error_round_missing_photo
+        "local_guesser_error_send_round_photo" ->
+            R.string.local_guesser_error_send_round_photo
+        "local_guesser_error_prepare_round_photo" ->
+            R.string.local_guesser_error_prepare_round_photo
+        "local_guesser_error_save_received_photo" ->
+            R.string.local_guesser_error_save_received_photo
+        "local_guesser_error_photo_transfer" ->
+            R.string.local_guesser_error_photo_transfer
+        else -> null
+    }
 }
 
 private data class RoundSubmission(

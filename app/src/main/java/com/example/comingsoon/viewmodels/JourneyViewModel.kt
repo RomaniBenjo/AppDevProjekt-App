@@ -47,6 +47,7 @@ import com.example.comingsoon.R
 import com.example.comingsoon.language.localizedString
 import com.example.comingsoon.language.persistedAppLanguage
 import com.example.comingsoon.language.localizedCountryName
+import com.example.comingsoon.errors.localizedUserMessage
 
 data class Journey(
     val id: Int,
@@ -407,10 +408,14 @@ class JourneyViewModel(
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
+                    val reason = e.localizedUserMessage(
+                        appContext,
+                        R.string.unknown_error
+                    )
                     claimStatus = ClaimStatus.Error(
                         appContext.localizedString(
                             R.string.claim_failed,
-                            appContext.localizedString(R.string.unknown_error)
+                            reason
                         )
                     )
                 }
@@ -495,13 +500,13 @@ class JourneyViewModel(
                     _claimedCountries.clear()
                     _claimedCountries.addAll(refreshedClaims)
                     journeySyncError = journeyResult.exceptionOrNull()?.let {
-                        appContext.localizedString(R.string.journey_sync_failed)
+                        it.localizedUserMessage(appContext, R.string.journey_sync_failed)
                     }
                     claimedCountrySyncError = claimedResult.exceptionOrNull()?.let {
-                        appContext.localizedString(R.string.claim_sync_failed)
+                        it.localizedUserMessage(appContext, R.string.claim_sync_failed)
                     }
                     shareSyncError = shareResult.exceptionOrNull()?.let {
-                        appContext.localizedString(R.string.share_sync_failed)
+                        it.localizedUserMessage(appContext, R.string.share_sync_failed)
                     }
                 }
             } catch (e: Exception) {
@@ -735,7 +740,10 @@ class JourneyViewModel(
                 }
             } catch (exception: Exception) {
                 withContext(Dispatchers.Main) {
-                    shareError = appContext.localizedString(R.string.share_failed)
+                    shareError = exception.localizedUserMessage(
+                        appContext,
+                        R.string.share_failed
+                    )
                     onResult(false)
                 }
             } finally {
@@ -791,7 +799,10 @@ class JourneyViewModel(
                 }
             } catch (exception: Exception) {
                 withContext(Dispatchers.Main) {
-                    shareError = appContext.localizedString(R.string.unshare_failed)
+                    shareError = exception.localizedUserMessage(
+                        appContext,
+                        R.string.unshare_failed
+                    )
                     onResult(false)
                 }
             } finally {
@@ -831,7 +842,10 @@ class JourneyViewModel(
                 }
             } catch (exception: Exception) {
                 withContext(Dispatchers.Main) {
-                    shareError = appContext.localizedString(R.string.qr_create_failed)
+                    shareError = exception.localizedUserMessage(
+                        appContext,
+                        R.string.qr_create_failed
+                    )
                 }
             } finally {
                 withContext(Dispatchers.Main) { isCreatingQrLink = false }
@@ -863,7 +877,11 @@ class JourneyViewModel(
                 }
             } catch (exception: Exception) {
                 withContext(Dispatchers.Main) {
-                    shareError = appContext.localizedString(R.string.share_link_open_failed)
+                    shareError = exception.localizedUserMessage(
+                        context = appContext,
+                        fallback = R.string.share_link_open_failed,
+                        conflict = R.string.share_link_already_used
+                    )
                     onResult(null)
                 }
             }

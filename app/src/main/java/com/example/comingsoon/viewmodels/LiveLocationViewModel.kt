@@ -20,12 +20,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.maplibre.android.geometry.LatLng
 import com.example.comingsoon.R
-import com.example.comingsoon.language.localizedString
+import com.example.comingsoon.errors.localizedUserMessage
 
 class LiveLocationViewModel(
     private val repository: LiveLocationRepository,
-    private val context: Context
+    context: Context
 ) : ViewModel() {
+    private val appContext = context.applicationContext
 
     private val friendsApiClient = FriendsApiClient(BuildConfig.API_BASE_URL)
 
@@ -55,12 +56,12 @@ class LiveLocationViewModel(
 
     fun startSharing() {
         _selfTrail.clear()
-        LiveLocationService.start(context)
+        LiveLocationService.start(appContext)
         isSharing = true
     }
 
     fun stopSharing() {
-        LiveLocationService.stop(context)
+        LiveLocationService.stop(appContext)
         isSharing = false
         selfPosition = null
         _selfTrail.clear()
@@ -78,7 +79,10 @@ class LiveLocationViewModel(
                     _friendLocations.addAll(it)
                 }
                 .onFailure {
-                    errorMessage = context.localizedString(R.string.live_locations_load_failed)
+                    errorMessage = it.localizedUserMessage(
+                        appContext,
+                        R.string.live_locations_load_failed
+                    )
                 }
         }
     }
@@ -96,7 +100,7 @@ class LiveLocationViewModel(
                     // that we have foreground context again, rather than leaving the account
                     // stuck "sharing" server-side with nothing actually pushing fixes.
                     _selfTrail.clear()
-                    LiveLocationService.start(context)
+                    LiveLocationService.start(appContext)
                     isSharing = true
                 }
                 false -> isSharing = false

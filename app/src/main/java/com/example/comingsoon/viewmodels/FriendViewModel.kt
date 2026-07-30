@@ -28,6 +28,7 @@ import com.example.comingsoon.R
 import com.example.comingsoon.language.localizedString
 import com.example.comingsoon.notifications.NotificationsHelper
 import com.example.comingsoon.notifications.FriendRequestNotificationStore
+import com.example.comingsoon.errors.localizedUserMessage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -64,12 +65,13 @@ enum class FriendJourneyTab {
 
 class FriendViewModel(
     private val repository: FriendsRepository,
-    private val context: Context
+    context: Context
 ) : ViewModel() {
+    private val appContext = context.applicationContext
     private var realtimeJob: Job? = null
     private val refreshMutex = Mutex()
     private val friendRequestNotificationStore =
-        FriendRequestNotificationStore(context.applicationContext)
+        FriendRequestNotificationStore(appContext)
     private var onOfflineJourneyReceived: suspend (
         OfflineFriendIdentity,
         OfflineJourneyPayload
@@ -79,7 +81,7 @@ class FriendViewModel(
         OfflineJourneyPayload
     ) -> Unit = { _, _ -> error("Offline journey sender is not connected") }
     private val offlinePairingManager = OfflineFriendPairingManager(
-        context = context.applicationContext,
+        context = appContext,
         ownIdentity = repository::currentOfflineIdentity,
         onFriendReceived = { identity, pairingId ->
             repository.saveNearbyFriend(identity, pairingId)
@@ -267,7 +269,7 @@ class FriendViewModel(
             snapshot.requests.outgoing.map { it.toRequest(incoming = false) }
         )
         incoming.filter { it.id in newIncomingIds }.forEach { request ->
-            NotificationsHelper(context).showFriendRequest(
+            NotificationsHelper(appContext).showFriendRequest(
                 requestId = request.id,
                 senderName = request.user.name
             )
@@ -278,7 +280,7 @@ class FriendViewModel(
         val normalized = query.trim()
         if (normalized.length < 2) {
             _searchResults.clear()
-            errorMessage = context.localizedString(R.string.friends_search_too_short)
+            errorMessage = appContext.localizedString(R.string.friends_search_too_short)
             return
         }
         viewModelScope.launch {
@@ -306,7 +308,9 @@ class FriendViewModel(
                 refreshAfterMutation()
             }.onSuccess {
                 onSuccess()
-            }.onFailure(::showError)
+            }.onFailure {
+                showError(it, conflictMessage = R.string.friend_request_exists)
+            }
             isLoading = false
         }
     }
@@ -399,8 +403,15 @@ class FriendViewModel(
         _friends.replaceWith(repository.loadCachedFriends().map(::toFriend))
     }
 
-    private fun showError(throwable: Throwable) {
-        errorMessage = context.localizedString(R.string.friends_load_failed)
+    private fun showError(
+        throwable: Throwable,
+        conflictMessage: Int = R.string.error_conflict
+    ) {
+        errorMessage = throwable.localizedUserMessage(
+            context = appContext,
+            fallback = R.string.friends_load_failed,
+            conflict = conflictMessage
+        )
     }
 
     private fun <T> MutableList<T>.replaceWith(items: List<T>) {

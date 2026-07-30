@@ -538,7 +538,9 @@ private fun AddCountryDialog(
                             if (isSelected) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = appString(R.string.selected),
+                                    contentDescription = appString(
+                                        R.string.selected_content_description
+                                    ),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }

@@ -3,6 +3,7 @@ package com.example.comingsoon.sync
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.example.comingsoon.errors.AppApiException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
@@ -18,7 +19,11 @@ private data class ServerClaimedCountriesList(
     @SerializedName("claimed_countries") val claimedCountries: List<ServerClaimedCountry>
 )
 
-class ClaimedCountriesApiException(message: String) : Exception(message)
+class ClaimedCountriesApiException(
+    message: String,
+    statusCode: Int? = null,
+    cause: Throwable? = null
+) : AppApiException(message, statusCode, cause)
 
 class ClaimedCountriesApiClient(baseUrl: String, private val gson: Gson = Gson()) {
     private val baseUrl = baseUrl.trim().trimEnd('/')
@@ -73,13 +78,16 @@ class ClaimedCountriesApiClient(baseUrl: String, private val gson: Gson = Gson()
             val status = connection.responseCode
             val stream = if (status in 200..299) connection.inputStream else connection.errorStream
             val response = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-            if (status !in 200..299) throw ClaimedCountriesApiException(errorMessage(status, response))
+            if (status !in 200..299) {
+                throw ClaimedCountriesApiException(errorMessage(status, response), status)
+            }
             response
         } catch (exception: ClaimedCountriesApiException) {
             throw exception
         } catch (exception: Exception) {
             throw ClaimedCountriesApiException(
-                exception.localizedMessage ?: "Der Server ist nicht erreichbar."
+                exception.localizedMessage ?: "Der Server ist nicht erreichbar.",
+                cause = exception
             )
         } finally {
             connection.disconnect()
