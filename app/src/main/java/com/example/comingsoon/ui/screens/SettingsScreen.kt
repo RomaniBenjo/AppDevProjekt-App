@@ -2,7 +2,10 @@ package com.example.comingsoon.ui.screens
 
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,6 +57,8 @@ import com.example.comingsoon.language.AppLanguage
 import com.example.comingsoon.language.AppLanguageViewModel
 import com.example.comingsoon.language.appString
 import com.example.comingsoon.notifications.NotificationsHelper
+import com.example.comingsoon.notifications.NotificationPermission
+import com.example.comingsoon.notifications.NotificationPermissionHelper
 import com.example.comingsoon.ui.theme.AppThemeType
 import com.example.comingsoon.ui.theme.AppThemeViewModel
 import com.example.comingsoon.viewmodels.SettingsViewModel
@@ -68,6 +74,25 @@ fun SettingsScreen(
     val context = LocalContext.current
 
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    var afterNotificationPermission by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val action = afterNotificationPermission
+        afterNotificationPermission = null
+        if (granted) action?.invoke()
+    }
+    val withNotificationPermission: (() -> Unit) -> Unit = { action ->
+        if (
+            Build.VERSION.SDK_INT < 33 ||
+            NotificationPermissionHelper.hasPermission(context)
+        ) {
+            action()
+        } else {
+            afterNotificationPermission = action
+            notificationPermissionLauncher.launch(NotificationPermission.permission)
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -127,7 +152,16 @@ fun SettingsScreen(
             JourneyNotificationSetting(
                 enabled = settingsViewModel.isJourneyReminderEnabled(),
                 reminderTime = settingsViewModel.getReminderTime(),
-                onEnabledChanged = settingsViewModel::updateJourneyReminderEnabled,
+                onEnabledChanged = { enabled ->
+                    if (!enabled) {
+                        settingsViewModel.updateJourneyReminderEnabled(false)
+                    } else {
+                        withNotificationPermission {
+                            settingsViewModel.updateJourneyReminderEnabled(true)
+                            showTimePicker = true
+                        }
+                    }
+                },
                 onTimeClicked = {
                     showTimePicker = true
                 }
@@ -147,7 +181,11 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth(0.45f)
                         .height(58.dp),
-                    onClick = { NotificationsHelper(context).showTestNotification() }
+                    onClick = {
+                        withNotificationPermission {
+                            NotificationsHelper(context).showTestNotification()
+                        }
+                    }
                 ) {
                     Text(
                         text = appString(R.string.test_notification),
@@ -424,8 +462,11 @@ fun JourneyNotificationSetting(
                         else Color.Transparent
                     )
                     .clickable {
-                        onEnabledChanged(true)
-                        onTimeClicked()
+                        if (enabled) {
+                            onTimeClicked()
+                        } else {
+                            onEnabledChanged(true)
+                        }
                     },
                 contentAlignment = Alignment.Center
             ) {

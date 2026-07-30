@@ -10,10 +10,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.comingsoon.auth.AuthenticatedUser
 import com.example.comingsoon.friends.FriendsRepository
 import com.example.comingsoon.friends.OfflineFriendEndpoint
+import com.example.comingsoon.friends.OfflineFriendIdentity
+import com.example.comingsoon.friends.OfflineJourneyPayload
 import com.example.comingsoon.friends.OfflineFriendPairingManager
 import com.example.comingsoon.friends.OfflinePairingPhase
 import com.example.comingsoon.friends.ServerFriendRequest
 import com.example.comingsoon.friends.StoredFriend
+import com.example.comingsoon.friends.stableOfflineId
+import com.example.comingsoon.friends.toOfflinePayload
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -59,12 +63,26 @@ class FriendViewModel(
     private val context: Context
 ) : ViewModel() {
     private var realtimeJob: Job? = null
+    private var onOfflineJourneyReceived: suspend (
+        OfflineFriendIdentity,
+        OfflineJourneyPayload
+    ) -> Unit = { _, _ -> error("Offline journey receiver is not connected") }
+    private var onOfflineJourneySent: suspend (
+        OfflineFriendIdentity,
+        OfflineJourneyPayload
+    ) -> Unit = { _, _ -> error("Offline journey sender is not connected") }
     private val offlinePairingManager = OfflineFriendPairingManager(
         context = context.applicationContext,
         ownIdentity = repository::currentOfflineIdentity,
         onFriendReceived = { identity, pairingId ->
             repository.saveNearbyFriend(identity, pairingId)
             replaceFriendsFromCache()
+        },
+        onJourneyReceived = { owner, journey ->
+            onOfflineJourneyReceived(owner, journey)
+        },
+        onJourneySent = { recipient, journey ->
+            onOfflineJourneySent(recipient, journey)
         }
     )
     val offlinePairingState = offlinePairingManager.state
@@ -115,6 +133,28 @@ class FriendViewModel(
     fun acceptOfflineFriend() = offlinePairingManager.acceptPendingConnection()
     fun rejectOfflineFriend() = offlinePairingManager.rejectPendingConnection()
     fun stopOfflinePairing() = offlinePairingManager.stop()
+
+    fun bindOfflineJourneyCallbacks(
+        onReceived: suspend (OfflineFriendIdentity, OfflineJourneyPayload) -> Unit,
+        onSent: suspend (OfflineFriendIdentity, OfflineJourneyPayload) -> Unit
+    ) {
+        onOfflineJourneyReceived = onReceived
+        onOfflineJourneySent = onSent
+    }
+
+    fun unbindOfflineJourneyCallbacks() {
+        onOfflineJourneyReceived = { _, _ -> error("Offline journey receiver is not connected") }
+        onOfflineJourneySent = { _, _ -> error("Offline journey sender is not connected") }
+    }
+
+    fun shareJourneyOffline(journey: Journey, friend: Friend) {
+        val identityKey = friend.identityKey ?: return
+        offlinePairingManager.startJourneyShare(
+            targetIdentityKey = identityKey,
+            targetFriendName = friend.name,
+            journey = journey.toOfflinePayload()
+        )
+    }
 
     fun startRealtimeUpdates() {
         if (!repository.hasSession() || realtimeJob?.isActive == true) return
@@ -309,15 +349,6 @@ class FriendViewModel(
 
     private suspend fun replaceFriendsFromCache() {
         _friends.replaceWith(repository.loadCachedFriends().map(::toFriend))
-    }
-
-    private fun stableOfflineId(identityKey: String): Int {
-        val hash = identityKey.hashCode()
-        return when (hash) {
-            0 -> -1
-            Int.MIN_VALUE -> Int.MIN_VALUE + 1
-            else -> -kotlin.math.abs(hash)
-        }
     }
 
     private fun showError(throwable: Throwable) {

@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -100,6 +101,16 @@ class MainActivity : ComponentActivity() {
             val overlayViewModel: OverlayViewModel = viewModel()
             val profileViewModel: ProfileViewModel = viewModel()
 
+            DisposableEffect(friendViewModel, journeyViewModel) {
+                friendViewModel.bindOfflineJourneyCallbacks(
+                    onReceived = journeyViewModel::receiveOfflineJourney,
+                    onSent = journeyViewModel::recordSentOfflineJourney
+                )
+                onDispose {
+                    friendViewModel.unbindOfflineJourneyCallbacks()
+                }
+            }
+
             LaunchedEffect(pendingFriendId, friendViewModel.currentUserId) {
                 val friendId = pendingFriendId ?: return@LaunchedEffect
                 val currentUserId = friendViewModel.currentUserId ?: return@LaunchedEffect
@@ -133,6 +144,14 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 themeViewModel.updateMode(isDark)
                 journeyViewModel.loadJourneys(context)
+            }
+            val journeyRemindersEnabled = settingsViewModel.isJourneyReminderEnabled()
+            val journeyReminderTime = settingsViewModel.getReminderTime()
+            LaunchedEffect(journeyRemindersEnabled, journeyReminderTime) {
+                journeyViewModel.configureJourneyReminders(
+                    enabled = journeyRemindersEnabled,
+                    reminderTime = journeyReminderTime
+                )
             }
             LaunchedEffect(friendViewModel.journeyShareUpdateVersion) {
                 if (friendViewModel.journeyShareUpdateVersion > 0) {

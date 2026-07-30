@@ -52,12 +52,18 @@ interface SharedJourneyDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(shares: List<SharedJourneyEntity>)
 
-    @Query("DELETE FROM shared_journeys WHERE viewerId = :viewerId")
-    suspend fun deleteForViewer(viewerId: Int)
+    @Query(
+        """
+        DELETE FROM shared_journeys
+        WHERE viewerId = :viewerId
+          AND shareType != 'offline'
+        """
+    )
+    suspend fun deleteOnlineForViewer(viewerId: Int)
 
     @Transaction
-    suspend fun replaceForViewer(viewerId: Int, shares: List<SharedJourneyEntity>) {
-        deleteForViewer(viewerId)
+    suspend fun replaceOnlineForViewer(viewerId: Int, shares: List<SharedJourneyEntity>) {
+        deleteOnlineForViewer(viewerId)
         if (shares.isNotEmpty()) insertAll(shares)
     }
 }

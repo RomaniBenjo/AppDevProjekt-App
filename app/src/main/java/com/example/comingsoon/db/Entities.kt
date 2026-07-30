@@ -72,6 +72,7 @@ data class SharedJourneyEntity(
     val ownerId: Int,
     val recipientId: Int,
     val serverJourneyId: Int,
+    val localJourneyId: Int?,
     val ownerName: String,
     val ownerEmail: String,
     val ownerPictureUrl: String?,

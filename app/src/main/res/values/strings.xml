@@ -476,4 +476,16 @@
     <string name="offline_friend_rejected">The other person rejected the connection.</string>
     <string name="offline_friend_connection_failed">The nearby connection could not be established.</string>
     <string name="offline_friend_disconnected">The connection to the other phone was lost.</string>
+    <string name="offline_journey_share_title">Share offline with %1$s</string>
+    <string name="offline_journey_recipient_instruction">On the other phone, open Friends → Add friend → Offline friend and make the phone visible.</string>
+    <string name="offline_journey_transferring">The journey is being transferred securely…</string>
+    <string name="offline_journey_search_failed">Nearby devices could not be searched for offline sharing.</string>
+    <string name="offline_journey_wrong_friend">This is not %1$s’s device. The journey was not sent.</string>
+    <string name="offline_journey_too_large">This journey contains too much data for a direct Nearby transfer.</string>
+    <string name="offline_journey_transfer_failed">The journey could not be transferred to the other phone.</string>
+    <string name="offline_journey_invalid">The other phone sent invalid journey data.</string>
+    <string name="offline_journey_save_failed">The offline journey could not be saved.</string>
+    <string name="offline_journey_received">“%1$s” was received from %2$s and added to Shared With Me.</string>
+    <string name="offline_journey_shared">“%1$s” was shared offline with %2$s.</string>
+    <string name="offline_shared">Shared offline</string>
 </resources>

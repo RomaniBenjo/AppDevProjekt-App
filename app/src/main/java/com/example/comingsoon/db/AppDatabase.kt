@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ClaimedCountryEntity::class,
         FriendEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -43,7 +43,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_3_4,
                     MIGRATION_4_5,
                     MIGRATION_5_6,
-                    MIGRATION_6_7
+                    MIGRATION_6_7,
+                    MIGRATION_7_8
                 )
                 .fallbackToDestructiveMigration(true)
                 .build()
@@ -152,6 +153,14 @@ abstract class AppDatabase : RoomDatabase() {
                     CREATE INDEX IF NOT EXISTS index_pending_journey_shares_localJourneyId
                     ON pending_journey_shares(localJourneyId)
                     """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE shared_journeys ADD COLUMN localJourneyId INTEGER"
                 )
             }
         }

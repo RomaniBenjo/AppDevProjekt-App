@@ -475,4 +475,16 @@
     <string name="offline_friend_rejected">Die andere Person hat die Verbindung abgelehnt.</string>
     <string name="offline_friend_connection_failed">Die Verbindung in der Nähe konnte nicht hergestellt werden.</string>
     <string name="offline_friend_disconnected">Die Verbindung zum anderen Smartphone wurde getrennt.</string>
+    <string name="offline_journey_share_title">Offline mit %1$s teilen</string>
+    <string name="offline_journey_recipient_instruction">Öffne auf dem anderen Smartphone Freunde → Freund hinzufügen → Offline-Freund und mache das Smartphone sichtbar.</string>
+    <string name="offline_journey_transferring">Die Reise wird sicher übertragen…</string>
+    <string name="offline_journey_search_failed">Geräte in der Nähe konnten für das Offline-Teilen nicht gesucht werden.</string>
+    <string name="offline_journey_wrong_friend">Das ist nicht das Gerät von %1$s. Die Reise wurde nicht gesendet.</string>
+    <string name="offline_journey_too_large">Diese Reise enthält zu viele Daten für eine direkte Nearby-Übertragung.</string>
+    <string name="offline_journey_transfer_failed">Die Reise konnte nicht auf das andere Smartphone übertragen werden.</string>
+    <string name="offline_journey_invalid">Das andere Smartphone hat ungültige Reisedaten gesendet.</string>
+    <string name="offline_journey_save_failed">Die Offline-Reise konnte nicht gespeichert werden.</string>
+    <string name="offline_journey_received">„%1$s“ wurde von %2$s empfangen und unter „Mit mir geteilt“ hinzugefügt.</string>
+    <string name="offline_journey_shared">„%1$s“ wurde offline mit %2$s geteilt.</string>
+    <string name="offline_shared">Offline geteilt</string>
 </resources>

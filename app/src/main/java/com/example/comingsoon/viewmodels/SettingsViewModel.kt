@@ -13,12 +13,13 @@ class SettingsViewModel(
     private val repository: AppPreferenceRepository
 ) : ViewModel() {
 
-    private var journeyReminderEnabledState  by mutableStateOf(true)
+    private var journeyReminderEnabledState by mutableStateOf(false)
     private var journeyReminderTimeState by mutableStateOf(LocalTime.of(9, 0))
 
     init {
         viewModelScope.launch {
             repository.settingsFlow.collect {
+                journeyReminderEnabledState = it.journeyReminderEnabled
                 journeyReminderTimeState = it.notificationTime
             }
         }

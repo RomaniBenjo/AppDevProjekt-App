@@ -14,10 +14,13 @@ class JourneyStartWorker (
 ) : Worker(context, params) {
     override fun doWork(): Result {
         val journeyName = inputData.getString("journey_name") ?: return Result.failure()
+        val journeyId = inputData.getInt("journey_id", Int.MIN_VALUE)
+        if (journeyId == Int.MIN_VALUE) return Result.failure()
         val repository = AppPreferenceRepository(applicationContext)
         val settings = runBlocking { repository.settingsFlow.first() }
+        if (!settings.journeyReminderEnabled) return Result.success()
         val localizedContext = applicationContext.localized(settings.language)
-        NotificationsHelper(localizedContext).showJourneyStarted(journeyName)
+        NotificationsHelper(localizedContext).showJourneyStarted(journeyId, journeyName)
 
         return Result.success()
     }
