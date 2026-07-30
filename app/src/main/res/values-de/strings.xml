@@ -16,7 +16,6 @@
     <string name="live_location">Live Standort</string>
     <string name="settings">Einstellungen</string>
     <string name="profile">Profil</string>
-    <string name="profile_editor">Profil-Editor</string>
 
     <!-- Button-Confirmations -->
     <string name="remove">Entfernen</string>
@@ -66,8 +65,6 @@
     <string name="test_notification">Test Benachrichtigung</string>
     <string name="light_mode">Tagmodus</string>
     <string name="dark_mode">Nachtmodus</string>
-    <string name="change_photo">Foto ändern</string>
-    <string name="profile_name">Profil-Name</string>
     <string name="journey_name">Reise-Name</string>
     <string name="start_date">Start-Datum</string>
     <string name="end_date">End-Datum</string>
@@ -194,6 +191,8 @@
     <string name="local_guesser_text">Verbindet zwei Smartphones in der Nähe und erratet die Orte auf euren Fotos – ohne Spielserver oder Internet.</string>
 
     <string name="save_qr_code">QR Code speichern</string>
+    <string name="qr_saved_to_gallery">Der QR-Code wurde in deiner Galerie gespeichert.</string>
+    <string name="qr_save_failed">Der QR-Code konnte nicht gespeichert werden.</string>
     <string name="share_journey_with_friend">Teile eine Reise mit diesem Freund</string>
     <string name="share_journey">Reise teilen</string>
     <string name="share_journey_qr_description">Scanne diesen QR-Code, um auf die Reise zuzugreifen.</string>

@@ -54,5 +54,4 @@ sealed class NavScreens (
     object LiveLocations : NavScreens("livelocations", R.string.live_location)
     object Settings : NavScreens("settings",R.string.settings, icon = Icons.Default.Settings)
     object Profile : NavScreens("profile",R.string.profile, icon = Icons.Default.Person)
-    object ProfileEditor : NavScreens("profileeditor", R.string.profile_editor)
 }

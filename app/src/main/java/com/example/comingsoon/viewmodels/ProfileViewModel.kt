@@ -17,12 +17,6 @@ class ProfileViewModel : ViewModel() {
     var profile by mutableStateOf(ProfilePlaceholder.profile)
         private set
 
-    fun updateName(name: String) {
-        profile = profile.copy(
-            name = name
-        )
-    }
-
     fun updateFromAuthenticatedUser(user: AuthenticatedUser) {
         profile = Profile(
             id = user.id,
