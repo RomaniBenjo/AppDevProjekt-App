@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -289,66 +290,82 @@ fun ExpandableFriendCard(
                     modifier = Modifier.weight(.9f),
                     onClick = onShow
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Visibility,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
+                    BoxWithConstraints {
+                        val showText = maxWidth > 90.dp
 
-                    Spacer(Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Outlined.Visibility,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
 
-                    Text(
-                        text = appString(R.string.show),
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                        if (showText) {
+                            Spacer(Modifier.width(4.dp))
+
+                            Text(
+                                text = appString(R.string.show),
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
 
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
                     onClick = onRemove
                 ) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        null,
-                        modifier = Modifier.size(14.dp)
-                    )
+                    BoxWithConstraints {
+                        val showText = maxWidth > 90.dp
 
-                    Spacer(Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
 
-                    Text(
-                        text = appString(R.string.remove),
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                        if (showText) {
+                            Spacer(Modifier.width(4.dp))
+
+                            Text(
+                                text = appString(R.string.remove),
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
 
                 Button(
                     modifier = Modifier.weight(.9f),
                     onClick = onShare
                 ) {
-                    Icon(
-                        Icons.Outlined.Share,
-                        null,
-                        modifier = Modifier.size(14.dp)
-                    )
+                    BoxWithConstraints {
+                        val showText = maxWidth > 90.dp
 
-                    Spacer(Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
 
-                    Text(
-                        text = appString(R.string.share),
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                        if (showText) {
+                            Spacer(Modifier.width(6.dp))
+
+                            Text(
+                                text = appString(R.string.share),
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
-            }
-        }
     }
 }
 
