@@ -361,17 +361,6 @@ fun HomeScreen (
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }
-                            if (countryViewModel.claimedCountries.isNotEmpty()) {
-                                IconButton(
-                                    onClick = { countryViewModel.clearAllClaims() }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = appString(R.string.clear_claims),
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
                         }
                         
                         Spacer(Modifier.height(8.dp))
